@@ -23,7 +23,7 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(schema = "main")
+@Table(schema = "main", name = "temp")
 public class Temperature {
 
     @Id
