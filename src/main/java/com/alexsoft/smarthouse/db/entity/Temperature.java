@@ -24,7 +24,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(schema = "main")
-public class Temp {
+public class Temperature {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "temp_sq")

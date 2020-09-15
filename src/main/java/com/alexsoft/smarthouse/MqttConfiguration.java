@@ -1,5 +1,7 @@
 package com.alexsoft.smarthouse;
 
+import java.util.UUID;
+
 import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
@@ -53,7 +55,7 @@ public class MqttConfiguration {
         defaultMqttPahoClientFactory.setConnectionOptions(options);
 
         return IntegrationFlows.from(
-            new MqttPahoMessageDrivenChannelAdapter(mqttUrl, mqttSubscriber,
+            new MqttPahoMessageDrivenChannelAdapter(mqttUrl, mqttSubscriber + "-" + UUID.randomUUID(),
                 defaultMqttPahoClientFactory, mqttTopic)
         ).handle(m -> {
             LOGGER.info("Received a message {}", m.getPayload());

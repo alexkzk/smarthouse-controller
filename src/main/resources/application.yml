@@ -6,14 +6,28 @@ spring:
   #    change-log: classpath:db/changelog.xml
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     database: postgresql
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
   datasource:
     url: jdbc:postgresql://185.212.128.246:5432/smarthouse
     driver-class-name: org.postgresql.Driver
     username: guessword
     password: guessword<G13
+
+logging:
+  file:
+    enabled: true
+    path: /var/log/smarthouse
+    file-name: smarthouse
+    max-history: 90
+  level:
+    root: info
+    com.alexsoft.smarthouse: debug
+
+mqtt:
+  server: 185.212.128.246
+  port: 1883
+  topic: ALEXKZK-SMARTHOUSE
+  subscriber: smarthouse-controller
+  user: alexkzk
+  password: Vlena<G13
