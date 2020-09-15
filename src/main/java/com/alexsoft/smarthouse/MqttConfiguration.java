@@ -60,7 +60,11 @@ public class MqttConfiguration {
         ).handle(m -> {
             LOGGER.info("Received a message {}", m.getPayload());
             HouseState houseState = HouseStateMsgConverter.toEntity(String.valueOf(m.getPayload()));
-            houseStateRepository.saveAndFlush(houseState);
+            if(!houseState.isNull()) {
+                houseStateRepository.saveAndFlush(houseState);
+            } else {
+                LOGGER.warn("Skipping saving a null HouseState {}", houseState);
+            }
         }).get();
     }
 

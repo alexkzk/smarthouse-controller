@@ -50,6 +50,20 @@ public class HouseState {
         temperatures.forEach(temp -> temp.setHouseState(this));
     }
 
+    public boolean isNull() {
+        for (Aqi aqi : aqis) {
+            if (!aqi.isNull()) {
+                return false;
+            }
+        }
+        for (Temperature temperature : temperatures) {
+            if(!temperature.isNull()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static Builder builder() {
         return new Builder();
     }

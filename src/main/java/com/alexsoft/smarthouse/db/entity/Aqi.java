@@ -42,4 +42,7 @@ public class Aqi {
     @ManyToOne
     private HouseState houseState;
 
+    public boolean isNull() {
+        return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0);
+    }
 }

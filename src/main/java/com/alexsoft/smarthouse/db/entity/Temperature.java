@@ -44,4 +44,8 @@ public class Temperature {
     @ManyToOne
     private HouseState houseState;
 
+    public boolean isNull() {
+        return (temperature == null || temperature == -100.0) && (rh == null || rh == -100.0) && (ah == null || ah == -100.0);
+    }
+
 }
