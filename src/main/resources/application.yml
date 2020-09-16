@@ -1,4 +1,8 @@
-spring:
+server:
+  servlet:
+    context-path: /smarthouse
+
+  spring:
   application:
     name: smarthouse
   #  liquibase:

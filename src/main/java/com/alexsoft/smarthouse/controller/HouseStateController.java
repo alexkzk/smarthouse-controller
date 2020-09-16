@@ -5,34 +5,40 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
-import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
+import com.alexsoft.smarthouse.service.HouseStateService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_ZONEID;
 
 @RestController
-@RequestMapping("/house-state")
+@RequestMapping("/measures")
 public class HouseStateController {
-    private final HouseStateRepository houseStateRepository;
-    private final HouseStateToDtoMapper houseStateToDtoMapper;
 
-    public HouseStateController(
-        final HouseStateRepository houseStateRepository,
-        final HouseStateToDtoMapper houseStateToDtoMapper
-    ) {
-        this.houseStateRepository = houseStateRepository;
-        this.houseStateToDtoMapper = houseStateToDtoMapper;
+    private final HouseStateService houseStateService;
+
+    public HouseStateController(HouseStateService houseStateService) {
+        this.houseStateService = houseStateService;
     }
 
     @GetMapping
-    public ResponseEntity<List<HouseStateDto>> findAll() {
-        LocalDateTime interval = ZonedDateTime.now(MQTT_ZONEID).toLocalDateTime().minus(Duration.ofMinutes(15));
-        return ResponseEntity.ok(houseStateToDtoMapper.toDtos(houseStateRepository.findAfter(interval)));
+    public ResponseEntity<List<HouseStateDto>> find(@RequestParam @Min(5) @Max(120) Integer withinMinutes) {
+        return ResponseEntity.ok(houseStateService.findWithinMinutes(withinMinutes));
     }
+
+    /*@GetMapping("/avg")
+    public ResponseEntity<List<HouseStateDto>> average(@RequestParam @Min(5) @Max(120) Integer withinMinutes) {
+        LocalDateTime interval = ZonedDateTime.now(MQTT_ZONEID).toLocalDateTime()
+                .minus(Duration.ofMinutes(withinMinutes));
+        return ResponseEntity.ok(houseStateToDtoMapper.toDtos(houseStateRepository.findAfter(interval)));
+
+    }*/
 
 }
