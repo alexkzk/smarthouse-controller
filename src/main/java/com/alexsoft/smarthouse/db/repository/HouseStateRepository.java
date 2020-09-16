@@ -9,7 +9,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface HouseStateRepository extends JpaRepository<HouseState, Integer> {
+
     @Query("from HouseState where received > :localDateTime")
-    public List<HouseState> findBefore(@Param("localDateTime") LocalDateTime localDateTime);
+    public List<HouseState> findAfter(@Param("localDateTime") LocalDateTime localDateTime);
 
 }

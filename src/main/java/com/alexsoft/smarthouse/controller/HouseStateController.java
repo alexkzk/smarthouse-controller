@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_ZONEID;
 
 @RestController
-@RequestMapping("/alexhome/measures")
+@RequestMapping("/house-state")
 public class HouseStateController {
     private final HouseStateRepository houseStateRepository;
     private final HouseStateToDtoMapper houseStateToDtoMapper;
@@ -32,7 +32,7 @@ public class HouseStateController {
     @GetMapping
     public ResponseEntity<List<HouseStateDto>> findAll() {
         LocalDateTime interval = ZonedDateTime.now(MQTT_ZONEID).toLocalDateTime().minus(Duration.ofMinutes(15));
-        return ResponseEntity.ok(houseStateToDtoMapper.toDtos(houseStateRepository.findBefore(interval)));
+        return ResponseEntity.ok(houseStateToDtoMapper.toDtos(houseStateRepository.findAfter(interval)));
     }
 
 }
