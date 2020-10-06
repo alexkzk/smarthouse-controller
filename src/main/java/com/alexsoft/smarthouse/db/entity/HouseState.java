@@ -45,6 +45,13 @@ public class HouseState {
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Temperature> temperatures;
 
+    public void addTemperature(Temperature temperature) {
+        if (temperature != null) {
+            temperature.setHouseState(this);
+            temperatures.add(temperature);
+        }
+    }
+
     public void setParentForAll() {
         aqis.forEach(aqi -> aqi.setHouseState(this));
         temperatures.forEach(temp -> temp.setHouseState(this));

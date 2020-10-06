@@ -2,7 +2,7 @@ server:
   servlet:
     context-path: /smarthouse
 
-  spring:
+spring:
   application:
     name: smarthouse
   #  liquibase:
@@ -35,3 +35,8 @@ mqtt:
   subscriber: smarthouse-controller
   user: alexkzk
   password: Vlena<G13
+
+avwx:
+  baseUri: https://avwx.rest/api
+  metarSubUri: /metar/UKLN?options=&airport=true&reporting=true&format=json&onfail=cache
+  token: ${AVWX_TOKEN:your-avwx-token-here}

@@ -1,10 +1,17 @@
 package com.alexsoft.smarthouse;
 
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.MeasurePlace;
+import com.alexsoft.smarthouse.db.entity.Temperature;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
+import com.alexsoft.smarthouse.model.Metar;
+import com.alexsoft.smarthouse.service.MetarReceiver;
 import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
+import com.alexsoft.smarthouse.utils.TempUtils;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +30,13 @@ public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SmartHouseApplication.class);
 
+    private final TempUtils tempUtils = new TempUtils();
+
     @Autowired
     private HouseStateRepository houseStateRepository;
+
+    @Autowired
+    private MetarReceiver metarReceiver;
 
     @Value("tcp://${mqtt.server}:${mqtt.port}")
     private String mqttUrl;
@@ -59,13 +71,38 @@ public class MqttConfiguration {
                 defaultMqttPahoClientFactory, mqttTopic)
         ).handle(m -> {
             LOGGER.info("Received a message {}", m.getPayload());
-            HouseState houseState = HouseStateMsgConverter.toEntity(String.valueOf(m.getPayload()));
-            if(!houseState.isNull()) {
+            String message = String.valueOf(m.getPayload());
+            HouseState houseState = HouseStateMsgConverter.toEntity(message);
+            if (message.contains("pm25")) { // todo replace this condition by adding measure place in message
+                try {
+                    Metar metar = metarReceiver.getMetar();
+                    if (metarIsNotExpired(metar)) {
+                        Double temp = Double.valueOf(metar.getTemperature().getValue());
+                        Integer devpoint = metar.getDewpoint().getValue();
+                        Integer rh = tempUtils.calculateRelativeHumidity(temp, Double.valueOf(devpoint));
+                        Temperature temperature = Temperature.builder()
+                            .measurePlace(MeasurePlace.CHERNIVTSI_AIRPORT)
+                            .temperature(temp)
+                            .rh(Double.valueOf(rh))
+                            .ah(tempUtils.calculateAbsoluteHumidity(temp, rh))
+                            .build();
+                        houseState.addTemperature(temperature);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Couldn't retrieve a metar", e);
+                }
+            }
+            if (!houseState.isNull()) {
                 houseStateRepository.saveAndFlush(houseState);
             } else {
                 LOGGER.warn("Skipping saving a null HouseState {}", houseState);
             }
         }).get();
+    }
+
+    private boolean metarIsNotExpired(final Metar metar) {
+        return metar != null && metar.getTime() != null && metar.getTime().getIssueDateTime() != null &&
+            ChronoUnit.HOURS.between(metar.getTime().getIssueDateTime(), ZonedDateTime.now()) < 1;
     }
 
     @Bean

@@ -37,7 +37,7 @@ public class Temperature {
 
     private Double temperature;
 
-    private Double rh;
+    private Double rh;  //todo Convert to integer
 
     private Double ah;
 
