@@ -23,29 +23,27 @@ import lombok.ToString;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(schema = "main", name = "temp")
-public class Temperature {
+@Table(schema = "main")
+public class AirQualityIndication {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "temp_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "temp_sq", name = "temp_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_quality_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "air_quality_indication_sq",
+        name = "air_quality_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
     @Enumerated(EnumType.STRING)
     private MeasurePlace measurePlace;
 
-    private Double temperature;
+    private Float pm25;
 
-    private Double rh;  //todo Convert to integer
-
-    private Double ah;
+    private Float pm10;
 
     @ManyToOne
     private HouseState houseState;
 
     public boolean isNull() {
-        return (temperature == null || temperature == -100.0) && (rh == null || rh == -100.0) && (ah == null || ah == -100.0);
+        return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0);
     }
-
 }

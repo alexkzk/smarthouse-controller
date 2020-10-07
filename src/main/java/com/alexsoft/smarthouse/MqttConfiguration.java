@@ -4,9 +4,9 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
+import com.alexsoft.smarthouse.db.entity.HeatIndication;
 import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.db.entity.MeasurePlace;
-import com.alexsoft.smarthouse.db.entity.Temperature;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.model.Metar;
 import com.alexsoft.smarthouse.service.MetarReceiver;
@@ -77,16 +77,16 @@ public class MqttConfiguration {
                 try {
                     Metar metar = metarReceiver.getMetar();
                     if (metarIsNotExpired(metar)) {
-                        Double temp = Double.valueOf(metar.getTemperature().getValue());
+                        Float temp = Float.valueOf(metar.getTemperature().getValue());
                         Integer devpoint = metar.getDewpoint().getValue();
-                        Integer rh = tempUtils.calculateRelativeHumidity(temp, Double.valueOf(devpoint));
-                        Temperature temperature = Temperature.builder()
+                        Integer rh = tempUtils.calculateRelativeHumidity(temp, Float.valueOf(devpoint));
+                        HeatIndication heatIndication = HeatIndication.builder()
                             .measurePlace(MeasurePlace.CHERNIVTSI_AIRPORT)
-                            .temperature(temp)
-                            .rh(Double.valueOf(rh))
-                            .ah(tempUtils.calculateAbsoluteHumidity(temp, rh))
+                            .tempCelsius(temp)
+                            .relativeHumidity(rh)
+                            .absoluteHumidity(tempUtils.calculateAbsoluteHumidity(temp, rh))
                             .build();
-                        houseState.addTemperature(temperature);
+                        houseState.addTemperature(heatIndication);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Couldn't retrieve a metar", e);

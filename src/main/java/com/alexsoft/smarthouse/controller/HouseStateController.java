@@ -1,8 +1,5 @@
 package com.alexsoft.smarthouse.controller;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 import com.alexsoft.smarthouse.dto.HouseStateDto;
@@ -15,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-
-import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_ZONEID;
 
 @RestController
 @RequestMapping("/measures")

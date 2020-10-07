@@ -24,25 +24,28 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(schema = "main")
-public class Aqi {
+public class HeatIndication {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "aqi_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "aqi_sq", name = "aqi_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "heat_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "heat_indication_sq", name = "heat_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
     @Enumerated(EnumType.STRING)
     private MeasurePlace measurePlace;
 
-    private Double pm25;
+    private Float tempCelsius;
 
-    private Double pm10;
+    private Integer relativeHumidity;
+
+    private Float absoluteHumidity;
 
     @ManyToOne
     private HouseState houseState;
 
     public boolean isNull() {
-        return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0);
+        return (tempCelsius == null || tempCelsius == -100.0) && (relativeHumidity == null || relativeHumidity == -100.0) && (absoluteHumidity == null || absoluteHumidity == -100.0);
     }
+
 }

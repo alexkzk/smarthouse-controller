@@ -21,7 +21,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Builder/*(toBuilder = true, builderClassName = "HouseStateBuilder")*/
+@Builder
 @Setter
 @Getter
 @NoArgsConstructor
@@ -35,36 +35,42 @@ public class HouseState {
     @ToString.Include
     private Integer id;
 
-    private LocalDateTime issued;
+    /**
+     * An MQTT message issue date time
+     */
+    private LocalDateTime messageIssued;
 
-    private LocalDateTime received;
+    /**
+     * Actual MQTT message receiving date time
+     */
+    private LocalDateTime messageReceived;
 
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Aqi> aqis;
+    private List<AirQualityIndication> airQualities;
 
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Temperature> temperatures;
+    private List<HeatIndication> heatIndications;
 
-    public void addTemperature(Temperature temperature) {
-        if (temperature != null) {
-            temperature.setHouseState(this);
-            temperatures.add(temperature);
+    public void addTemperature(HeatIndication heatIndication) {
+        if (heatIndication != null) {
+            heatIndication.setHouseState(this);
+            heatIndications.add(heatIndication);
         }
     }
 
     public void setParentForAll() {
-        aqis.forEach(aqi -> aqi.setHouseState(this));
-        temperatures.forEach(temp -> temp.setHouseState(this));
+        airQualities.forEach(aqi -> aqi.setHouseState(this));
+        heatIndications.forEach(temp -> temp.setHouseState(this));
     }
 
     public boolean isNull() {
-        for (Aqi aqi : aqis) {
-            if (!aqi.isNull()) {
+        for (AirQualityIndication airQualityIndication : airQualities) {
+            if (!airQualityIndication.isNull()) {
                 return false;
             }
         }
-        for (Temperature temperature : temperatures) {
-            if(!temperature.isNull()) {
+        for (HeatIndication heatIndication : heatIndications) {
+            if(!heatIndication.isNull()) {
                 return false;
             }
         }

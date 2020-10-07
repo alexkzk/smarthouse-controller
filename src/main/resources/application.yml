@@ -10,7 +10,7 @@ spring:
   #    change-log: classpath:db/changelog.xml
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     database: postgresql
   datasource:
     url: jdbc:postgresql://185.212.128.246:5432/smarthouse

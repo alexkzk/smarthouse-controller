@@ -14,42 +14,42 @@ public class TempUtilsTest {
     //todo to unite next for tests to a parametrized one
     @Test
     public void calculateRelativeHumidityTest() {
-        assertThat(tempUtils.calculateRelativeHumidity(18.17, 14.0), is(77));
+        assertThat(tempUtils.calculateRelativeHumidity(18.17F, 14.0F), is(77));
     }
 
     @Test
     public void calculateRelativeHumidityDewpointZeroReturnsCorrectHumidTest() {
-        assertThat(tempUtils.calculateRelativeHumidity(14.2, 0.0), is(38));
+        assertThat(tempUtils.calculateRelativeHumidity(14.2F, 0.0F), is(38));
     }
 
     @Test
     public void calculateRelativeHumidityNegativeTempReturnsCorrectHumidTest() {
-        assertThat(tempUtils.calculateRelativeHumidity(14.2, -1.0), is(35));
+        assertThat(tempUtils.calculateRelativeHumidity(14.2F, -1.0F), is(35));
     }
 
     @Test
     public void calculateRelativeHumidityNegativeTempAndDewpointReturnsCorrectHumidTest() {
-        assertThat(tempUtils.calculateRelativeHumidity(-5.0, -10.0), is(68));
+        assertThat(tempUtils.calculateRelativeHumidity(-5.0F, -10.0F), is(68));
     }
 
     @Test
     public void calculateRelativeHumidityDewpointNullReturnsNullTest() {
-        assertNull(tempUtils.calculateRelativeHumidity(14.2, null));
+        assertNull(tempUtils.calculateRelativeHumidity(14.2F, null));
     }
 
     @Test
     public void calculateRelativeHumidityTempNullReturnsNullTest() {
-        assertNull(tempUtils.calculateRelativeHumidity(14.2, null));
+        assertNull(tempUtils.calculateRelativeHumidity(14.2F, null));
     }
 
     @Test
     public void calculateRelativeHumidityDewpointGreaterThanTemp_shouldReturnNullTest() {
-        assertNull(tempUtils.calculateRelativeHumidity(-5.0, -3.0));
+        assertNull(tempUtils.calculateRelativeHumidity(-5.0F, -3.0F));
     }
 
     @Test
     public void calculateAbsoluteHumidityTest() {
-        assertThat(tempUtils.calculateAbsoluteHumidity(25.5, 45), is(10.7));
+        assertThat(tempUtils.calculateAbsoluteHumidity(25.5F, 45), is(10.7));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class TempUtilsTest {
 
     @Test
     public void calculateAbsoluteHumidityNullRh_shouldReturnNullTest() {
-        assertNull(tempUtils.calculateAbsoluteHumidity(23.0, null));
+        assertNull(tempUtils.calculateAbsoluteHumidity(23.0F, null));
     }
 
 }
