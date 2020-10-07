@@ -2,6 +2,7 @@ package com.alexsoft.smarthouse.db.entity;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -15,15 +16,18 @@ import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.util.CollectionUtils;
 
 @Entity
 @Builder
 @Setter
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(schema = "main")
@@ -46,10 +50,13 @@ public class HouseState {
     private LocalDateTime messageReceived;
 
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<AirQualityIndication> airQualities;
+    private List<AirQualityIndication> airQualities = new ArrayList<>();
 
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<HeatIndication> heatIndications;
+    private List<HeatIndication> heatIndications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WindIndication> windIndications = new ArrayList<>();
 
     public void addTemperature(HeatIndication heatIndication) {
         if (heatIndication != null) {
@@ -58,9 +65,23 @@ public class HouseState {
         }
     }
 
+    public void addWindIndication(WindIndication windIndication) {
+        if (windIndication != null) {
+            windIndication.setHouseState(this);
+            windIndications.add(windIndication);
+        }
+    }
+
     public void setParentForAll() {
-        airQualities.forEach(aqi -> aqi.setHouseState(this));
-        heatIndications.forEach(temp -> temp.setHouseState(this));
+        if (airQualities != null) {
+            airQualities.forEach(aqi -> aqi.setHouseState(this));
+        }
+        if (heatIndications != null) {
+            heatIndications.forEach(temp -> temp.setHouseState(this));
+        }
+        if (windIndications != null) {
+            windIndications.forEach(wind -> wind.setHouseState(this));
+        }
     }
 
     public boolean isNull() {
@@ -73,6 +94,9 @@ public class HouseState {
             if(!heatIndication.isNull()) {
                 return false;
             }
+        }
+        if(!CollectionUtils.isEmpty(windIndications)) {
+            return false;
         }
         return true;
     }

@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+
 @Entity
 @Builder
 @Setter
@@ -26,28 +27,22 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(schema = "main")
-public class HeatIndication {
+public class WindIndication {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "heat_indication_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "heat_indication_sq", name = "heat_indication_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "wind_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "wind_indication_sq", name = "wind_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
     @Enumerated(EnumType.STRING)
-    private MeasurePlace measurePlace;
+    MeasurePlace measurePlace;
 
-    private Float tempCelsius;
+    Integer direction;
 
-    private Integer relativeHumidity;
-
-    private Float absoluteHumidity;
+    Integer speed;
 
     @ManyToOne
     private HouseState houseState;
-
-    public boolean isNull() {
-        return (tempCelsius == null || tempCelsius == -100.0) && (relativeHumidity == null || relativeHumidity == -100.0) && (absoluteHumidity == null || absoluteHumidity == -100.0);
-    }
 
 }

@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.alexsoft.smarthouse.db.entity.HeatIndication;
 import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.db.entity.MeasurePlace;
+import com.alexsoft.smarthouse.db.entity.WindIndication;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.model.Metar;
 import com.alexsoft.smarthouse.service.MetarReceiver;
@@ -87,6 +88,15 @@ public class MqttConfiguration {
                             .absoluteHumidity(tempUtils.calculateAbsoluteHumidity(temp, rh))
                             .build();
                         houseState.addTemperature(heatIndication);
+                        if((metar.getWindDirection() != null && metar.getWindDirection().getValue() != null) ||
+                            (metar.getWindSpeed() != null && metar.getWindSpeed().getValue() != null)) {
+                            WindIndication windIndication = WindIndication.builder()
+                                .direction(metar.getWindDirection() == null ? null : metar.getWindDirection().getValue())
+                                .speed(metar.getWindSpeed() == null ? null : metar.getWindSpeed().getValue())
+                                .measurePlace(MeasurePlace.CHERNIVTSI_AIRPORT)
+                                .build();
+                            houseState.addWindIndication(windIndication);
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.error("Couldn't retrieve a metar", e);

@@ -49,7 +49,7 @@ public class TempUtilsTest {
 
     @Test
     public void calculateAbsoluteHumidityTest() {
-        assertThat(tempUtils.calculateAbsoluteHumidity(25.5F, 45), is(10.7));
+        assertThat(tempUtils.calculateAbsoluteHumidity(25.5F, 45), is(10.7F));
     }
 
     @Test
