@@ -44,10 +44,6 @@ public class HouseStateMsgConverter {
             .relativeHumidity(values.get("windRh") == null ? null : values.get("windRh").intValue())
             .absoluteHumidity(values.get("windAh")).build();
 
-        HeatIndication washRoom = HeatIndication.builder().measurePlace(WASH_ROOM_1).tempCelsius(values.get("washroom1T"))
-            .relativeHumidity(values.get("washroom1Rh") == null ? null : values.get("washroom1Rh").intValue())
-            .absoluteHumidity(values.get("washroom1Ah")).build();
-
         if(!livRoom.isNull()){
             temps.add(livRoom);
         }
@@ -56,9 +52,6 @@ public class HouseStateMsgConverter {
         }
         if(!terraceWindow.isNull()){
             temps.add(terraceWindow);
-        }
-        if(!washRoom.isNull()){
-            temps.add(washRoom);
         }
 
         List<AirQualityIndication> airQualities = new ArrayList<>();
