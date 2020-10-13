@@ -28,7 +28,6 @@ import org.springframework.util.CollectionUtils;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RequiredArgsConstructor
 @Table(schema = "main")
 public class HouseState {
 
