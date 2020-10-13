@@ -71,6 +71,7 @@ public class HouseStateMsgConverter {
                 .messageReceived(ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime())
                 .heatIndications(temps)
                 .airQualities(airQualities)
+                .windIndications(new ArrayList<>())
                 .build();
     }
 

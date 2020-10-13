@@ -16,20 +16,19 @@ import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import org.springframework.util.CollectionUtils;
 
 @Entity
+@Data
 @Builder
-@Setter
-@Getter
-@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Table(schema = "main")
 public class HouseState {
 
@@ -49,12 +48,15 @@ public class HouseState {
      */
     private LocalDateTime messageReceived;
 
+    @NonNull
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AirQualityIndication> airQualities = new ArrayList<>();
 
+    @NonNull
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HeatIndication> heatIndications = new ArrayList<>();
 
+    @NonNull
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WindIndication> windIndications = new ArrayList<>();
 

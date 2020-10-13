@@ -12,17 +12,13 @@ import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 @Entity
+@Data
 @Builder
-@Setter
-@Getter
-@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(schema = "main")
