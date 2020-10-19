@@ -1,5 +1,6 @@
 package com.alexsoft.smarthouse;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -26,6 +27,7 @@ public class HouseStateBuilderTest {
             .airQualities(Collections.singletonList(
                 AirQualityIndication.builder().measurePlace(TERRACE_ROOF).pm10(0.0F).pm25(0.0F).build()
             ))
+            .windIndications(new ArrayList<>())
             .build();
         houseState.getAirQualities().forEach(aqi -> assertEquals(aqi.getHouseState(), houseState));
         houseState.getHeatIndications().forEach(temp -> assertEquals(temp.getHouseState(), houseState));

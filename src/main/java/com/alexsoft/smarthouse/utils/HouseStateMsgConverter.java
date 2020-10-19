@@ -13,10 +13,14 @@ import java.util.stream.Collectors;
 import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
 import com.alexsoft.smarthouse.db.entity.HeatIndication;
 import com.alexsoft.smarthouse.db.entity.HouseState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.alexsoft.smarthouse.db.entity.MeasurePlace.*;
 
 public class HouseStateMsgConverter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateMsgConverter.class);
 
     public static final String MQTT_DATE_TIME_PATTERN = "dd/MM/yyyy HH:mm:ss";
     public static final ZoneId MQTT_PRODUCER_TIMEZONE_ID = ZoneId.of("Europe/Kiev");
@@ -27,7 +31,7 @@ public class HouseStateMsgConverter {
                 .collect(
                         Collectors.toMap(
                                 lit -> lit.split("=")[0],
-                                lit -> Float.valueOf(lit.split("=")[1]))
+                            HouseStateMsgConverter::getaFloat)
                 );
 
         List<HeatIndication> temps = new ArrayList<>();
@@ -44,6 +48,10 @@ public class HouseStateMsgConverter {
             .relativeHumidity(values.get("windRh") == null ? null : values.get("windRh").intValue())
             .absoluteHumidity(values.get("windAh")).build();
 
+        HeatIndication balconyIndications = HeatIndication.builder().measurePlace(BALCONY).tempCelsius(values.get("balcT"))
+            .relativeHumidity(values.get("balcRh") == null ? null : values.get("balcRh").intValue())
+            .absoluteHumidity(values.get("balcAh")).build();
+
         if(!livRoom.isNull()){
             temps.add(livRoom);
         }
@@ -52,6 +60,9 @@ public class HouseStateMsgConverter {
         }
         if(!terraceWindow.isNull()){
             temps.add(terraceWindow);
+        }
+        if(!balconyIndications.isNull()){
+            temps.add(balconyIndications);
         }
 
         List<AirQualityIndication> airQualities = new ArrayList<>();
@@ -66,6 +77,17 @@ public class HouseStateMsgConverter {
                 .airQualities(airQualities)
                 .windIndications(new ArrayList<>())
                 .build();
+    }
+
+    private static Float getaFloat(final String lit) {
+        String s = null;
+        try {
+            s = lit.split("=")[1];
+            return Float.valueOf(s);
+        } catch (Exception e) {
+            LOGGER.error("Couldn't convert {} to a float", s);
+            return -100.0F;
+        }
     }
 
 }
