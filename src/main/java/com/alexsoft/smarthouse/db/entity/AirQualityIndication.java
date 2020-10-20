@@ -38,6 +38,7 @@ public class AirQualityIndication {
 
     private Float pm10;
 
+    @ToString.Exclude
     @ManyToOne
     private HouseState houseState;
 

@@ -39,6 +39,7 @@ public class HeatIndication {
 
     private Float absoluteHumidity;
 
+    @ToString.Exclude
     @ManyToOne
     private HouseState houseState;
 

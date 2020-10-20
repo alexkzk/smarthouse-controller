@@ -1,10 +1,10 @@
 package com.alexsoft.smarthouse.dto.mapper;
 
 import com.alexsoft.smarthouse.db.entity.HeatIndication;
-import com.alexsoft.smarthouse.dto.TempDto;
+import com.alexsoft.smarthouse.dto.HeatIndicationDto;
 import org.mapstruct.Mapper;
 
 @Mapper
 public interface TempDtoMapper {
-    TempDto toDto(HeatIndication heatIndication);
+    HeatIndicationDto toDto(HeatIndication heatIndication);
 }

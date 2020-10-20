@@ -38,6 +38,7 @@ public class WindIndication {
 
     Integer speed;
 
+    @ToString.Exclude
     @ManyToOne
     private HouseState houseState;
 
