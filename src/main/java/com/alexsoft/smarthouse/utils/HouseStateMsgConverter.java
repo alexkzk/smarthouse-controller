@@ -36,6 +36,9 @@ public class HouseStateMsgConverter {
 
         List<HeatIndication> temps = new ArrayList<>();
 
+        HeatIndication childRoom = HeatIndication.builder().measurePlace(CHILDRENS).tempCelsius(values.get("childrenTemp"))
+            .relativeHumidity(values.get("childrenHumid") == null ? null : values.get("childrenHumid").intValue()).build();
+
         HeatIndication livRoom = HeatIndication.builder().measurePlace(LIVING_ROOM).tempCelsius(values.get("livRoomT"))
             .relativeHumidity(values.get("livRoomRh") == null ? null : values.get("livRoomRh").intValue())
             .absoluteHumidity(values.get("livRoomAh")).build();
@@ -55,6 +58,9 @@ public class HouseStateMsgConverter {
         if(!livRoom.isNull()){
             temps.add(livRoom);
         }
+        if(!childRoom.isNull()){
+            temps.add(childRoom);
+        }
         if(!terrace.isNull()){
             temps.add(terrace);
         }
@@ -69,6 +75,11 @@ public class HouseStateMsgConverter {
         AirQualityIndication airQualityIndicationTerrace = AirQualityIndication.builder().measurePlace(TERRACE_ROOF).pm10(values.get("pm10")).pm25(values.get("pm25")).build();
         if(!airQualityIndicationTerrace.isNull()) {
             airQualities.add(airQualityIndicationTerrace);
+        }
+        AirQualityIndication airQualityIndicationChildrens = AirQualityIndication.builder().measurePlace(CHILDRENS)
+            .iaq(values.get("childrenIaq")).co2(values.get("childrenCo2")).voc(values.get("childrenVoc")).build();
+        if(!airQualityIndicationChildrens.isNull()) {
+            airQualities.add(airQualityIndicationChildrens);
         }
         return HouseState.builder()
                 .messageIssued(LocalDateTime.parse(literals.get(0), DateTimeFormatter.ofPattern(MQTT_DATE_TIME_PATTERN)))

@@ -38,11 +38,17 @@ public class AirQualityIndication {
 
     private Float pm10;
 
+    private Float iaq;
+
+    private Float co2;
+
+    private Float voc;
+
     @ToString.Exclude
     @ManyToOne
     private HouseState houseState;
 
     public boolean isNull() {
-        return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0);
+        return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0) && iaq == null && co2 == null && voc == null;
     }
 }
