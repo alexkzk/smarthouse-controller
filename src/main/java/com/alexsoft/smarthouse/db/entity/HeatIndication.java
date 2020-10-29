@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,9 +41,11 @@ public class HeatIndication {
     private Float absoluteHumidity;
 
     @ToString.Exclude
+    @JsonIgnore
     @ManyToOne
     private HouseState houseState;
 
+    @JsonIgnore
     public boolean isNull() {
         return (tempCelsius == null || tempCelsius == -100.0) && (relativeHumidity == null || relativeHumidity == -100.0) && (absoluteHumidity == null || absoluteHumidity == -100.0);
     }

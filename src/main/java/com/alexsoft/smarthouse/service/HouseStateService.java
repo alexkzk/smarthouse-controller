@@ -1,8 +1,10 @@
 package com.alexsoft.smarthouse.service;
 
+import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
+import com.alexsoft.smarthouse.utils.SerializationUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -25,7 +27,9 @@ public class HouseStateService {
     public List<HouseStateDto> findWithinMinutes(Integer minutes) {
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes));
-        return houseStateToDtoMapper.toDtos(houseStateRepository.findAfter(interval));
+        List<HouseState> measures = houseStateRepository.findAfter(interval);
+        SerializationUtils.serializeToFile("temp.json", measures);
+        return houseStateToDtoMapper.toDtos(measures);
 
     }
 

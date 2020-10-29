@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,9 +46,11 @@ public class AirQualityIndication {
     private Float voc;
 
     @ToString.Exclude
+    @JsonIgnore
     @ManyToOne
     private HouseState houseState;
 
+    @JsonIgnore
     public boolean isNull() {
         return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0) && iaq == null && co2 == null && voc == null;
     }

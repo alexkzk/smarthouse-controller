@@ -14,6 +14,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +27,8 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import org.springframework.util.CollectionUtils;
+
+import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
 @Entity
 @Data
@@ -39,11 +47,17 @@ public class HouseState {
     /**
      * An MQTT message issue date time
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime messageIssued;
 
     /**
      * Actual MQTT message receiving date time
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime messageReceived;
 
     @NonNull
@@ -84,6 +98,7 @@ public class HouseState {
         }
     }
 
+    @JsonIgnore
     public boolean isNull() {
         for (AirQualityIndication airQualityIndication : airQualities) {
             if (!airQualityIndication.isNull()) {
