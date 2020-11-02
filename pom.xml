@@ -32,6 +32,8 @@
     </repository>
   </distributionManagement>
 
+
+
   <build>
     <plugins>
 
@@ -40,8 +42,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
         <configuration>
-          <source>9</source>
-          <target>9</target>
+          <source>11</source>
+          <target>11</target>
           <annotationProcessorPaths>
             <path>
               <groupId>org.mapstruct</groupId>
@@ -141,8 +143,5 @@
       <artifactId>commons-collections4</artifactId>
       <version>4.4</version>
     </dependency>
-
-
   </dependencies>
-
 </project>

@@ -54,6 +54,9 @@ public class MqttConfiguration {
     @Value("${mqtt.password}")
     private String mqttPassword;
 
+    @Value("${mqtt.msgSavingEnabled}")
+    private Boolean msgSavingEnabled;
+
     @Bean
     public IntegrationFlow mqttInbound() {
 
@@ -102,7 +105,7 @@ public class MqttConfiguration {
                     LOGGER.error("Couldn't retrieve a metar", e);
                 }
             }
-            if (!houseState.isNull()) {
+            if (!houseState.isNull() && msgSavingEnabled) {
                 houseStateRepository.saveAndFlush(houseState);
             } else {
                 LOGGER.warn("Skipping saving a null HouseState {}", houseState);
