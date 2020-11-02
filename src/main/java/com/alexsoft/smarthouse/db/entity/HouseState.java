@@ -4,6 +4,7 @@ package com.alexsoft.smarthouse.db.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -26,9 +27,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
+import one.util.streamex.StreamEx;
 import org.springframework.util.CollectionUtils;
 
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
+import static com.alexsoft.smarthouse.utils.MeasureUtils.measureIsNotNull;
 
 @Entity
 @Data
@@ -72,18 +75,31 @@ public class HouseState {
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WindIndication> windIndications = new ArrayList<>();
 
-    public void addTemperature(HeatIndication heatIndication) {
-        if (heatIndication != null) {
+    public void addIndication(HeatIndication heatIndication) {
+        if (measureIsNotNull(heatIndication)) {
             heatIndication.setHouseState(this);
             heatIndications.add(heatIndication);
         }
     }
 
-    public void addWindIndication(WindIndication windIndication) {
-        if (windIndication != null) {
+    public void addIndication(AirQualityIndication airQualityIndication) {
+        if (measureIsNotNull(airQualityIndication)) {
+            airQualityIndication.setHouseState(this);
+            airQualities.add(airQualityIndication);
+        }
+    }
+
+    public void addIndication(WindIndication windIndication) {
+        if (measureIsNotNull(windIndication)) {
             windIndication.setHouseState(this);
             windIndications.add(windIndication);
         }
+    }
+
+    public Stream<Measure> getAllMeasures() {
+        return StreamEx.of(getAirQualities().stream().map(aqi -> (Measure) aqi))
+            .append(getHeatIndications().stream().map(aqi -> (Measure) aqi))
+            .append(getWindIndications().stream().map(aqi -> (Measure) aqi));
     }
 
     public void setParentForAll() {

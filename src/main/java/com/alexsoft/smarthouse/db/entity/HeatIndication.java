@@ -17,6 +17,7 @@ import lombok.ToString;
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @NoArgsConstructor
 @Table(schema = "main")
 public class HeatIndication extends Measure {
@@ -47,8 +48,8 @@ public class HeatIndication extends Measure {
 
     @JsonIgnore
     public boolean isNull() {
-        return (tempCelsius == null || tempCelsius == -100.0) && (relativeHumidity == null || relativeHumidity == -100.0)
-            && (absoluteHumidity == null || absoluteHumidity == -100.0);
+        return (tempCelsius == null || Float.isNaN(tempCelsius)) && (relativeHumidity == null)
+            && (absoluteHumidity == null || Float.isNaN(absoluteHumidity));
     }
 
 }

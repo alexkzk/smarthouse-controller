@@ -1,7 +1,10 @@
 package com.alexsoft.smarthouse.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
+import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +31,14 @@ public class HouseStateController {
         return ResponseEntity.ok(houseStateService.findWithinMinutes(withinMinutes));
     }
 
-    /*@GetMapping("/avg")
-    public ResponseEntity<List<HouseStateDto>> average(@RequestParam @Min(5) @Max(120) Integer withinMinutes) {
-        LocalDateTime interval = ZonedDateTime.now(MQTT_ZONEID).toLocalDateTime()
-                .minus(Duration.ofMinutes(withinMinutes));
-        return ResponseEntity.ok(houseStateToDtoMapper.toDtos(houseStateRepository.findAfter(interval)));
+    @GetMapping("/avg")
+    public ResponseEntity<List<HouseStateDto>> average(
+        @RequestParam @Min(5) @Max(120) Integer withinMinutes,
+        @RequestParam @Min(5) @Max(60) Integer aggregateIntervalMin
+    ) {
+        List<HouseState> localDateTimeHouseStateMap = houseStateService.aggregateOnInterval(aggregateIntervalMin, withinMinutes);
+        return ResponseEntity.ok(null);
 
-    }*/
+    }
 
 }

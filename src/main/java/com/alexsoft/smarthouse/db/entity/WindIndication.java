@@ -17,6 +17,7 @@ import lombok.ToString;
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @NoArgsConstructor
 @Table(schema = "main")
 public class WindIndication extends Measure {
@@ -42,4 +43,8 @@ public class WindIndication extends Measure {
 
     Integer speed;
 
+    @Override
+    public boolean isNull() {
+        return speed == null && direction == null;
+    }
 }

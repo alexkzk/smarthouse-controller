@@ -15,7 +15,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @MappedSuperclass
-public class Measure {
+public abstract class Measure {
 
     @Enumerated(EnumType.STRING)
     protected MeasurePlace measurePlace;
@@ -24,5 +24,8 @@ public class Measure {
     @JsonIgnore
     @ManyToOne
     protected HouseState houseState;
+
+    @JsonIgnore
+    public abstract boolean isNull();
 
 }

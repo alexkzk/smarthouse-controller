@@ -90,7 +90,7 @@ public class MqttConfiguration {
                             .relativeHumidity(rh)
                             .absoluteHumidity(tempUtils.calculateAbsoluteHumidity(temp, rh))
                             .build();
-                        houseState.addTemperature(heatIndication);
+                        houseState.addIndication(heatIndication);
                         if((metar.getWindDirection() != null && metar.getWindDirection().getValue() != null) ||
                             (metar.getWindSpeed() != null && metar.getWindSpeed().getValue() != null)) {
                             WindIndication windIndication = WindIndication.builder()
@@ -98,7 +98,7 @@ public class MqttConfiguration {
                                 .speed(metar.getWindSpeed() == null ? null : metar.getWindSpeed().getValue())
                                 .measurePlace(MeasurePlace.CHERNIVTSI_AIRPORT)
                                 .build();
-                            houseState.addWindIndication(windIndication);
+                            houseState.addIndication(windIndication);
                         }
                     }
                 } catch (Exception e) {

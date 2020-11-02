@@ -17,6 +17,7 @@ import lombok.ToString;
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @NoArgsConstructor
 @Table(schema = "main")
 public class AirQualityIndication extends Measure {
@@ -54,6 +55,7 @@ public class AirQualityIndication extends Measure {
 
     @JsonIgnore
     public boolean isNull() {
-        return (pm25 == null || pm25 == -100.0) && (pm10 == null || pm10 == -100.0) && iaq == null && co2 == null && voc == null;
+        return (pm25 == null || Float.isNaN(pm25)) && (pm10 == null || Float.isNaN(pm10)) && (iaq == null || Float.isNaN(iaq))
+            && (co2 == null || Float.isNaN(co2)) && (voc == null || Float.isNaN(voc));
     }
 }
