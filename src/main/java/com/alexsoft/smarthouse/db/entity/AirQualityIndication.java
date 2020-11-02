@@ -1,29 +1,39 @@
 package com.alexsoft.smarthouse.db.entity;
 
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 @Table(schema = "main")
-public class AirQualityIndication {
+public class AirQualityIndication extends Measure {
+
+    @Builder
+    public AirQualityIndication(
+        final MeasurePlace measurePlace, final HouseState houseState, final Integer id,
+        final Float pm25, final Float pm10, final Float iaq, final Float co2, final Float voc
+    ) {
+        super(measurePlace, houseState);
+        this.id = id;
+        this.pm25 = pm25;
+        this.pm10 = pm10;
+        this.iaq = iaq;
+        this.co2 = co2;
+        this.voc = voc;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_quality_indication_sq")
@@ -31,9 +41,6 @@ public class AirQualityIndication {
         name = "air_quality_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
-
-    @Enumerated(EnumType.STRING)
-    private MeasurePlace measurePlace;
 
     private Float pm25;
 
@@ -44,11 +51,6 @@ public class AirQualityIndication {
     private Float co2;
 
     private Float voc;
-
-    @ToString.Exclude
-    @JsonIgnore
-    @ManyToOne
-    private HouseState houseState;
 
     @JsonIgnore
     public boolean isNull() {

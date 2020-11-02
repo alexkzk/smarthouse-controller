@@ -1,29 +1,37 @@
 package com.alexsoft.smarthouse.db.entity;
 
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@AllArgsConstructor
 @Table(schema = "main")
-public class HeatIndication {
+public class HeatIndication extends Measure {
+
+    @Builder
+    public HeatIndication(
+        final MeasurePlace measurePlace, final HouseState houseState, final Integer id,
+        final Float tempCelsius, final Integer relativeHumidity, final Float absoluteHumidity
+    ) {
+        super(measurePlace, houseState);
+        this.id = id;
+        this.tempCelsius = tempCelsius;
+        this.relativeHumidity = relativeHumidity;
+        this.absoluteHumidity = absoluteHumidity;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "heat_indication_sq")
@@ -31,23 +39,16 @@ public class HeatIndication {
     @ToString.Include
     private Integer id;
 
-    @Enumerated(EnumType.STRING)
-    private MeasurePlace measurePlace;
-
     private Float tempCelsius;
 
     private Integer relativeHumidity;
 
     private Float absoluteHumidity;
 
-    @ToString.Exclude
-    @JsonIgnore
-    @ManyToOne
-    private HouseState houseState;
-
     @JsonIgnore
     public boolean isNull() {
-        return (tempCelsius == null || tempCelsius == -100.0) && (relativeHumidity == null || relativeHumidity == -100.0) && (absoluteHumidity == null || absoluteHumidity == -100.0);
+        return (tempCelsius == null || tempCelsius == -100.0) && (relativeHumidity == null || relativeHumidity == -100.0)
+            && (absoluteHumidity == null || absoluteHumidity == -100.0);
     }
 
 }
