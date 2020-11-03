@@ -39,7 +39,7 @@ import static com.alexsoft.smarthouse.utils.MeasureUtils.measureIsNotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(schema = "main")
-public class HouseState {
+public class HouseState implements Comparable<HouseState>{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "house_state_sq")
@@ -126,14 +126,16 @@ public class HouseState {
                 return false;
             }
         }
-        if(!CollectionUtils.isEmpty(windIndications)) {
-            return false;
-        }
-        return true;
+        return CollectionUtils.isEmpty(windIndications);
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public int compareTo(HouseState houseState) {
+        return houseState.getMessageReceived().compareTo(getMessageReceived());
     }
 
     public static class Builder extends HouseStateBuilder {

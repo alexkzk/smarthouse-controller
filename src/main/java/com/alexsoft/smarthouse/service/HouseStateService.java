@@ -18,7 +18,10 @@ import com.alexsoft.smarthouse.db.entity.WindIndication;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
+import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.SerializationUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_PRODUCER_TIMEZONE_ID;
@@ -26,6 +29,9 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 public class HouseStateService {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+
     private final HouseStateRepository houseStateRepository;
     private final HouseStateToDtoMapper houseStateToDtoMapper;
 
@@ -34,30 +40,40 @@ public class HouseStateService {
         this.houseStateToDtoMapper = houseStateToDtoMapper;
     }
 
-    public List<HouseStateDto> findWithinMinutes(Integer minutes) {
+    public List<HouseStateDto> findWithinMinutes(Integer minutes, Integer hours) {
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
-                .minus(Duration.ofMinutes(minutes));
+                .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
+                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
         SerializationUtils.serializeToFile("temp.json", measures);
         return houseStateToDtoMapper.toDtos(measures);
 
     }
 
-    public List<HouseState> aggregateOnInterval(Integer aggregateIntervalMinutes, Integer withinMinutes) {
+    public List<HouseStateDto> aggregateOnInterval(
+            Integer aggregateIntervalMinutes, Integer minutes, Integer hours
+    ) {
+        long startMillis = System.currentTimeMillis();
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
-                .minus(Duration.ofMinutes(withinMinutes));
+                .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
+                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
-        return measures.stream().collect(
+        LOGGER.debug("Started averaging of {} measures", measures.size());
+        List<HouseStateDto> houseStateDtos = houseStateToDtoMapper.toDtos(measures.stream().collect(
                 Collectors.groupingBy(
-                        houseState -> houseState.getMessageReceived().withSecond(0).withNano(0)
-                            .withMinute(houseState.getMessageReceived().getMinute() / aggregateIntervalMinutes * aggregateIntervalMinutes),
+                        houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregateIntervalMinutes),
                         TreeMap::new,
                         Collectors.collectingAndThen(toList(), this::averageList)
                 )
-        ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey())).map(Entry::getValue).collect(toList());
+        ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey()))
+                .map(Entry::getValue).sorted().collect(toList()));
+        LOGGER.debug("Averaging completed, time {}", System.currentTimeMillis() - startMillis);
+        return houseStateDtos;
     }
 
     private HouseState averageList(List<HouseState> houseStates) {
+
+        long startMillis = System.currentTimeMillis();
 
         HouseState averagedHouseState = new HouseState();
 
@@ -105,6 +121,8 @@ public class HouseStateService {
             averagedHouseState.addIndication(averagedAqi);
 
         }
+
+        LOGGER.debug("Averaged a HouseState list, size {}, time {}ms ", houseStates.size(), System.currentTimeMillis() - startMillis);
 
         return averagedHouseState;
 

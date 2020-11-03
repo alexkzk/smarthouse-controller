@@ -27,17 +27,22 @@ public class HouseStateController {
     }
 
     @GetMapping
-    public ResponseEntity<List<HouseStateDto>> find(@RequestParam @Min(5) @Max(120) Integer withinMinutes) {
-        return ResponseEntity.ok(houseStateService.findWithinMinutes(withinMinutes));
+    public ResponseEntity<List<HouseStateDto>> find(
+            @RequestParam @Min(5) @Max(120) Integer minutes,
+            @RequestParam @Min(1) @Max(7 * 24) Integer hours
+    ) {
+        return ResponseEntity.ok(houseStateService.findWithinMinutes(minutes, hours));
     }
 
     @GetMapping("/avg")
     public ResponseEntity<List<HouseStateDto>> average(
-        @RequestParam @Min(5) @Max(120) Integer withinMinutes,
-        @RequestParam @Min(5) @Max(60) Integer aggregateIntervalMin
+            @RequestParam @Min(5) @Max(120) Integer minutes,
+            @RequestParam @Min(1) @Max(7 * 24) Integer hours,
+            @RequestParam @Min(5) @Max(60) Integer aggregateIntervalMin
     ) {
-        List<HouseState> localDateTimeHouseStateMap = houseStateService.aggregateOnInterval(aggregateIntervalMin, withinMinutes);
-        return ResponseEntity.ok(null);
+        List<HouseStateDto> localDateTimeHouseStateMap = houseStateService.aggregateOnInterval(
+                aggregateIntervalMin, minutes, hours);
+        return ResponseEntity.ok(localDateTimeHouseStateMap);
 
     }
 
