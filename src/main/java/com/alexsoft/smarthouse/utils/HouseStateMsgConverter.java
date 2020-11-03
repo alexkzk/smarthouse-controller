@@ -94,10 +94,10 @@ public class HouseStateMsgConverter {
         String s = null;
         try {
             s = lit.split("=")[1];
-            return Float.valueOf(s);
+            return s.equals("nan") ? null : Float.valueOf(s);
         } catch (Exception e) {
-            LOGGER.error("Couldn't convert {} to a float", s);
-            return -100.0F;
+            LOGGER.error("Couldn't convert" + s + "to a float", e);
+            return null;
         }
     }
 
