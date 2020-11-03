@@ -97,7 +97,7 @@ public class HouseStateMsgConverter {
             return s.equals("nan") ? null : Float.valueOf(s);
         } catch (Exception e) {
             LOGGER.error("Couldn't convert" + s + "to a float", e);
-            return null;
+            return Float.NaN;
         }
     }
 
