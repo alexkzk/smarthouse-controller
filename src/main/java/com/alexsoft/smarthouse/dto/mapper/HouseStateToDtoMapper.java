@@ -9,4 +9,5 @@ import org.mapstruct.Mapper;
 @Mapper(uses = {AqiDtoMapper.class, TempDtoMapper.class})
 public interface HouseStateToDtoMapper {
     List<HouseStateDto> toDtos(List<HouseState> houseStates);
+    HouseStateDto toDto(HouseState houseState);
 }

@@ -27,33 +27,25 @@ public class HouseStateMsgConverter {
 
     public static HouseState toEntity(String message) {
         List<String> literals = Arrays.asList(message.split(","));
-        Map<String, Float> values = literals.stream().filter(lit -> lit.contains("="))
-                .collect(
-                        Collectors.toMap(
-                                lit -> lit.split("=")[0],
-                            HouseStateMsgConverter::getaFloat)
-                );
+        Map<String, Float> values = literals.stream().filter(lit -> lit.contains("=")).collect(
+                        Collectors.toMap(lit -> lit.split("=")[0], HouseStateMsgConverter::getaFloat));
 
         List<HeatIndication> temps = new ArrayList<>();
 
         HeatIndication childRoom = HeatIndication.builder().measurePlace(CHILDRENS).tempCelsius(values.get("childrenTemp"))
-            .relativeHumidity(values.get("childrenHumid") == null ? null : values.get("childrenHumid").intValue()).build();
+            .relativeHumidity(getIntValue(values, "childrenHumid")).build();
 
         HeatIndication livRoom = HeatIndication.builder().measurePlace(LIVING_ROOM).tempCelsius(values.get("livRoomT"))
-            .relativeHumidity(values.get("livRoomRh") == null ? null : values.get("livRoomRh").intValue())
-            .absoluteHumidity(values.get("livRoomAh")).build();
+            .relativeHumidity(getIntValue(values, "livRoomRh")).absoluteHumidity(values.get("livRoomAh")).build();
 
         HeatIndication terrace = HeatIndication.builder().measurePlace(TERRACE_ROOF).tempCelsius(values.get("roofT"))
-            .relativeHumidity(values.get("roofRh") == null ? null : values.get("roofRh").intValue())
-            .absoluteHumidity(values.get("roofAh")).build();
+            .relativeHumidity(getIntValue(values, "roofRh")).absoluteHumidity(values.get("roofAh")).build();
 
         HeatIndication terraceWindow = HeatIndication.builder().measurePlace(TERRACE_WINDOW).tempCelsius(values.get("windT"))
-            .relativeHumidity(values.get("windRh") == null ? null : values.get("windRh").intValue())
-            .absoluteHumidity(values.get("windAh")).build();
+            .relativeHumidity(getIntValue(values, "windRh")).absoluteHumidity(values.get("windAh")).build();
 
         HeatIndication balconyIndications = HeatIndication.builder().measurePlace(BALCONY).tempCelsius(values.get("balcT"))
-            .relativeHumidity(values.get("balcRh") == null ? null : values.get("balcRh").intValue())
-            .absoluteHumidity(values.get("balcAh")).build();
+            .relativeHumidity(getIntValue(values, "balcRh")).absoluteHumidity(values.get("balcAh")).build();
 
         if(!livRoom.isNull()){
             temps.add(livRoom);
@@ -90,11 +82,15 @@ public class HouseStateMsgConverter {
                 .build();
     }
 
+    private static Integer getIntValue(final Map<String, Float> values, final String valueKey) {
+        return values.get(valueKey) == null || Float.isNaN(values.get(valueKey)) ? null : values.get(valueKey).intValue();
+    }
+
     private static Float getaFloat(final String lit) {
         String s = null;
         try {
             s = lit.split("=")[1];
-            return s.equals("nan") ? null : Float.valueOf(s);
+            return s.equals("nan") ? Float.NaN : Float.parseFloat(s);
         } catch (Exception e) {
             LOGGER.error("Couldn't convert" + s + "to a float", e);
             return Float.NaN;

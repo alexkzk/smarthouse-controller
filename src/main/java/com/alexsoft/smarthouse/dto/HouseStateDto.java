@@ -16,5 +16,6 @@ public class HouseStateDto {
     private LocalDateTime messageReceived;
     private List<AirQualityIndicationDto> airQualities;
     private List<HeatIndicationDto> heatIndications;
+    private List<WindIndicationsDto> windIndications;
 
 }

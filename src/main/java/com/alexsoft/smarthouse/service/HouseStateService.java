@@ -59,14 +59,14 @@ public class HouseStateService {
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
         LOGGER.debug("Started averaging of {} measures", measures.size());
-        List<HouseStateDto> houseStateDtos = houseStateToDtoMapper.toDtos(measures.stream().collect(
+        List<HouseStateDto> houseStateDtos = measures.stream().collect(
                 Collectors.groupingBy(
                         houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregateIntervalMinutes),
                         TreeMap::new,
                         Collectors.collectingAndThen(toList(), this::averageList)
                 )
         ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey()))
-                .map(Entry::getValue).sorted().collect(toList()));
+                .map(Entry::getValue).sorted().map(houseStateToDtoMapper::toDto).collect(toList());
         LOGGER.debug("Averaging completed, time {}", System.currentTimeMillis() - startMillis);
         return houseStateDtos;
     }
@@ -112,7 +112,7 @@ public class HouseStateService {
             double windSpeed = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getSpeed).average().orElse(Double.NaN);
             WindIndication averagedWinds = WindIndication.builder()
                 .measurePlace(measurePlace)
-                .direction(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
+                .speed(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
                 .direction(Double.isNaN(windSpeed) ? null : (int) Math.round(windSpeed))
                 .build();
 
@@ -122,7 +122,9 @@ public class HouseStateService {
 
         }
 
-        LOGGER.debug("Averaged a HouseState list, size {}, time {}ms ", houseStates.size(), System.currentTimeMillis() - startMillis);
+        LOGGER.debug("Averaged a list of HouseState's of size {}, time {}ms",
+            houseStates.size(), System.currentTimeMillis() - startMillis);
+        LOGGER.trace("Averaged value: {}", averagedHouseState);
 
         return averagedHouseState;
 

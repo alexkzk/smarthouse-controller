@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -64,15 +65,15 @@ public class HouseState implements Comparable<HouseState>{
     private LocalDateTime messageReceived;
 
     @NonNull
-    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<AirQualityIndication> airQualities = new ArrayList<>();
 
     @NonNull
-    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<HeatIndication> heatIndications = new ArrayList<>();
 
     @NonNull
-    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<WindIndication> windIndications = new ArrayList<>();
 
     public void addIndication(HeatIndication heatIndication) {
@@ -103,15 +104,7 @@ public class HouseState implements Comparable<HouseState>{
     }
 
     public void setParentForAll() {
-        if (airQualities != null) {
-            airQualities.forEach(aqi -> aqi.setHouseState(this));
-        }
-        if (heatIndications != null) {
-            heatIndications.forEach(temp -> temp.setHouseState(this));
-        }
-        if (windIndications != null) {
-            windIndications.forEach(wind -> wind.setHouseState(this));
-        }
+        getAllMeasures().forEach(measure -> measure.setHouseState(this));
     }
 
     @JsonIgnore

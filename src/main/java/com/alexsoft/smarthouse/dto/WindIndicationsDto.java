@@ -1,18 +1,20 @@
 package com.alexsoft.smarthouse.dto;
 
 import com.alexsoft.smarthouse.db.entity.MeasurePlace;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class HeatIndicationDto {
+public class WindIndicationsDto {
 
     private Integer id;
     private MeasurePlace measurePlace;
-    private Float tempCelsius;
-    private Integer relativeHumidity;
-    private Float absoluteHumidity;
+    private Integer direction;
+    private Integer speed;
 
 }

@@ -22,6 +22,9 @@ import lombok.ToString;
 @Table(schema = "main")
 public class HeatIndication extends Measure {
 
+    private static final int TEMP_ACCURACY = 10;
+    private static final int AH_ACCURACY = 100;
+
     @Builder
     public HeatIndication(
         final MeasurePlace measurePlace, final HouseState houseState, final Integer id,
@@ -29,9 +32,9 @@ public class HeatIndication extends Measure {
     ) {
         super(measurePlace, houseState);
         this.id = id;
-        this.tempCelsius = tempCelsius;
+        this.tempCelsius = tempCelsius == null || Float.isNaN(tempCelsius) ? null : (float) Math.round(tempCelsius * TEMP_ACCURACY) / TEMP_ACCURACY;
         this.relativeHumidity = relativeHumidity;
-        this.absoluteHumidity = absoluteHumidity;
+        this.absoluteHumidity = absoluteHumidity == null || Float.isNaN(absoluteHumidity) ? null : (float) Math.round(absoluteHumidity * AH_ACCURACY) / AH_ACCURACY;
     }
 
     @Id

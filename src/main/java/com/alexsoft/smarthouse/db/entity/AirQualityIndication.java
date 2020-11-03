@@ -22,6 +22,11 @@ import lombok.ToString;
 @Table(schema = "main")
 public class AirQualityIndication extends Measure {
 
+    private static final int PM_ACCURACY = 10;
+    private static final int IAQ_ACCURACY = 1;
+    private static final int CO2_ACCURACY = 1;
+    private static final int VOC_ACCURACY = 100;
+
     @Builder
     public AirQualityIndication(
         final MeasurePlace measurePlace, final HouseState houseState, final Integer id,
@@ -29,11 +34,11 @@ public class AirQualityIndication extends Measure {
     ) {
         super(measurePlace, houseState);
         this.id = id;
-        this.pm25 = pm25;
-        this.pm10 = pm10;
-        this.iaq = iaq;
-        this.co2 = co2;
-        this.voc = voc;
+        this.pm25 = pm25 == null || Float.isNaN(pm25) ? null : (float) Math.round(pm25 * PM_ACCURACY) / PM_ACCURACY;
+        this.pm10 = pm10 == null || Float.isNaN(pm10) ? null : (float) Math.round(pm10 * PM_ACCURACY) / PM_ACCURACY;
+        this.iaq = iaq == null || Float.isNaN(iaq) ? null : (float) Math.round(iaq * IAQ_ACCURACY) / IAQ_ACCURACY;
+        this.co2 = co2 == null || Float.isNaN(co2) ? null : (float) Math.round(co2 * CO2_ACCURACY) / CO2_ACCURACY;
+        this.voc = voc == null || Float.isNaN(voc) ? null : (float) Math.round(voc * VOC_ACCURACY) / VOC_ACCURACY;
     }
 
     @Id
@@ -47,9 +52,9 @@ public class AirQualityIndication extends Measure {
 
     private Float pm10;
 
-    private Float iaq;
+    private Float iaq;  //  TODO convert to int
 
-    private Float co2;
+    private Float co2;  //  TODO convert to int
 
     private Float voc;
 
