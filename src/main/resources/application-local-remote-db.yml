@@ -1,2 +1,13 @@
 mqtt:
   msgSavingEnabled: false
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+#    com.alexsoft.smarthouse: trace
