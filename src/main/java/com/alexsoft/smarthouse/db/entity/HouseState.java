@@ -29,6 +29,8 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import one.util.streamex.StreamEx;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.springframework.util.CollectionUtils;
 
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
@@ -65,15 +67,18 @@ public class HouseState implements Comparable<HouseState>{
     private LocalDateTime messageReceived;
 
     @NonNull
-    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
     private List<AirQualityIndication> airQualities = new ArrayList<>();
 
     @NonNull
-    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
     private List<HeatIndication> heatIndications = new ArrayList<>();
 
     @NonNull
-    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SUBSELECT)
     private List<WindIndication> windIndications = new ArrayList<>();
 
     public void addIndication(HeatIndication heatIndication) {

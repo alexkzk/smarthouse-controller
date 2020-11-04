@@ -58,7 +58,10 @@ public class HouseStateService {
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
-        LOGGER.debug("Started averaging of {} measures", measures.size());
+        LOGGER.debug("Started averaging of {} measures, fetching time was {}ms, nested measures: {}",
+            measures.size(), System.currentTimeMillis() - startMillis,
+            measures.stream().flatMap(HouseState::getAllMeasures).count()
+        );
         List<HouseStateDto> houseStateDtos = measures.stream().collect(
                 Collectors.groupingBy(
                         houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregateIntervalMinutes),
@@ -122,9 +125,8 @@ public class HouseStateService {
 
         }
 
-        LOGGER.debug("Averaged a list of HouseState's of size {}, time {}ms",
-            houseStates.size(), System.currentTimeMillis() - startMillis);
-        LOGGER.trace("Averaged value: {}", averagedHouseState);
+        LOGGER.trace("Averaged a list of HouseState's of size {}, time {}ms, averaged value: {}",
+            houseStates.size(), System.currentTimeMillis() - startMillis, averagedHouseState);
 
         return averagedHouseState;
 
