@@ -49,12 +49,13 @@ group by date_trunc('hour', message_received) + (FLOOR(DATE_PART('minute', messa
 order by msg_received DESC;
 
 -- Main indications
-select house_state.message_received, heat_indication.measure_place, heat_indication.temp_celsius,
-       heat_indication.relative_humidity, heat_indication.absolute_humidity,
+select house_state.message_received, heat_indication.measure_place, heat_indication.temp_celsius as temp,
+       heat_indication.relative_humidity as rh, heat_indication.absolute_humidity as ah,
        wind_indication.direction, wind_indication.speed,
+       air_quality_indication.pm25,air_quality_indication.pm10,
        air_quality_indication.iaq,air_quality_indication.co2, air_quality_indication.voc
 from main.house_state
-         join main.heat_indication on house_state.id = heat_indication.house_state_id
-         join main.air_quality_indication on house_state.id = air_quality_indication.house_state_id
-            join main.wind_indication on house_state.id = wind_indication.house_state_id
-order by message_received desc;
+         left join main.heat_indication on house_state.id = heat_indication.house_state_id
+         left join main.air_quality_indication on house_state.id = air_quality_indication.house_state_id
+         left join main.wind_indication on house_state.id = wind_indication.house_state_id
+order by message_received desc LIMIT 3000;

@@ -87,7 +87,7 @@ public class HouseStateService {
 
             List<AirQualityIndication> aqis = houseStates.stream().flatMap(houseState -> houseState.getAirQualities().stream())
                 .filter(aqi -> aqi.getMeasurePlace() == measurePlace)
-                .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toList());
             AirQualityIndication averagedAqi = AirQualityIndication.builder()
                 .measurePlace(measurePlace)
                 .pm25((float) aqis.stream().filter(aqi -> aqi.getPm25() != null).mapToDouble(AirQualityIndication::getPm25).average().orElse(Double.NaN))
@@ -99,7 +99,7 @@ public class HouseStateService {
 
             List<HeatIndication> temps = houseStates.stream().flatMap(houseState -> houseState.getHeatIndications().stream())
                 .filter(heatIndication -> heatIndication.getMeasurePlace() == measurePlace)
-                .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toList());
             double averageRh = temps.stream().filter(temp -> temp.getRelativeHumidity() != null).mapToInt(HeatIndication::getRelativeHumidity).average().orElse(Double.NaN);
             HeatIndication heatIndication = HeatIndication.builder()
                 .measurePlace(measurePlace)
@@ -110,7 +110,7 @@ public class HouseStateService {
 
             List<WindIndication> winds = houseStates.stream().flatMap(houseState -> houseState.getWindIndications().stream())
                 .filter(windIndication -> windIndication.getMeasurePlace() == measurePlace)
-                .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toList());
             double windDir = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getDirection).average().orElse(Double.NaN);
             double windSpeed = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getSpeed).average().orElse(Double.NaN);
             WindIndication averagedWinds = WindIndication.builder()
