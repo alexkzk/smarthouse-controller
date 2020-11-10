@@ -40,14 +40,21 @@ public class HouseStateService {
         this.houseStateToDtoMapper = houseStateToDtoMapper;
     }
 
-    public List<HouseStateDto> findWithinMinutes(Integer minutes, Integer hours) {
+    public List<HouseStateDto> findWithinInterval(Integer minutes, Integer hours, Integer days) {
+        List<HouseState> measures = findHouseStates(minutes, hours, days);
+        return houseStateToDtoMapper.toDtos(measures);
+    }
+
+    private List<HouseState> findHouseStates(Integer minutes, Integer hours, Integer days) {
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
+                .minus(Duration.ofDays(days == null || days < 0 ? 0 : days))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
-        List<HouseState> measures = houseStateRepository.findAfter(interval);
-        SerializationUtils.serializeToFile("temp.json", measures);
-        return houseStateToDtoMapper.toDtos(measures);
+        return houseStateRepository.findAfter(interval);
+    }
 
+    public HouseState avgWithinInterval(Integer minutes, Integer hours, Integer days) {
+        return averageList(findHouseStates(minutes, hours, days));
     }
 
     public List<HouseStateDto> aggregateOnInterval(

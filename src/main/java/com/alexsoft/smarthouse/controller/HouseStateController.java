@@ -1,10 +1,7 @@
 package com.alexsoft.smarthouse.controller;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
-import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import org.springframework.http.ResponseEntity;
@@ -27,18 +24,23 @@ public class HouseStateController {
     }
 
     @GetMapping
-    public ResponseEntity<List<HouseStateDto>> find(
-            @RequestParam @Min(5) @Max(120) Integer minutes,
-            @RequestParam @Min(1) @Max(7 * 24) Integer hours
+    public ResponseEntity<List<HouseStateDto>> findWithinInterval(
+            @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
     ) {
-        return ResponseEntity.ok(houseStateService.findWithinMinutes(minutes, hours));
+        return ResponseEntity.ok(houseStateService.findWithinInterval(minutes, hours, days));
     }
 
     @GetMapping("/avg")
-    public ResponseEntity<List<HouseStateDto>> average(
-            @RequestParam @Min(5) @Max(120) Integer minutes,
-            @RequestParam @Min(1) @Max(7 * 24) Integer hours,
-            @RequestParam @Min(5) @Max(60) Integer aggregateIntervalMin
+    public ResponseEntity<List<HouseStateDto>> averageWithinInterval(
+            @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
+    ) {
+        return ResponseEntity.ok(houseStateService.findWithinInterval(minutes, hours, days));
+    }
+
+    @GetMapping("/aggregate")
+    public ResponseEntity<List<HouseStateDto>> aggregateOnInterval(
+            @RequestParam Integer minutes, @RequestParam Integer hours,
+            @RequestParam Integer days, @RequestParam @Min(1) @Max(60) Integer aggregateIntervalMin
     ) {
         List<HouseStateDto> localDateTimeHouseStateMap = houseStateService.aggregateOnInterval(
                 aggregateIntervalMin, minutes, hours);
