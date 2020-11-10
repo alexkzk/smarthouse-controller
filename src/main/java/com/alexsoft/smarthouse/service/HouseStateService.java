@@ -62,6 +62,7 @@ public class HouseStateService {
             measures.size(), System.currentTimeMillis() - startMillis,
             measures.stream().flatMap(HouseState::getAllMeasures).count()
         );
+        startMillis = System.currentTimeMillis();
         List<HouseStateDto> houseStateDtos = measures.stream().collect(
                 Collectors.groupingBy(
                         houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregateIntervalMinutes),

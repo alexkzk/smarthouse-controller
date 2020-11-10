@@ -69,16 +69,19 @@ public class HouseState implements Comparable<HouseState>{
     @NonNull
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     @Fetch(FetchMode.SUBSELECT)
+    @lombok.Builder.Default
     private List<AirQualityIndication> airQualities = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     @Fetch(FetchMode.SUBSELECT)
+    @lombok.Builder.Default
     private List<HeatIndication> heatIndications = new ArrayList<>();
 
     @NonNull
     @OneToMany(mappedBy = "houseState", cascade = CascadeType.ALL, orphanRemoval = true)
     @Fetch(FetchMode.SUBSELECT)
+    @lombok.Builder.Default
     private List<WindIndication> windIndications = new ArrayList<>();
 
     public void addIndication(HeatIndication heatIndication) {
