@@ -18,20 +18,20 @@ public class MeasureAverageTest {
     @Test
     public void groupingTest() {
 
-        List<HouseState> zeroMinutes = List.of(
-            HouseState.builder().airQualities(List.of()).heatIndications(List.of()).windIndications(List.of()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 0, 0)).build(),
-            HouseState.builder().airQualities(List.of()).heatIndications(List.of()).windIndications(List.of()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 2, 0)).build(),
-            HouseState.builder().airQualities(List.of()).heatIndications(List.of()).windIndications(List.of()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 7, 0)).build(),
-            HouseState.builder().airQualities(List.of()).heatIndications(List.of()).windIndications(List.of()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 9, 59)).build()
+        List<HouseState> zeroMinutes = Arrays.asList(
+            HouseState.builder().airQualities(Arrays.asList()).heatIndications(Arrays.asList()).windIndications(Arrays.asList()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 0, 0)).build(),
+            HouseState.builder().airQualities(Arrays.asList()).heatIndications(Arrays.asList()).windIndications(Arrays.asList()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 2, 0)).build(),
+            HouseState.builder().airQualities(Arrays.asList()).heatIndications(Arrays.asList()).windIndications(Arrays.asList()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 7, 0)).build(),
+            HouseState.builder().airQualities(Arrays.asList()).heatIndications(Arrays.asList()).windIndications(Arrays.asList()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 9, 59)).build()
         );
-        List<HouseState> tenMinutes = List.of(
-            HouseState.builder().airQualities(List.of()).heatIndications(List.of()).windIndications(List.of()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 10, 0)).build(),
-            HouseState.builder().airQualities(List.of()).heatIndications(List.of()).windIndications(List.of()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 10, 1)).build()
+        List<HouseState> tenMinutes = Arrays.asList(
+            HouseState.builder().airQualities(Arrays.asList()).heatIndications(Arrays.asList()).windIndications(Arrays.asList()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 10, 0)).build(),
+            HouseState.builder().airQualities(Arrays.asList()).heatIndications(Arrays.asList()).windIndications(Arrays.asList()).messageReceived(LocalDateTime.of(2020, 1, 1, 10, 10, 1)).build()
         );
-        Map<LocalDateTime, List<HouseState>> expectedMap = Map.of(
-            LocalDateTime.of(2020, 1, 1, 10, 0, 0), zeroMinutes,
-            LocalDateTime.of(2020, 1, 1, 10, 10, 0), tenMinutes
-        );
+        Map<LocalDateTime, List<HouseState>> expectedMap = new HashMap<>();
+
+        expectedMap.put(LocalDateTime.of(2020, 1, 1, 10, 0, 0), zeroMinutes);
+        expectedMap.put(LocalDateTime.of(2020, 1, 1, 10, 10, 0), tenMinutes);
         Map<LocalDateTime, List<HouseState>> actualMap = ListUtils.union(zeroMinutes, tenMinutes).stream().collect(
             Collectors.groupingBy(
                 houseState -> houseState.getMessageReceived().withSecond(0).withNano(0)

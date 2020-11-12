@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head lang="en">
+	<meta charset="UTF-8" />
+	<title>Air quality</title>
+</head>
+<body>
+<table cellspacing="2" border="1" cellpadding="5" width="600">
+	<thead>
+	<tr>
+		<th> Date </th>
+		<th> Temp </th>
+		<th> RH </th>
+		<th> AH </th>
+		<th> IAQ </th>
+		<th> PM 2.5 </th>
+		<th> PM 10 </th>
+		<th> CO2 </th>
+		<th> VOC </th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr th:if="${mstates.empty}">
+		<td colspan="2"> No Measures Available </td>
+	</tr>
+	<tr th:each="hst : ${mstates}">
+		<td><span th:text="${hst.messageReceived}"> DATE </span></td>
+		<td><span th:text="${hst.getOutdoorHeat().getTempCelsius()}"> Temp </span></td>
+		<td><span th:text="${hst.getOutdoorHeat().getRelativeHumidity()}"> RH </span></td>
+		<td><span th:text="${hst.getOutdoorHeat().getAbsoluteHumidity()}"> AH </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).iaq}"> IAQ </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).pm25}"> PM 2.5 </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).pm10}"> PM 10 </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).co2}"> CO2 </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).voc}"> VOC </span></td>
+	</tr>
+	</tbody>
+</table>
+<br>
+<br>
+<table cellspacing="2" border="1" cellpadding="5" width="600">
+	<thead>
+	<tr>
+		<th> Date </th>
+		<th> Temp </th>
+		<th> RH </th>
+		<th> AH </th>
+		<th> IAQ </th>
+		<th> PM 2.5 </th>
+		<th> PM 10 </th>
+		<th> CO2 </th>
+		<th> VOC </th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr th:if="${hstates.empty}">
+		<td colspan="2"> No Measures Available </td>
+	</tr>
+	<tr th:each="hst : ${hstates}">
+		<td><span th:text="${hst.messageReceived}"> DATE </span></td>
+		<td><span th:text="${hst.getOutdoorHeat().getTempCelsius()}"> Temp </span></td>
+		<td><span th:text="${hst.getOutdoorHeat().getRelativeHumidity()}"> RH </span></td>
+		<td><span th:text="${hst.getOutdoorHeat().getAbsoluteHumidity()}"> AH </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).iaq}"> IAQ </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).pm25}"> PM 2.5 </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).pm10}"> PM 10 </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).co2}"> CO2 </span></td>
+		<td><span th:text="${hst.getAirQualities().get(0).voc}"> VOC </span></td>
+	</tr>
+	</tbody>
+</table>
+
+</body>
+</html>

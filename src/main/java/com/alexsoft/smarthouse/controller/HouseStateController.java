@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.service.HouseStateService;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,13 +16,10 @@ import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/measures")
+@AllArgsConstructor
 public class HouseStateController {
 
     private final HouseStateService houseStateService;
-
-    public HouseStateController(HouseStateService houseStateService) {
-        this.houseStateService = houseStateService;
-    }
 
     @GetMapping
     public ResponseEntity<List<HouseStateDto>> findWithinInterval(
@@ -43,7 +41,7 @@ public class HouseStateController {
             @RequestParam Integer days, @RequestParam @Min(1) @Max(60) Integer aggregateIntervalMin
     ) {
         List<HouseStateDto> localDateTimeHouseStateMap = houseStateService.aggregateOnInterval(
-                aggregateIntervalMin, minutes, hours);
+                aggregateIntervalMin, minutes, hours, days);
         return ResponseEntity.ok(localDateTimeHouseStateMap);
 
     }

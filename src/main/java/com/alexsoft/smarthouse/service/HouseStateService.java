@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
 import com.alexsoft.smarthouse.db.entity.HeatIndication;
@@ -19,7 +20,7 @@ import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
 import com.alexsoft.smarthouse.utils.DateUtils;
-import com.alexsoft.smarthouse.utils.SerializationUtils;
+import com.alexsoft.smarthouse.utils.TempUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,10 +35,17 @@ public class HouseStateService {
 
     private final HouseStateRepository houseStateRepository;
     private final HouseStateToDtoMapper houseStateToDtoMapper;
+    private final TempUtils tempUtils = new TempUtils();
 
     public HouseStateService(HouseStateRepository houseStateRepository, HouseStateToDtoMapper houseStateToDtoMapper) {
         this.houseStateRepository = houseStateRepository;
         this.houseStateToDtoMapper = houseStateToDtoMapper;
+    }
+
+    public List<HouseStateDto> findDefaultMeasureSet() {
+        List<HouseStateDto> hourlyList = aggregateOnInterval(60, null, null, 3);
+        List<HouseStateDto> minutelyList = aggregateOnInterval(5, null, 1, null);
+        return Stream.concat(minutelyList.stream(), hourlyList.stream()).collect(toList());
     }
 
     public List<HouseStateDto> findWithinInterval(Integer minutes, Integer hours, Integer days) {
@@ -58,12 +66,13 @@ public class HouseStateService {
     }
 
     public List<HouseStateDto> aggregateOnInterval(
-            Integer aggregateIntervalMinutes, Integer minutes, Integer hours
+            Integer aggregateIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {
         long startMillis = System.currentTimeMillis();
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
-                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
+                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
+                .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
         LOGGER.debug("Started averaging of {} measures, fetching time was {}ms, nested measures: {}",
             measures.size(), System.currentTimeMillis() - startMillis,
@@ -88,7 +97,13 @@ public class HouseStateService {
 
         HouseState averagedHouseState = new HouseState();
 
-        List<Measure> measures = houseStates.stream().flatMap(HouseState::getAllMeasures).collect(Collectors.toList());
+        List<Measure> measures = houseStates.stream().flatMap(HouseState::getAllMeasures).peek(measure -> {
+            if (measure instanceof AirQualityIndication) {
+                measure.setMeasurePlace(MeasurePlace.OUTDOOR);
+            } else if (measure.getMeasurePlace() == MeasurePlace.CHILDRENS && measure instanceof HeatIndication) {
+                measure.setMeasurePlace(MeasurePlace.BALCONY);
+            }
+        }).collect(Collectors.toList());
         Set<MeasurePlace> measurePlaces = measures.stream().map(Measure::getMeasurePlace).collect(Collectors.toSet());
 
         for (MeasurePlace measurePlace : measurePlaces) {
@@ -115,6 +130,9 @@ public class HouseStateService {
                 .absoluteHumidity((float) temps.stream().filter(temp -> temp.getAbsoluteHumidity() != null).mapToDouble(HeatIndication::getAbsoluteHumidity).average().orElse(Double.NaN))
                 .relativeHumidity(Double.isNaN(averageRh) ? null : (int) Math.round(averageRh))
                 .build();
+            if(heatIndication.getAbsoluteHumidity() == null && heatIndication.getRelativeHumidity() != null && heatIndication.getTempCelsius() != null) {
+                heatIndication.setAbsoluteHumidity(tempUtils.calculateAbsoluteHumidity(heatIndication.getTempCelsius(), heatIndication.getRelativeHumidity()));
+            }
 
             List<WindIndication> winds = houseStates.stream().flatMap(houseState -> houseState.getWindIndications().stream())
                 .filter(windIndication -> windIndication.getMeasurePlace() == measurePlace)
@@ -123,8 +141,8 @@ public class HouseStateService {
             double windSpeed = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getSpeed).average().orElse(Double.NaN);
             WindIndication averagedWinds = WindIndication.builder()
                 .measurePlace(measurePlace)
-                .speed(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
-                .direction(Double.isNaN(windSpeed) ? null : (int) Math.round(windSpeed))
+                .direction(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
+                .speed(Double.isNaN(windSpeed) ? null : (int) Math.round(windSpeed))
                 .build();
 
             averagedHouseState.addIndication(averagedWinds);

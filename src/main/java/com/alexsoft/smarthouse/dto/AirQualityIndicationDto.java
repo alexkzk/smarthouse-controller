@@ -1,10 +1,10 @@
 package com.alexsoft.smarthouse.dto;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-
 import com.alexsoft.smarthouse.db.entity.MeasurePlace;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -12,9 +12,11 @@ import lombok.*;
 @Builder
 public class AirQualityIndicationDto {
 
-    private Integer id;
     private MeasurePlace measurePlace;
     private Float pm25;
     private Float pm10;
+    private Float iaq;
+    private Float co2;
+    private Float voc;
 
 }

@@ -15,7 +15,6 @@ public class TempDtoMapperImpl implements TempDtoMapper {
 
         HeatIndicationDtoBuilder heatIndicationDto = HeatIndicationDto.builder();
 
-        heatIndicationDto.id( heatIndication.getId() );
         heatIndicationDto.measurePlace( heatIndication.getMeasurePlace() );
         heatIndicationDto.tempCelsius( heatIndication.getTempCelsius() );
         heatIndicationDto.relativeHumidity( heatIndication.getRelativeHumidity() );

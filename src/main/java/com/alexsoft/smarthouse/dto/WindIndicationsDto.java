@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class WindIndicationsDto {
 
-    private Integer id;
     private MeasurePlace measurePlace;
     private Integer direction;
     private Integer speed;

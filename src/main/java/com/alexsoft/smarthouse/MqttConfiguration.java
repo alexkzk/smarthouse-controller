@@ -107,7 +107,7 @@ public class MqttConfiguration {
             }
             if (!houseState.isNull() && msgSavingEnabled) {
                 houseStateRepository.saveAndFlush(houseState);
-            } else {
+            } else if (!houseState.isNull()) {
                 LOGGER.warn("Skipping saving a null HouseState {}", houseState);
             }
         }).get();

@@ -44,7 +44,6 @@ public class HouseStateToDtoMapperImpl implements HouseStateToDtoMapper {
 
         HouseStateDtoBuilder houseStateDto = HouseStateDto.builder();
 
-        houseStateDto.id( houseState.getId() );
         houseStateDto.messageIssued( houseState.getMessageIssued() );
         houseStateDto.messageReceived( houseState.getMessageReceived() );
         houseStateDto.airQualities( airQualityIndicationListToAirQualityIndicationDtoList( houseState.getAirQualities() ) );
@@ -87,7 +86,6 @@ public class HouseStateToDtoMapperImpl implements HouseStateToDtoMapper {
 
         WindIndicationsDtoBuilder windIndicationsDto = WindIndicationsDto.builder();
 
-        windIndicationsDto.id( windIndication.getId() );
         windIndicationsDto.measurePlace( windIndication.getMeasurePlace() );
         windIndicationsDto.direction( windIndication.getDirection() );
         windIndicationsDto.speed( windIndication.getSpeed() );

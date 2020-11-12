@@ -9,7 +9,6 @@ import lombok.*;
 @Builder
 public class HeatIndicationDto {
 
-    private Integer id;
     private MeasurePlace measurePlace;
     private Float tempCelsius;
     private Integer relativeHumidity;

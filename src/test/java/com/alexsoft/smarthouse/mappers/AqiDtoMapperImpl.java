@@ -16,7 +16,6 @@ public class AqiDtoMapperImpl implements AqiDtoMapper {
 
         AirQualityIndicationDtoBuilder airQualityIndicationDto = AirQualityIndicationDto.builder();
 
-        airQualityIndicationDto.id( airQualityIndication.getId() );
         airQualityIndicationDto.measurePlace( airQualityIndication.getMeasurePlace() );
         airQualityIndicationDto.pm25( airQualityIndication.getPm25() );
         airQualityIndicationDto.pm10( airQualityIndication.getPm10() );
