@@ -16,6 +16,7 @@ public class AirQualityIndicationDto {
     private Float pm25;
     private Float pm10;
     private Float iaq;
+    private Integer maxIaq;
     private Float co2;
     private Float voc;
 

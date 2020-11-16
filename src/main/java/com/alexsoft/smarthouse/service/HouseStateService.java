@@ -3,6 +3,7 @@ package com.alexsoft.smarthouse.service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -76,8 +77,8 @@ public class HouseStateService {
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
         LOGGER.debug("Started averaging of {} measures, fetching time was {}ms, nested measures: {}",
-            measures.size(), System.currentTimeMillis() - startMillis,
-            measures.stream().flatMap(HouseState::getAllMeasures).count()
+                measures.size(), System.currentTimeMillis() - startMillis,
+                measures.stream().flatMap(HouseState::getAllMeasures).count()
         );
         startMillis = System.currentTimeMillis();
         List<HouseStateDto> houseStateDtos = measures.stream().collect(
@@ -110,41 +111,42 @@ public class HouseStateService {
         for (MeasurePlace measurePlace : measurePlaces) {
 
             List<AirQualityIndication> aqis = houseStates.stream().flatMap(houseState -> houseState.getAirQualities().stream())
-                .filter(aqi -> aqi.getMeasurePlace() == measurePlace)
-                .collect(Collectors.toList());
+                    .filter(aqi -> aqi.getMeasurePlace() == measurePlace)
+                    .collect(Collectors.toList());
             AirQualityIndication averagedAqi = AirQualityIndication.builder()
-                .measurePlace(measurePlace)
-                .pm25((float) aqis.stream().map(AirQualityIndication::getPm25).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                .pm10((float) aqis.stream().map(AirQualityIndication::getPm10).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                .co2((float) aqis.stream().map(AirQualityIndication::getCo2).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                .iaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                .voc((float) aqis.stream().map(AirQualityIndication::getVoc).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                .build();
+                    .measurePlace(measurePlace)
+                    .pm25((float) aqis.stream().map(AirQualityIndication::getPm25).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .pm10((float) aqis.stream().map(AirQualityIndication::getPm10).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .co2((float) aqis.stream().map(AirQualityIndication::getCo2).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .iaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .maxIaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).max().orElse(Double.NaN))
+                    .voc((float) aqis.stream().map(AirQualityIndication::getVoc).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .build();
 
             List<HeatIndication> temps = houseStates.stream().flatMap(houseState -> houseState.getHeatIndications().stream())
-                .filter(heatIndication -> heatIndication.getMeasurePlace() == measurePlace)
-                .collect(Collectors.toList());
+                    .filter(heatIndication -> heatIndication.getMeasurePlace() == measurePlace)
+                    .collect(Collectors.toList());
             double averageRh = temps.stream().filter(temp -> temp.getRelativeHumidity() != null).mapToInt(HeatIndication::getRelativeHumidity).average().orElse(Double.NaN);
             HeatIndication heatIndication = HeatIndication.builder()
-                .measurePlace(measurePlace)
-                .tempCelsius((float) temps.stream().filter(temp -> temp.getTempCelsius() != null).mapToDouble(HeatIndication::getTempCelsius).average().orElse(Double.NaN))
-                .absoluteHumidity((float) temps.stream().filter(temp -> temp.getAbsoluteHumidity() != null).mapToDouble(HeatIndication::getAbsoluteHumidity).average().orElse(Double.NaN))
-                .relativeHumidity(Double.isNaN(averageRh) ? null : (int) Math.round(averageRh))
-                .build();
-            if(heatIndication.getAbsoluteHumidity() == null && heatIndication.getRelativeHumidity() != null && heatIndication.getTempCelsius() != null) {
+                    .measurePlace(measurePlace)
+                    .tempCelsius((float) temps.stream().filter(temp -> temp.getTempCelsius() != null).mapToDouble(HeatIndication::getTempCelsius).average().orElse(Double.NaN))
+                    .absoluteHumidity((float) temps.stream().filter(temp -> temp.getAbsoluteHumidity() != null).mapToDouble(HeatIndication::getAbsoluteHumidity).average().orElse(Double.NaN))
+                    .relativeHumidity(Double.isNaN(averageRh) ? null : (int) Math.round(averageRh))
+                    .build();
+            if (heatIndication.getAbsoluteHumidity() == null && heatIndication.getRelativeHumidity() != null && heatIndication.getTempCelsius() != null) {
                 heatIndication.setAbsoluteHumidity(tempUtils.calculateAbsoluteHumidity(heatIndication.getTempCelsius(), heatIndication.getRelativeHumidity()));
             }
 
             List<WindIndication> winds = houseStates.stream().flatMap(houseState -> houseState.getWindIndications().stream())
-                .filter(windIndication -> windIndication.getMeasurePlace() == measurePlace)
-                .collect(Collectors.toList());
+                    .filter(windIndication -> windIndication.getMeasurePlace() == measurePlace)
+                    .collect(Collectors.toList());
             double windDir = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getDirection).average().orElse(Double.NaN);
             double windSpeed = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getSpeed).average().orElse(Double.NaN);
             WindIndication averagedWinds = WindIndication.builder()
-                .measurePlace(measurePlace)
-                .direction(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
-                .speed(Double.isNaN(windSpeed) ? null : (int) Math.round(windSpeed))
-                .build();
+                    .measurePlace(measurePlace)
+                    .direction(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
+                    .speed(Double.isNaN(windSpeed) ? null : (int) Math.round(windSpeed))
+                    .build();
 
             averagedHouseState.addIndication(averagedWinds);
             averagedHouseState.addIndication(heatIndication);
@@ -153,7 +155,7 @@ public class HouseStateService {
         }
 
         LOGGER.trace("Averaged a list of HouseState's of size {}, time {}ms, averaged value: {}",
-            houseStates.size(), System.currentTimeMillis() - startMillis, averagedHouseState);
+                houseStates.size(), System.currentTimeMillis() - startMillis, averagedHouseState);
 
         return averagedHouseState;
 

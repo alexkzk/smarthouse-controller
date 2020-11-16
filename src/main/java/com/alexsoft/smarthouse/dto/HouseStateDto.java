@@ -27,4 +27,18 @@ public class HouseStateDto {
             .orElse(HeatIndicationDto.builder().build());
     }
 
+    public HeatIndicationDto getAirportHeat() {
+        return heatIndications.stream().filter(hi -> hi.getMeasurePlace() == MeasurePlace.CHERNIVTSI_AIRPORT).findFirst()
+                .orElse(HeatIndicationDto.builder().build());
+    }
+
+    public AirQualityIndicationDto getOutdoorAqi() {
+        return airQualities.stream().filter(aqi -> aqi.getMeasurePlace() == MeasurePlace.OUTDOOR).findFirst()
+                .orElse(AirQualityIndicationDto.builder().build());
+    }
+
+    public WindIndicationsDto getWindIndications() {
+        return windIndications.stream().findFirst().orElse(WindIndicationsDto.builder().build());
+    }
+
 }
