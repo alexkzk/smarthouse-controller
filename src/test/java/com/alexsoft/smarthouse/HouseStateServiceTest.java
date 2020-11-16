@@ -43,7 +43,6 @@ public class HouseStateServiceTest {
     }
 
     @Test
-    @Disabled
     public void houseStateAveragingTest () {
         List<HouseState> states = Arrays.asList(
             HouseState.builder().messageReceived(LocalDateTime.of(2020, 11, 1, 10, 1)).airQualities(
@@ -63,10 +62,10 @@ public class HouseStateServiceTest {
         assertThat(houseStateService.aggregateOnInterval(10, null, null, null), is(
                 Arrays.asList(
                     HouseStateDto.builder().messageReceived(LocalDateTime.of(2020, 11, 1, 10, 10)).airQualities(
-                        Collections.singletonList(AirQualityIndicationDto.builder().pm10(7.0F).pm25(3.0F).measurePlace(MeasurePlace.TERRACE_ROOF).build())
+                        Collections.singletonList(AirQualityIndicationDto.builder().pm10(7.0F).pm25(3.0F).measurePlace(MeasurePlace.OUTDOOR).build())
                     ).build(),
                     HouseStateDto.builder().messageReceived(LocalDateTime.of(2020, 11, 1, 10, 0)).airQualities(Arrays.asList(
-                        AirQualityIndicationDto.builder().measurePlace(MeasurePlace.TERRACE_ROOF).pm10(5.5F).pm25(7.5F).build()
+                        AirQualityIndicationDto.builder().measurePlace(MeasurePlace.OUTDOOR).pm10(5.5F).pm25(7.5F).build()
                     )).build()
                 )
             )

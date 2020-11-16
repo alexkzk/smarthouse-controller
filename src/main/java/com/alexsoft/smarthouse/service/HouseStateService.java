@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -113,11 +114,11 @@ public class HouseStateService {
                 .collect(Collectors.toList());
             AirQualityIndication averagedAqi = AirQualityIndication.builder()
                 .measurePlace(measurePlace)
-                .pm25((float) aqis.stream().filter(aqi -> aqi.getPm25() != null).mapToDouble(AirQualityIndication::getPm25).average().orElse(Double.NaN))
-                .pm10((float) aqis.stream().filter(aqi -> aqi.getPm10() != null).mapToDouble(AirQualityIndication::getPm10).average().orElse(Double.NaN))
-                .co2((float) aqis.stream().filter(aqi -> aqi.getCo2() != null).mapToDouble(AirQualityIndication::getCo2).average().orElse(Double.NaN))
-                .iaq((float) aqis.stream().filter(aqi -> aqi.getIaq() != null).mapToDouble(AirQualityIndication::getIaq).average().orElse(Double.NaN))
-                .voc((float) aqis.stream().filter(aqi -> aqi.getVoc() != null).mapToDouble(AirQualityIndication::getVoc).average().orElse(Double.NaN))
+                .pm25((float) aqis.stream().map(AirQualityIndication::getPm25).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                .pm10((float) aqis.stream().map(AirQualityIndication::getPm10).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                .co2((float) aqis.stream().map(AirQualityIndication::getCo2).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                .iaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                .voc((float) aqis.stream().map(AirQualityIndication::getVoc).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
                 .build();
 
             List<HeatIndication> temps = houseStates.stream().flatMap(houseState -> houseState.getHeatIndications().stream())
