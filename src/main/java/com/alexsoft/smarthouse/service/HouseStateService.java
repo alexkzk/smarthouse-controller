@@ -50,6 +50,11 @@ public class HouseStateService {
         return Stream.concat(minutelyList.stream(), hourlyList.stream()).collect(toList());
     }
 
+    public Integer getFiveMinuteAvgIaq() {
+        Float iaq = houseStateToDtoMapper.toDto(avgWithinInterval(5, 0, 0)).getOutdoorAqi().getIaq();
+        return iaq == null || Float.isNaN(iaq) ? 0 : iaq.intValue();
+    }
+
     public List<HouseStateDto> findWithinInterval(Integer minutes, Integer hours, Integer days) {
         List<HouseState> measures = findHouseStates(minutes, hours, days);
         return houseStateToDtoMapper.toDtos(measures);

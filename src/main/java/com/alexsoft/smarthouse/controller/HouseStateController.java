@@ -35,6 +35,12 @@ public class HouseStateController {
         return ResponseEntity.ok(houseStateService.findWithinInterval(minutes, hours, days));
     }
 
+    @GetMapping("/avg/iaq")
+    public ResponseEntity<Integer> averageFiveMinIaq() {
+        Integer fiveMinuteAvgIaq = houseStateService.getFiveMinuteAvgIaq();
+        return ResponseEntity.ok(fiveMinuteAvgIaq);
+    }
+
     @GetMapping("/aggregate")
     public ResponseEntity<List<HouseStateDto>> aggregateOnInterval(
             @RequestParam Integer minutes, @RequestParam Integer hours,
