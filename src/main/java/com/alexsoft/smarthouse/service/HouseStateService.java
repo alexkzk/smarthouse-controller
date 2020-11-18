@@ -44,10 +44,8 @@ public class HouseStateService {
         this.houseStateToDtoMapper = houseStateToDtoMapper;
     }
 
-    public List<HouseStateDto> findDefaultMeasureSet() {
-        List<HouseStateDto> hourlyList = aggregateOnInterval(60, null, null, 3);
-        List<HouseStateDto> minutelyList = aggregateOnInterval(5, null, 1, null);
-        return Stream.concat(minutelyList.stream(), hourlyList.stream()).collect(toList());
+    public HouseState save(HouseState houseState) {
+        return houseStateRepository.saveAndFlush(houseState);
     }
 
     public Integer getFiveMinuteAvgIaq() {

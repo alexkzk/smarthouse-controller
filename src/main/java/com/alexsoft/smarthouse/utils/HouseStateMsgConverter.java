@@ -4,20 +4,25 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
-import com.alexsoft.smarthouse.db.entity.HeatIndication;
-import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.*;
+import com.alexsoft.smarthouse.model.Metar;
+import com.alexsoft.smarthouse.service.MetarReceiver;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import static com.alexsoft.smarthouse.db.entity.MeasurePlace.*;
 
+@Service
+@AllArgsConstructor
 public class HouseStateMsgConverter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateMsgConverter.class);
@@ -25,7 +30,10 @@ public class HouseStateMsgConverter {
     public static final String MQTT_DATE_TIME_PATTERN = "dd/MM/yyyy HH:mm:ss";
     public static final ZoneId MQTT_PRODUCER_TIMEZONE_ID = ZoneId.of("Europe/Kiev");
 
-    public static HouseState toEntity(String message) {
+    private final TempUtils tempUtils = new TempUtils();
+    private final MetarReceiver metarReceiver;
+
+    public HouseState toEntity(String message) {
         List<String> literals = Arrays.asList(message.split(","));
         Map<String, Float> values = literals.stream().filter(lit -> lit.contains("=")).collect(
                         Collectors.toMap(lit -> lit.split("=")[0], HouseStateMsgConverter::getaFloat));
@@ -73,13 +81,49 @@ public class HouseStateMsgConverter {
         if(!airQualityIndicationChildrens.isNull()) {
             airQualities.add(airQualityIndicationChildrens);
         }
-        return HouseState.builder()
+        HouseState build = HouseState.builder()
                 .messageIssued(LocalDateTime.parse(literals.get(0), DateTimeFormatter.ofPattern(MQTT_DATE_TIME_PATTERN)))
                 .messageReceived(ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime())
                 .heatIndications(temps)
                 .airQualities(airQualities)
                 .windIndications(new ArrayList<>())
                 .build();
+
+        if (message.contains("pm25")) { // todo replace this condition by adding measure place in message
+            try {
+                Metar metar = metarReceiver.getMetar();
+                if (metarIsNotExpired(metar)) {
+                    Float temp = Float.valueOf(metar.getTemperature().getValue());
+                    Integer devpoint = metar.getDewpoint().getValue();
+                    Integer rh = tempUtils.calculateRelativeHumidity(temp, Float.valueOf(devpoint));
+                    HeatIndication heatIndication = HeatIndication.builder()
+                            .measurePlace(MeasurePlace.CHERNIVTSI_AIRPORT)
+                            .tempCelsius(temp)
+                            .relativeHumidity(rh)
+                            .absoluteHumidity(tempUtils.calculateAbsoluteHumidity(temp, rh))
+                            .build();
+                    build.addIndication(heatIndication);
+                    if((metar.getWindDirection() != null && metar.getWindDirection().getValue() != null) ||
+                            (metar.getWindSpeed() != null && metar.getWindSpeed().getValue() != null)) {
+                        WindIndication windIndication = WindIndication.builder()
+                                .direction(metar.getWindDirection() == null ? null : metar.getWindDirection().getValue())
+                                .speed(metar.getWindSpeed() == null ? null : metar.getWindSpeed().getValue())
+                                .measurePlace(MeasurePlace.CHERNIVTSI_AIRPORT)
+                                .build();
+                        build.addIndication(windIndication);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Couldn't retrieve a metar", e);
+            }
+        }
+
+        return build;
+    }
+
+    private boolean metarIsNotExpired(final Metar metar) {
+        return metar != null && metar.getTime() != null && metar.getTime().getIssueDateTime() != null &&
+                ChronoUnit.HOURS.between(metar.getTime().getIssueDateTime(), ZonedDateTime.now()) < 1;
     }
 
     private static Integer getIntValue(final Map<String, Float> values, final String valueKey) {
