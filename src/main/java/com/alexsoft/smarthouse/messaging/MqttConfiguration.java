@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse;
+package com.alexsoft.smarthouse.messaging;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -29,7 +29,7 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 @Configuration
 public class MqttConfiguration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SmartHouseApplication.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
 
     private final TempUtils tempUtils = new TempUtils();
 
@@ -74,7 +74,7 @@ public class MqttConfiguration {
             new MqttPahoMessageDrivenChannelAdapter(mqttUrl, mqttSubscriber + "-" + UUID.randomUUID(),
                 defaultMqttPahoClientFactory, mqttTopic)
         ).handle(m -> {
-            LOGGER.info("Received a message {}", m.getPayload());
+            LOGGER.debug("Received a message {}", m.getPayload());
             String message = String.valueOf(m.getPayload());
             HouseState houseState = HouseStateMsgConverter.toEntity(message);
             if (message.contains("pm25")) { // todo replace this condition by adding measure place in message
@@ -108,7 +108,7 @@ public class MqttConfiguration {
             if (!houseState.isNull() && msgSavingEnabled) {
                 houseStateRepository.saveAndFlush(houseState);
             } else if (!houseState.isNull()) {
-                LOGGER.warn("Skipping saving a null HouseState {}", houseState);
+                LOGGER.debug("Skipping saving a null HouseState {}", houseState);
             }
         }).get();
     }

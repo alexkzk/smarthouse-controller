@@ -19,11 +19,14 @@ spring:
     password: guessword<G13
 
 logging:
-  file:
-    enabled: true
-    path: /var/log/smarthouse
-    file-name: smarthouse
+  filepath: /var/log/smarthouse
+  main:
+    name: smarthouse
     max-history: 90
+  msg:
+    path: /var/log/smarthouse
+    name: smarthouse-msg
+    max-history: 3
   level:
     root: info
     com.alexsoft.smarthouse: debug

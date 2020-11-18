@@ -6,26 +6,35 @@
   <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr(%-50.50logger{49}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
   <property name="FILE_LOG_PATTERN" value="${FILE_LOG_PATTERN:-%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} ${LOG_LEVEL_PATTERN:-%5p} [%15.15t] %-50.50logger{49} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
 
-  <springProperty name="fileEnabled" source="logging.file.enabled"/>
-  <springProperty name="filePath" source="logging.file.path"/>
-  <springProperty name="fileName" source="logging.file.file-name"/>
-  <springProperty name="fileLifetime" source="logging.file.max-history"/>
+  <springProperty name="filePath" source="logging.filepath"/>
 
-  <if condition='property("fileEnabled").equals("true")'>
-    <then>
-      <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${filePath}/${fileName}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-          <fileNamePattern>${filePath}/${fileName}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-          <maxHistory>${fileLifetime}</maxHistory>
-        </rollingPolicy>
+  <springProperty name="main-log-filename" source="logging.main.name"/>
+  <springProperty name="main-log-lifetime" source="logging.main.max-history"/>
 
-        <encoder>
-          <pattern>${FILE_LOG_PATTERN}</pattern>
-        </encoder>
-      </appender>
-    </then>
-  </if>
+  <springProperty name="messaging-log-filename" source="logging.msg.name"/>
+  <springProperty name="messaging-log-lifetime" source="logging.msg.max-history"/>
+
+  <appender name="MAIN_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${filePath}/${main-log-filename}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${filePath}/${main-log-filename}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>${main-log-lifetime}</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="MSG_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${filePath}/${messaging-log-filename}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${filePath}/${messaging-log-filename}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>${messaging-log-lifetime}</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
@@ -35,11 +44,11 @@
 
   <root>
     <appender-ref ref="STDOUT"/>
-    <if condition='property("fileEnabled").equals("true")'>
-      <then>
-        <appender-ref ref="FILE"/>
-      </then>
-    </if>
+    <appender-ref ref="MAIN_LOG"/>
   </root>
+
+  <logger name="com.alexsoft.smarthouse.messaging" additivity="false">
+    <appender-ref ref="MSG_LOG"/>
+  </logger>
 
 </configuration>
