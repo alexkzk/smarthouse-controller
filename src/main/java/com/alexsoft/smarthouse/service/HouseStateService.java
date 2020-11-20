@@ -25,6 +25,7 @@ import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_PRODUCER_TIMEZONE_ID;
@@ -34,6 +35,9 @@ import static java.util.stream.Collectors.toList;
 public class HouseStateService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+
+    @Value("${mqtt.msgSavingEnabled}")
+    private Boolean msgSavingEnabled;
 
     private final HouseStateRepository houseStateRepository;
     private final HouseStateToDtoMapper houseStateToDtoMapper;
@@ -45,7 +49,10 @@ public class HouseStateService {
     }
 
     public HouseState save(HouseState houseState) {
-        return houseStateRepository.saveAndFlush(houseState);
+        if (!houseState.isNull() && msgSavingEnabled) {
+            return houseStateRepository.saveAndFlush(houseState);
+        }
+        return null;
     }
 
     public Integer getFiveMinuteAvgIaq() {

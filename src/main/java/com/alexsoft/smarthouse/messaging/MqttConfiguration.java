@@ -66,13 +66,7 @@ public class MqttConfiguration {
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
             LOGGER.debug("Received a message {}", message);
-            HouseState houseState = houseStateMsgConverter.toEntity(message);
-
-            if (!houseState.isNull() && msgSavingEnabled) {
-                houseStateService.save(houseState);
-            } else if (!houseState.isNull()) {
-                LOGGER.debug("Skipping saving");
-            }
+            houseStateService.save(houseStateMsgConverter.toEntity(message));
         }).get();
     }
 
