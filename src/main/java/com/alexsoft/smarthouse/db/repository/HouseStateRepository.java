@@ -12,7 +12,6 @@ import java.util.List;
 public interface HouseStateRepository extends JpaRepository<HouseState, Integer> {
 
     @Query("from HouseState where messageReceived > :localDateTime")
-    @Cacheable(value = "states")
-    public List<HouseState> findAfter(@Param("localDateTime") LocalDateTime localDateTime);
+    List<HouseState> findAfter(@Param("localDateTime") LocalDateTime localDateTime);
 
 }

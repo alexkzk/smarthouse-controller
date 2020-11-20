@@ -73,17 +73,19 @@ public class HouseStateService {
     public List<HouseStateDto> aggregateOnInterval(
             Integer aggregateIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {
+        LOGGER.debug("Aggregating houseStates on {} min interval, requested period: {} days, {} hours, {} minutes",
+            aggregateIntervalMinutes, days, hours, minutes);
         long startMillis = System.currentTimeMillis();
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
         List<HouseState> measures = houseStateRepository.findAfter(interval);
-        LOGGER.debug("Started averaging of {} measures, fetching time was {}ms, nested measures: {}",
-                measures.size(), System.currentTimeMillis() - startMillis,
-                measures.stream().flatMap(HouseState::getAllMeasures).count()
+        LOGGER.debug("Fetched {} houseStates, measures: {}, time: {} ms",
+            measures.size(), measures.stream().flatMap(HouseState::getAllMeasures).count(),
+            System.currentTimeMillis() - startMillis
         );
-        startMillis = System.currentTimeMillis();
+        long aggregationStart = System.currentTimeMillis();
         List<HouseStateDto> houseStateDtos = measures.stream().collect(
                 Collectors.groupingBy(
                         houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregateIntervalMinutes),
@@ -92,7 +94,8 @@ public class HouseStateService {
                 )
         ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey()))
                 .map(Entry::getValue).sorted().map(houseStateToDtoMapper::toDto).collect(toList());
-        LOGGER.debug("Averaging completed, time {}", System.currentTimeMillis() - startMillis);
+        LOGGER.debug("Aggregating completed, aggregation time: {} ms, total: {} ms", System.currentTimeMillis() - aggregationStart,
+            System.currentTimeMillis() - startMillis);
         return houseStateDtos;
     }
 

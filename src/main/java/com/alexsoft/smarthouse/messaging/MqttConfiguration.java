@@ -5,6 +5,7 @@ import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,13 +21,12 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import java.util.UUID;
 
 @Configuration
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
 
     private final HouseStateMsgConverter houseStateMsgConverter;
-    private final HouseStateRepository houseStateRepository;
     private final HouseStateService houseStateService;
 
     @Value("tcp://${mqtt.server}:${mqtt.port}")
