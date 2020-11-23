@@ -1,6 +1,7 @@
 package com.alexsoft.smarthouse.dto;
 
 import com.alexsoft.smarthouse.db.entity.MeasurePlace;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +24,7 @@ public class AirQualityIndicationDto {
     private Float co2;
     private Float voc;
 
+    @JsonIgnore
     public Integer getIntGasResistance() {
         return gasResistance == null ? null : (int) Math.round(gasResistance / 1000);
     }

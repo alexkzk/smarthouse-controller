@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alexsoft.smarthouse.db.entity.MeasurePlace;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 @Data
@@ -22,21 +23,25 @@ public class HouseStateDto {
     @lombok.Builder.Default
     private List<WindIndicationsDto> windIndications = new ArrayList<>();
 
+    @JsonIgnore
     public HeatIndicationDto getOutdoorHeat() {
         return heatIndications.stream().filter(hi -> hi.getMeasurePlace() == MeasurePlace.BALCONY).findFirst()
             .orElse(HeatIndicationDto.builder().build());
     }
 
+    @JsonIgnore
     public HeatIndicationDto getAirportHeat() {
         return heatIndications.stream().filter(hi -> hi.getMeasurePlace() == MeasurePlace.CHERNIVTSI_AIRPORT).findFirst()
                 .orElse(HeatIndicationDto.builder().build());
     }
 
+    @JsonIgnore
     public AirQualityIndicationDto getOutdoorAqi() {
         return airQualities.stream().filter(aqi -> aqi.getMeasurePlace() == MeasurePlace.OUTDOOR).findFirst()
                 .orElse(AirQualityIndicationDto.builder().build());
     }
 
+    @JsonIgnore
     public WindIndicationsDto getWindIndications() {
         return windIndications.stream().findFirst().orElse(WindIndicationsDto.builder().build());
     }
