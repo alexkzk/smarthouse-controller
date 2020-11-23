@@ -77,7 +77,11 @@ public class HouseStateMsgConverter {
             airQualities.add(airQualityIndicationTerrace);
         }
         AirQualityIndication airQualityIndicationChildrens = AirQualityIndication.builder().measurePlace(CHILDRENS)
-            .iaq(values.get("childrenIaq")).co2(values.get("childrenCo2")).voc(values.get("childrenVoc")).build();
+            .staticIaq(values.get("childrenSIaq"))
+            .iaq(values.get("childrenIaq"))
+            .iaqAccuracy(values.get("childrenIaqAccuracy") != null ? values.get("childrenIaqAccuracy").intValue() : null)
+            .gasResistance(values.get("gasResistance"))
+            .co2(values.get("childrenCo2")).voc(values.get("childrenVoc")).build();
         if(!airQualityIndicationChildrens.isNull()) {
             airQualities.add(airQualityIndicationChildrens);
         }

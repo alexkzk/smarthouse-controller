@@ -3,14 +3,12 @@ package com.alexsoft.smarthouse.service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
 import com.alexsoft.smarthouse.db.entity.HeatIndication;
@@ -56,7 +54,7 @@ public class HouseStateService {
     }
 
     public Integer getFiveMinuteAvgIaq() {
-        Float iaq = houseStateToDtoMapper.toDto(avgWithinInterval(5, 0, 0)).getOutdoorAqi().getIaq();
+        Float iaq = houseStateToDtoMapper.toDto(avgWithinInterval(5, 0, 0)).getOutdoorAqi().getStaticIaq();
         return iaq == null || Float.isNaN(iaq) ? 0 : iaq.intValue();
     }
 
@@ -132,7 +130,10 @@ public class HouseStateService {
                     .pm10((float) aqis.stream().map(AirQualityIndication::getPm10).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
                     .co2((float) aqis.stream().map(AirQualityIndication::getCo2).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
                     .iaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .maxIaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).max().orElse(Double.NaN))
+                    .gasResistance((float) aqis.stream().map(AirQualityIndication::getGasResistance).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .iaqAccuracy( (int) Math.round(aqis.stream().map(AirQualityIndication::getIaqAccuracy).filter(Objects::nonNull).mapToInt(Integer::valueOf).average().orElse(Float.NaN)))
+                    .staticIaq((float) aqis.stream().map(AirQualityIndication::getStaticIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
+                    .maxIaq((float) aqis.stream().map(AirQualityIndication::getStaticIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).max().orElse(Double.NaN))
                     .voc((float) aqis.stream().map(AirQualityIndication::getVoc).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
                     .build();
 
