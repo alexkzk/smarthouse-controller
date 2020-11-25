@@ -20,7 +20,9 @@ import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
 import com.alexsoft.smarthouse.utils.DateUtils;
+import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,23 +32,20 @@ import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_PRODUCER
 import static java.util.stream.Collectors.toList;
 
 @Service
+@RequiredArgsConstructor
 public class HouseStateService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
 
     @Value("${mqtt.msgSavingEnabled}")
-    private Boolean msgSavingEnabled;
-
+    private final Boolean msgSavingEnabled;
     private final HouseStateRepository houseStateRepository;
     private final HouseStateToDtoMapper houseStateToDtoMapper;
+    private final HouseStateMsgConverter houseStateMsgConverter;
     private final TempUtils tempUtils = new TempUtils();
 
-    public HouseStateService(HouseStateRepository houseStateRepository, HouseStateToDtoMapper houseStateToDtoMapper) {
-        this.houseStateRepository = houseStateRepository;
-        this.houseStateToDtoMapper = houseStateToDtoMapper;
-    }
-
-    public HouseState save(HouseState houseState) {
+    public HouseState save(String msg) {
+        HouseState houseState = houseStateMsgConverter.toEntity(msg);
         if (!houseState.isNull() && msgSavingEnabled) {
             return houseStateRepository.saveAndFlush(houseState);
         }

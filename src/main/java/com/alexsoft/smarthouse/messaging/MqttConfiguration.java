@@ -1,10 +1,9 @@
 package com.alexsoft.smarthouse.messaging;
 
-import com.alexsoft.smarthouse.db.entity.HouseState;
-import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
+import java.util.UUID;
+
+import com.alexsoft.smarthouse.service.HouseState2Service;
 import com.alexsoft.smarthouse.service.HouseStateService;
-import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
@@ -18,15 +17,13 @@ import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
 import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 
-import java.util.UUID;
-
 @Configuration
 @RequiredArgsConstructor
 public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
 
-    private final HouseStateMsgConverter houseStateMsgConverter;
+    private final HouseState2Service houseState2Service;
     private final HouseStateService houseStateService;
 
     @Value("tcp://${mqtt.server}:${mqtt.port}")
@@ -43,9 +40,6 @@ public class MqttConfiguration {
 
     @Value("${mqtt.password}")
     private String mqttPassword;
-
-    @Value("${mqtt.msgSavingEnabled}")
-    private Boolean msgSavingEnabled;
 
     @Bean
     public IntegrationFlow mqttInbound() {
@@ -66,7 +60,11 @@ public class MqttConfiguration {
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
             LOGGER.debug("Received a message {}", message);
-            houseStateService.save(houseStateMsgConverter.toEntity(message));
+            if (message.contains("{")) {
+                houseState2Service.save(message);
+            } else {
+                houseStateService.save(message);
+            }
         }).get();
     }
 

@@ -1,8 +1,14 @@
-package com.alexsoft.smarthouse.messaging.model;
+package com.alexsoft.smarthouse.db.entityv2;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -10,27 +16,37 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
+import lombok.ToString;
 
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
 @Data
-public class HouseStateMessage {
+@Entity
+@Table(schema = "main")
+public class HouseState2 {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "house_state2_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "house_state2_indication_sq",
+        name = "house_state2_indication_sq", allocationSize = 1)
+    @ToString.Include
+    private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime messageIssued;
 
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime messageReceived = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
+    private LocalDateTime messageReceived;
 
     private String publisherId;
 
     private String measurePlace;
 
+    @Embedded
     private Air air;
 
 }

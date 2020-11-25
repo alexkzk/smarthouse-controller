@@ -12,7 +12,9 @@
         "bme680Co2": 617.0,
         "bme680Voc": 0.78,
         "bme680IaqAccuracy": 3,
-        "bme680StaticIaq": 92.0
+        "bme680StaticIaq": 92.0,
+        "bme680RawTemp": 21.3,
+        "bme680RawRh": 15
       }
     },
     "temp": {

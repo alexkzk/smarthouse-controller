@@ -9,6 +9,6 @@ public class Meta {
     private Double bme680Voc;
     private Integer bme680IaqAccuracy;
     private Integer bme680StaticIaq;
-    private Double rawTemp;
-    private Integer rawHumid;
+    private Double bme680RawTemp;
+    private Integer bme680RawRh;
 }

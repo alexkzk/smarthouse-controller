@@ -5,6 +5,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    hibernate:
+      ddl-auto: validate
 logging:
   level:
     org:

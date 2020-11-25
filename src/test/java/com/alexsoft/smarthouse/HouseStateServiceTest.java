@@ -39,7 +39,7 @@ public class HouseStateServiceTest {
     void setup() {
         MockitoAnnotations.initMocks(this);
         when(houseStateToDtoMapper.toDto(any())).thenAnswer(i -> new HouseStateToDtoMapperImpl().toDto((HouseState) i.getArguments()[0]));
-        houseStateService = new HouseStateService(houseStateRepository, houseStateToDtoMapper);
+        houseStateService = new HouseStateService(null, houseStateRepository, houseStateToDtoMapper, null);
     }
 
     @Test
