@@ -1,7 +1,6 @@
 package com.alexsoft.smarthouse.db.repository;
 
-import com.alexsoft.smarthouse.db.entity.HouseState;
-import org.springframework.cache.annotation.Cacheable;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

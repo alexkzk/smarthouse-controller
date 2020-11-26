@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
-import com.alexsoft.smarthouse.db.entity.HeatIndication;
-import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.v1.AirQualityIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
 import org.junit.Test;
 
-import static com.alexsoft.smarthouse.db.entity.MeasurePlace.LIVING_ROOM;
-import static com.alexsoft.smarthouse.db.entity.MeasurePlace.TERRACE_ROOF;
-import static com.alexsoft.smarthouse.db.entity.MeasurePlace.TERRACE_WINDOW;
+import static com.alexsoft.smarthouse.db.entity.v1.MeasurePlace.LIVING_ROOM;
+import static com.alexsoft.smarthouse.db.entity.v1.MeasurePlace.TERRACE_ROOF;
+import static com.alexsoft.smarthouse.db.entity.v1.MeasurePlace.TERRACE_WINDOW;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HouseStateBuilderTest {

@@ -3,7 +3,7 @@ package com.alexsoft.smarthouse;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
 import com.alexsoft.smarthouse.utils.SerializationUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import one.util.streamex.StreamEx;

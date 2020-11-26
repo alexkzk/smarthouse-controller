@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse.mappers;
 
-import com.alexsoft.smarthouse.db.entity.HeatIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
 import com.alexsoft.smarthouse.dto.HeatIndicationDto;
 import com.alexsoft.smarthouse.dto.HeatIndicationDto.HeatIndicationDtoBuilder;
 import com.alexsoft.smarthouse.dto.mapper.TempDtoMapper;

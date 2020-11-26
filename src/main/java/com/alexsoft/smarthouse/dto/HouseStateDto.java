@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alexsoft.smarthouse.db.entity.MeasurePlace;
+import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 

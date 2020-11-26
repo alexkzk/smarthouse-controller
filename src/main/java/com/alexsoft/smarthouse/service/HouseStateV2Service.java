@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.db.entityv2.HouseState2;
-import com.alexsoft.smarthouse.db.repository.HouseState2Repository;
+import com.alexsoft.smarthouse.db.entity.v2.HouseStateV2;
+import com.alexsoft.smarthouse.db.repository.HouseStateV2Repository;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateMessageMapper;
 import com.alexsoft.smarthouse.messaging.model.HouseStateMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,23 +14,23 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class HouseState2Service {
+public class HouseStateV2Service {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Logger LOGGER = LoggerFactory.getLogger(HouseState2Service.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateV2Service.class);
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
-    private final HouseState2Repository houseState2Repository;
+    private final HouseStateV2Repository houseStateV2Repository;
     private final HouseStateMessageMapper houseStateMessageMapper;
 
-    public HouseState2 save(String msg) {
+    public HouseStateV2 save(String msg) {
         if (msgSavingEnabled) {
             HouseStateMessage houseStateMessage;
             try {
                 houseStateMessage = OBJECT_MAPPER.readValue(msg, HouseStateMessage.class);
-                HouseState2 houseState2 = houseStateMessageMapper.toHouseState2(houseStateMessage);
-                return houseState2Repository.saveAndFlush(houseState2);
+                HouseStateV2 houseStateV2 = houseStateMessageMapper.toHouseState2(houseStateMessage);
+                return houseStateV2Repository.saveAndFlush(houseStateV2);
             } catch (JsonProcessingException e) {
                 LOGGER.error(e.getMessage(), e);
             }

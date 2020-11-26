@@ -14,9 +14,9 @@
 		<th> AH </th>
 		<th> IAQ </th>
 		<th> SIAQ </th>
+		<th> RIAQ </th>
 		<th> IAQ accuracy </th>
-		<th> Gas Resistance </th>
-		<th> MAX IAQ </th>
+		<th> MAX SIAQ </th>
 		<th> PM 2.5 </th>
 		<th> PM 10 </th>
 		<th> CO2 </th>
@@ -37,11 +37,11 @@
 		<td><span th:text="${hst.getOutdoorHeat().getTempCelsius()}"> Temp </span></td>
 		<td><span th:text="${hst.getOutdoorHeat().getRelativeHumidity()}"> RH </span></td>
 		<td><span th:text="${hst.getOutdoorHeat().getAbsoluteHumidity()}"> AH </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getIaq()}"> IAQ </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getStaticIaq()}"> SIAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getIaqInt()}"> IAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getStaticIaqInt()}"> SIAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getRawIaq()}"> RIAQ </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getIaqAccuracy()}"> IAQ accuracy </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getIntGasResistance()}"> Gas Resistance </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getMaxIaq()}"> MAX IAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getMaxIaq()}"> MAX SIAQ </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getPm25()}"> PM 2.5 </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getPm10()}"> PM 10 </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getCo2()}"> CO2 </span></td>
@@ -65,9 +65,9 @@
 		<th> AH </th>
 		<th> IAQ </th>
 		<th> SIAQ </th>
+		<th> RIAQ </th>
 		<th> IAQ accuracy </th>
-		<th> Gas Resistance </th>
-		<th> MAX IAQ </th>
+		<th> MAX SIAQ </th>
 		<th> PM 2.5 </th>
 		<th> PM 10 </th>
 		<th> CO2 </th>
@@ -88,11 +88,11 @@
 		<td><span th:text="${hst.getOutdoorHeat().getTempCelsius()}"> Temp </span></td>
 		<td><span th:text="${hst.getOutdoorHeat().getRelativeHumidity()}"> RH </span></td>
 		<td><span th:text="${hst.getOutdoorHeat().getAbsoluteHumidity()}"> AH </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getIaq()}"> IAQ </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getStaticIaq()}"> SIAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getIaqInt()}"> IAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getStaticIaqInt()}"> SIAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getRawIaq()}"> RIAQ </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getIaqAccuracy()}"> IAQ accuracy </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getIntGasResistance()}"> Gas Resistance </span></td>
-		<td><span th:text="${hst.getOutdoorAqi().getMaxIaq()}"> MAX IAQ </span></td>
+		<td><span th:text="${hst.getOutdoorAqi().getMaxIaq()}"> MAX SIAQ </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getPm25()}"> PM 2.5 </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getPm10()}"> PM 10 </span></td>
 		<td><span th:text="${hst.getOutdoorAqi().getCo2()}"> CO2 </span></td>

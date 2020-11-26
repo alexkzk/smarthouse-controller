@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.entity;
+package com.alexsoft.smarthouse.db.entity.v1;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;

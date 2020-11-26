@@ -10,12 +10,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
-import com.alexsoft.smarthouse.db.entity.HeatIndication;
-import com.alexsoft.smarthouse.db.entity.HouseState;
-import com.alexsoft.smarthouse.db.entity.Measure;
-import com.alexsoft.smarthouse.db.entity.MeasurePlace;
-import com.alexsoft.smarthouse.db.entity.WindIndication;
+import com.alexsoft.smarthouse.db.entity.v1.AirQualityIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
+import com.alexsoft.smarthouse.db.entity.v1.Measure;
+import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
+import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;

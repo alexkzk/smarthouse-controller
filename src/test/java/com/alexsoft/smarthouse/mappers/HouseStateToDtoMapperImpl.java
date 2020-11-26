@@ -3,10 +3,10 @@ package com.alexsoft.smarthouse.mappers;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alexsoft.smarthouse.db.entity.AirQualityIndication;
-import com.alexsoft.smarthouse.db.entity.HeatIndication;
-import com.alexsoft.smarthouse.db.entity.HouseState;
-import com.alexsoft.smarthouse.db.entity.WindIndication;
+import com.alexsoft.smarthouse.db.entity.v1.AirQualityIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
+import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
 import com.alexsoft.smarthouse.dto.AirQualityIndicationDto;
 import com.alexsoft.smarthouse.dto.HeatIndicationDto;
 import com.alexsoft.smarthouse.dto.HouseStateDto;

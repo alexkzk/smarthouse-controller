@@ -1,7 +1,5 @@
 package com.alexsoft.smarthouse.utils;
 
-import com.alexsoft.smarthouse.db.entity.HouseState;
-
 import java.time.LocalDateTime;
 
 public class DateUtils {

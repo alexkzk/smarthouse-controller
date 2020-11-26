@@ -3,9 +3,8 @@ package com.alexsoft.smarthouse;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
 import org.apache.commons.collections4.ListUtils;
 import org.junit.jupiter.api.Test;
 

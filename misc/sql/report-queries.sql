@@ -19,8 +19,20 @@ order by msg_received DESC;
 select
         date_trunc('hour', message_received) + (FLOOR(DATE_PART('minute', message_received) / :interval_min ) * :interval_min || 'minutes')::interval as msg_received,
         concat(air_quality_indication.measure_place, '/', (CAST(count(*) as text))),
-        round(CAST(float8(avg(air_quality_indication.iaq)) as numeric), 0)      as iaq$avg,
-        round(CAST(float8(max(air_quality_indication.iaq)) as numeric), 0)      as iaq$max,
+        round(CAST(float8(avg(air_quality_indication.iaq)) as numeric), 0)      as iaqavg,
+        round(CAST(float8(max(air_quality_indication.iaq)) as numeric), 0)      as iaqmax,
+        round(CAST(float8(
+                    round(CAST(float8(max(air_quality_indication.iaq)) as numeric), 0)
+                /
+                    round(CAST(float8(avg(air_quality_indication.iaq)) as numeric), 0)
+            ) as numeric), 2)      as iaq_ratio,
+        round(CAST(float8(avg(air_quality_indication.gas_resistance)) as numeric), 0) / 1000     as gas_resistance2,
+        round(CAST(float8(
+            (700 - round(CAST(float8(avg(air_quality_indication.gas_resistance)) as numeric), 0) / 1000) / 3
+            ) as numeric), 0)     as raw_iaq_avg,
+        round(CAST(float8(
+                    (700 - round(CAST(float8(min(air_quality_indication.gas_resistance)) as numeric), 0) / 1000) / 3
+            ) as numeric), 0)     as raw_iaq_max,
         round(CAST(float8(avg(air_quality_indication.pm25)) as numeric), 1)     as pm25,
         round(CAST(float8(avg(air_quality_indication.pm10)) as numeric), 1)     as pm10,
         round(CAST(float8(avg(air_quality_indication.co2)) as numeric), 0)      as co2,

@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.entityv2;
+package com.alexsoft.smarthouse.db.entity.v2;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

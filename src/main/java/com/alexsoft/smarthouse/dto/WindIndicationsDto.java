@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse.dto;
 
-import com.alexsoft.smarthouse.db.entity.MeasurePlace;
+import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

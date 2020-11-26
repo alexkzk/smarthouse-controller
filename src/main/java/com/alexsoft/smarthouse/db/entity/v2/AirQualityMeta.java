@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.entityv2;
+package com.alexsoft.smarthouse.db.entity.v2;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,7 +10,10 @@ import javax.persistence.Table;
 import lombok.Data;
 import lombok.ToString;
 
-
+/**
+ * Represents air quality sensors' metadata information that may help to analyze the environmental situation better
+ * @author Author
+ */
 @Data
 @Entity
 @Table(name = "air_quality_meta", schema = "main")

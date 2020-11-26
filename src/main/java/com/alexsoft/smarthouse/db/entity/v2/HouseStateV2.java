@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.entityv2;
+package com.alexsoft.smarthouse.db.entity.v2;
 
 import java.time.LocalDateTime;
 
@@ -22,8 +22,8 @@ import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
 @Data
 @Entity
-@Table(schema = "main")
-public class HouseState2 {
+@Table(name = "house_state_v2", schema = "main")
+public class HouseStateV2 {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "house_state2_indication_sq")

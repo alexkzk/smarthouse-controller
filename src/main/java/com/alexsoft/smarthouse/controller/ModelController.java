@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class ModelController {
     private final HouseStateService houseStateService;
 
-    @GetMapping("/aqi")
-    public String index(Model model) {
+    @GetMapping("/average")
+    public String averagedMeasures(Model model) {
         List<HouseStateDto> hourlyList = houseStateService.aggregateOnInterval(60, null, null, 3);
         List<HouseStateDto> minutelyList = houseStateService.aggregateOnInterval(5, null, 1, null);
         model.addAttribute("hstates", hourlyList);

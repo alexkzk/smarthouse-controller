@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.entity;
+package com.alexsoft.smarthouse.db.entity.v1;
 
 
 import java.time.LocalDateTime;
@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;

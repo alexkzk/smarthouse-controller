@@ -11,7 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.alexsoft.smarthouse.db.entity.*;
+import com.alexsoft.smarthouse.db.entity.v1.AirQualityIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
+import com.alexsoft.smarthouse.db.entity.v1.HouseState;
+import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
+import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
 import com.alexsoft.smarthouse.model.Metar;
 import com.alexsoft.smarthouse.service.MetarReceiver;
 import lombok.AllArgsConstructor;
@@ -19,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import static com.alexsoft.smarthouse.db.entity.MeasurePlace.*;
+import static com.alexsoft.smarthouse.db.entity.v1.MeasurePlace.*;
 
 @Service
 @AllArgsConstructor
