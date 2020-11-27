@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.controller;
+package com.alexsoft.smarthouse.controller.presentation;
 
 import java.util.List;
 
@@ -11,13 +11,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 @AllArgsConstructor
-public class ModelController {
+public class HouseStatePresentationController {
+
     private final HouseStateService houseStateService;
 
     @GetMapping("/average")
     public String averagedMeasures(Model model) {
-        List<HouseStateDto> hourlyList = houseStateService.aggregateOnInterval(60, null, null, 3);
-        List<HouseStateDto> minutelyList = houseStateService.aggregateOnInterval(5, null, 1, null);
+        List<HouseStateDto> hourlyList = houseStateService.hourlyAggregatedMeasures();
+        List<HouseStateDto> minutelyList = houseStateService.minutelyAggregatedMeasures();
         model.addAttribute("hstates", hourlyList);
         model.addAttribute("mstates", minutelyList);
         return "average";

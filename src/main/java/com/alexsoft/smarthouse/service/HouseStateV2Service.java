@@ -3,7 +3,7 @@ package com.alexsoft.smarthouse.service;
 import com.alexsoft.smarthouse.db.entity.v2.HouseStateV2;
 import com.alexsoft.smarthouse.db.repository.HouseStateV2Repository;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateMessageMapper;
-import com.alexsoft.smarthouse.messaging.model.HouseStateMessage;
+import com.alexsoft.smarthouse.model.messaging.HouseStateMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.messaging.model;
+package com.alexsoft.smarthouse.model.messaging;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.model.Metar;
+import com.alexsoft.smarthouse.model.metar.Metar;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;

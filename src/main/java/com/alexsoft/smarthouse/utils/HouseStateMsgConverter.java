@@ -16,7 +16,7 @@ import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
 import com.alexsoft.smarthouse.db.entity.v1.HouseState;
 import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
 import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
-import com.alexsoft.smarthouse.model.Metar;
+import com.alexsoft.smarthouse.model.metar.Metar;
 import com.alexsoft.smarthouse.service.MetarReceiver;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;

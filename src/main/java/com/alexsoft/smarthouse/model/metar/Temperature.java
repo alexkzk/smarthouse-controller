@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model;
+package com.alexsoft.smarthouse.model.metar;
 
 import java.util.HashMap;
 import java.util.Map;

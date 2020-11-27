@@ -1,7 +1,6 @@
 
-package com.alexsoft.smarthouse.model;
+package com.alexsoft.smarthouse.model.metar;
 
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -28,14 +27,14 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "repr",
-    "dt"
+    "value"
 })
-public class Time {
+public class WxCode {
 
     @JsonProperty("repr")
     public String repr;
-    @JsonProperty("dt")
-    public ZonedDateTime issueDateTime;
+    @JsonProperty("value")
+    public String value;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

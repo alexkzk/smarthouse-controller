@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model;
+package com.alexsoft.smarthouse.model.metar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,23 +27,17 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "repr",
-    "type",
-    "altitude",
-    "modifier",
-    "direction"
+    "value",
+    "spoken"
 })
-public class Cloud {
+public class Dewpoint {
 
     @JsonProperty("repr")
     public String repr;
-    @JsonProperty("type")
-    public String type;
-    @JsonProperty("altitude")
-    public Integer altitude;
-    @JsonProperty("modifier")
-    public Object modifier;
-    @JsonProperty("direction")
-    public Object direction;
+    @JsonProperty("value")
+    public Integer value;
+    @JsonProperty("spoken")
+    public String spoken;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

@@ -74,6 +74,14 @@ public class HouseStateService {
         return averageList(findHouseStates(minutes, hours, days));
     }
 
+    public List<HouseStateDto> minutelyAggregatedMeasures() {
+        return aggregateOnInterval(5, null, 1, null);
+    }
+
+    public List<HouseStateDto> hourlyAggregatedMeasures() {
+        return aggregateOnInterval(60, null, null, 3);
+    }
+
     public List<HouseStateDto> aggregateOnInterval(
             Integer aggregateIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {

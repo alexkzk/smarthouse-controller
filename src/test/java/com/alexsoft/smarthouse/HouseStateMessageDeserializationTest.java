@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.messaging.model.HouseStateMessage;
+import com.alexsoft.smarthouse.model.messaging.HouseStateMessage;
 import com.alexsoft.smarthouse.utils.SerializationUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Test;

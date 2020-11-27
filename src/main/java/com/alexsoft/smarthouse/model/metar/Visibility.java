@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model;
+package com.alexsoft.smarthouse.model.metar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,15 +26,18 @@ import lombok.ToString;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "dewpoint_decimal",
-    "temperature_decimal"
+    "repr",
+    "value",
+    "spoken"
 })
-public class RemarksInfo {
+public class Visibility {
 
-    @JsonProperty("dewpoint_decimal")
-    public DewpointDecimal dewpointDecimal;
-    @JsonProperty("temperature_decimal")
-    public TemperatureDecimal temperatureDecimal;
+    @JsonProperty("repr")
+    public String repr;
+    @JsonProperty("value")
+    public Integer value;
+    @JsonProperty("spoken")
+    public String spoken;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

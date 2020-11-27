@@ -1,6 +1,7 @@
 
-package com.alexsoft.smarthouse.model;
+package com.alexsoft.smarthouse.model.metar;
 
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -26,18 +27,12 @@ import lombok.ToString;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "repr",
-    "value",
-    "spoken"
+    "timestamp"
 })
-public class Visibility {
+public class Meta {
 
-    @JsonProperty("repr")
-    public String repr;
-    @JsonProperty("value")
-    public Integer value;
-    @JsonProperty("spoken")
-    public String spoken;
+    @JsonProperty("timestamp")
+    public ZonedDateTime timestamp;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

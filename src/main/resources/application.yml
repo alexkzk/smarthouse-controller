@@ -5,9 +5,9 @@ server:
 spring:
   application:
     name: smarthouse
-  #  liquibase:
-  #    liquibase-schema: liquibase
-  #    change-log: classpath:db/changelog.xml
+#    liquibase: # todo temporary disabled until the database schema is finalized
+#      liquibase-schema: liquibase
+#      change-log: classpath:db/changelog.xml
   jpa:
     hibernate:
       ddl-auto: validate

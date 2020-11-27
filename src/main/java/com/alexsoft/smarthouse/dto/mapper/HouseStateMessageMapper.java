@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse.dto.mapper;
 
 import com.alexsoft.smarthouse.db.entity.v2.HouseStateV2;
-import com.alexsoft.smarthouse.messaging.model.HouseStateMessage;
+import com.alexsoft.smarthouse.model.messaging.HouseStateMessage;
 import org.mapstruct.Mapper;
 
 @Mapper
