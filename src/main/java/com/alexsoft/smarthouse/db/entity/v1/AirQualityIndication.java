@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import static com.alexsoft.smarthouse.utils.RoundingUtils.roundFloat;
+
 @Entity
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -30,15 +32,15 @@ public class AirQualityIndication extends Measure {
     ) {
         super(measurePlace, houseState);
         this.id = id;
-        this.pm25 = pm25 == null || Float.isNaN(pm25) ? null : (float) Math.round(pm25 * PM_ACCURACY) / PM_ACCURACY;
-        this.pm10 = pm10 == null || Float.isNaN(pm10) ? null : (float) Math.round(pm10 * PM_ACCURACY) / PM_ACCURACY;
-        this.staticIaq = staticIaq == null || Float.isNaN(staticIaq) ? null : (float) Math.round(staticIaq * IAQ_ACCURACY) / IAQ_ACCURACY;
-        this.iaq = iaq == null || Float.isNaN(iaq) ? null : (float) Math.round(iaq * IAQ_ACCURACY) / IAQ_ACCURACY;
-        this.gasResistance = gasResistance == null || Float.isNaN(gasResistance) ? null : (float) Math.round(gasResistance * IAQ_ACCURACY) / IAQ_ACCURACY;
+        this.pm25 = roundFloat(pm25, PM_ACCURACY);
+        this.pm10 = roundFloat(pm10, PM_ACCURACY);
+        this.staticIaq = roundFloat(staticIaq, IAQ_ACCURACY);
+        this.iaq = roundFloat(iaq, IAQ_ACCURACY);
+        this.gasResistance = roundFloat(gasResistance, IAQ_ACCURACY);
         this.iaqAccuracy = iaqAccuracy;
-        this.maxIaq = maxIaq == null || Float.isNaN(maxIaq) ? null : (float) Math.round(maxIaq * IAQ_ACCURACY) / IAQ_ACCURACY;
-        this.co2 = co2 == null || Float.isNaN(co2) ? null : (float) Math.round(co2 * CO2_ACCURACY) / CO2_ACCURACY;
-        this.voc = voc == null || Float.isNaN(voc) ? null : (float) Math.round(voc * VOC_ACCURACY) / VOC_ACCURACY;
+        this.maxIaq = roundFloat(maxIaq, IAQ_ACCURACY);
+        this.co2 = roundFloat(co2, CO2_ACCURACY);
+        this.voc = roundFloat(voc, VOC_ACCURACY);
     }
 
     @Id
