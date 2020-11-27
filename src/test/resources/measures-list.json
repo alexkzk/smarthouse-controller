@@ -1,7 +1,7 @@
 [ {
   "id" : 730,
-  "messageIssued" : "2020-10-29T16:53:59.000",
-  "messageReceived" : "2020-10-29T16:53:59.570",
+  "messageIssued" : "2020-10-29T16:53:59",
+  "messageReceived" : "2020-10-29T16:53:59",
   "airQualities" : [ {
     "id" : 599,
     "measurePlace" : "TERRACE_ROOF",
@@ -27,8 +27,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 731,
-  "messageIssued" : "2020-10-29T16:54:59.000",
-  "messageReceived" : "2020-10-29T16:54:59.577",
+  "messageIssued" : "2020-10-29T16:54:59",
+  "messageReceived" : "2020-10-29T16:54:59",
   "airQualities" : [ {
     "id" : 600,
     "measurePlace" : "TERRACE_ROOF",
@@ -54,8 +54,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 732,
-  "messageIssued" : "2020-10-29T16:55:59.000",
-  "messageReceived" : "2020-10-29T16:55:59.583",
+  "messageIssued" : "2020-10-29T16:55:59",
+  "messageReceived" : "2020-10-29T16:55:59",
   "airQualities" : [ {
     "id" : 601,
     "measurePlace" : "TERRACE_ROOF",
@@ -81,8 +81,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 733,
-  "messageIssued" : "2020-10-29T16:56:59.000",
-  "messageReceived" : "2020-10-29T16:56:59.888",
+  "messageIssued" : "2020-10-29T16:56:59",
+  "messageReceived" : "2020-10-29T16:56:59",
   "airQualities" : [ {
     "id" : 602,
     "measurePlace" : "TERRACE_ROOF",
@@ -108,8 +108,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 734,
-  "messageIssued" : "2020-10-29T16:58:59.000",
-  "messageReceived" : "2020-10-29T17:04:22.021",
+  "messageIssued" : "2020-10-29T16:58:59",
+  "messageReceived" : "2020-10-29T17:04:22",
   "airQualities" : [ {
     "id" : 603,
     "measurePlace" : "TERRACE_ROOF",
@@ -135,8 +135,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 735,
-  "messageIssued" : "2020-10-29T17:23:59.000",
-  "messageReceived" : "2020-10-29T17:24:00.694",
+  "messageIssued" : "2020-10-29T17:23:59",
+  "messageReceived" : "2020-10-29T17:24:00",
   "airQualities" : [ {
     "id" : 604,
     "measurePlace" : "TERRACE_ROOF",
@@ -162,8 +162,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 736,
-  "messageIssued" : "2020-10-29T17:24:59.000",
-  "messageReceived" : "2020-10-29T17:25:32.300",
+  "messageIssued" : "2020-10-29T17:24:59",
+  "messageReceived" : "2020-10-29T17:25:32",
   "airQualities" : [ {
     "id" : 605,
     "measurePlace" : "TERRACE_ROOF",
@@ -189,8 +189,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 737,
-  "messageIssued" : "2020-10-29T17:28:59.000",
-  "messageReceived" : "2020-10-29T17:29:43.823",
+  "messageIssued" : "2020-10-29T17:28:59",
+  "messageReceived" : "2020-10-29T17:29:43",
   "airQualities" : [ {
     "id" : 606,
     "measurePlace" : "TERRACE_ROOF",
@@ -216,8 +216,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 738,
-  "messageIssued" : "2020-10-29T17:29:59.000",
-  "messageReceived" : "2020-10-29T17:30:00.257",
+  "messageIssued" : "2020-10-29T17:29:59",
+  "messageReceived" : "2020-10-29T17:30:00",
   "airQualities" : [ {
     "id" : 607,
     "measurePlace" : "TERRACE_ROOF",
@@ -243,8 +243,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 739,
-  "messageIssued" : "2020-10-29T17:30:59.000",
-  "messageReceived" : "2020-10-29T17:31:00.240",
+  "messageIssued" : "2020-10-29T17:30:59",
+  "messageReceived" : "2020-10-29T17:31:00",
   "airQualities" : [ {
     "id" : 608,
     "measurePlace" : "TERRACE_ROOF",
@@ -270,8 +270,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 740,
-  "messageIssued" : "2020-10-29T17:31:59.000",
-  "messageReceived" : "2020-10-29T17:32:00.272",
+  "messageIssued" : "2020-10-29T17:31:59",
+  "messageReceived" : "2020-10-29T17:32:00",
   "airQualities" : [ {
     "id" : 609,
     "measurePlace" : "TERRACE_ROOF",
@@ -297,8 +297,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 741,
-  "messageIssued" : "2020-10-29T17:32:59.000",
-  "messageReceived" : "2020-10-29T17:33:00.270",
+  "messageIssued" : "2020-10-29T17:32:59",
+  "messageReceived" : "2020-10-29T17:33:00",
   "airQualities" : [ {
     "id" : 610,
     "measurePlace" : "TERRACE_ROOF",
@@ -324,8 +324,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 742,
-  "messageIssued" : "2020-10-29T17:33:59.000",
-  "messageReceived" : "2020-10-29T17:34:00.304",
+  "messageIssued" : "2020-10-29T17:33:59",
+  "messageReceived" : "2020-10-29T17:34:00",
   "airQualities" : [ {
     "id" : 611,
     "measurePlace" : "TERRACE_ROOF",
@@ -351,8 +351,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 743,
-  "messageIssued" : "2020-10-29T17:34:59.000",
-  "messageReceived" : "2020-10-29T17:35:34.318",
+  "messageIssued" : "2020-10-29T17:34:59",
+  "messageReceived" : "2020-10-29T17:35:34",
   "airQualities" : [ {
     "id" : 612,
     "measurePlace" : "TERRACE_ROOF",
@@ -378,8 +378,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 744,
-  "messageIssued" : "2020-10-29T17:35:59.000",
-  "messageReceived" : "2020-10-29T17:36:00.358",
+  "messageIssued" : "2020-10-29T17:35:59",
+  "messageReceived" : "2020-10-29T17:36:00",
   "airQualities" : [ {
     "id" : 613,
     "measurePlace" : "TERRACE_ROOF",
@@ -405,8 +405,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 745,
-  "messageIssued" : "2020-10-29T17:36:59.000",
-  "messageReceived" : "2020-10-29T17:37:00.360",
+  "messageIssued" : "2020-10-29T17:36:59",
+  "messageReceived" : "2020-10-29T17:37:00",
   "airQualities" : [ {
     "id" : 614,
     "measurePlace" : "TERRACE_ROOF",
@@ -432,8 +432,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 746,
-  "messageIssued" : "2020-10-29T17:37:59.000",
-  "messageReceived" : "2020-10-29T17:38:00.368",
+  "messageIssued" : "2020-10-29T17:37:59",
+  "messageReceived" : "2020-10-29T17:38:00",
   "airQualities" : [ {
     "id" : 615,
     "measurePlace" : "TERRACE_ROOF",
@@ -459,8 +459,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 747,
-  "messageIssued" : "2020-10-29T17:38:59.000",
-  "messageReceived" : "2020-10-29T17:39:00.392",
+  "messageIssued" : "2020-10-29T17:38:59",
+  "messageReceived" : "2020-10-29T17:39:00",
   "airQualities" : [ {
     "id" : 616,
     "measurePlace" : "TERRACE_ROOF",
@@ -486,8 +486,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 748,
-  "messageIssued" : "2020-10-29T17:39:59.000",
-  "messageReceived" : "2020-10-29T17:40:00.419",
+  "messageIssued" : "2020-10-29T17:39:59",
+  "messageReceived" : "2020-10-29T17:40:00",
   "airQualities" : [ {
     "id" : 617,
     "measurePlace" : "TERRACE_ROOF",
@@ -513,8 +513,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 749,
-  "messageIssued" : "2020-10-29T17:40:59.000",
-  "messageReceived" : "2020-10-29T17:41:00.470",
+  "messageIssued" : "2020-10-29T17:40:59",
+  "messageReceived" : "2020-10-29T17:41:00",
   "airQualities" : [ {
     "id" : 618,
     "measurePlace" : "TERRACE_ROOF",
@@ -540,8 +540,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 750,
-  "messageIssued" : "2020-10-29T17:41:59.000",
-  "messageReceived" : "2020-10-29T17:42:00.456",
+  "messageIssued" : "2020-10-29T17:41:59",
+  "messageReceived" : "2020-10-29T17:42:00",
   "airQualities" : [ {
     "id" : 619,
     "measurePlace" : "TERRACE_ROOF",
@@ -567,8 +567,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 751,
-  "messageIssued" : "2020-10-29T17:42:59.000",
-  "messageReceived" : "2020-10-29T17:43:00.471",
+  "messageIssued" : "2020-10-29T17:42:59",
+  "messageReceived" : "2020-10-29T17:43:00",
   "airQualities" : [ {
     "id" : 620,
     "measurePlace" : "TERRACE_ROOF",
@@ -594,8 +594,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 752,
-  "messageIssued" : "2020-10-29T17:43:59.000",
-  "messageReceived" : "2020-10-29T17:44:00.488",
+  "messageIssued" : "2020-10-29T17:43:59",
+  "messageReceived" : "2020-10-29T17:44:00",
   "airQualities" : [ {
     "id" : 621,
     "measurePlace" : "TERRACE_ROOF",
@@ -621,8 +621,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 753,
-  "messageIssued" : "2020-10-29T17:44:59.000",
-  "messageReceived" : "2020-10-29T17:45:00.497",
+  "messageIssued" : "2020-10-29T17:44:59",
+  "messageReceived" : "2020-10-29T17:45:00",
   "airQualities" : [ {
     "id" : 622,
     "measurePlace" : "TERRACE_ROOF",
@@ -648,8 +648,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 754,
-  "messageIssued" : "2020-10-29T17:45:59.000",
-  "messageReceived" : "2020-10-29T17:46:00.520",
+  "messageIssued" : "2020-10-29T17:45:59",
+  "messageReceived" : "2020-10-29T17:46:00",
   "airQualities" : [ {
     "id" : 623,
     "measurePlace" : "TERRACE_ROOF",
@@ -675,8 +675,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 755,
-  "messageIssued" : "2020-10-29T17:46:59.000",
-  "messageReceived" : "2020-10-29T17:47:00.529",
+  "messageIssued" : "2020-10-29T17:46:59",
+  "messageReceived" : "2020-10-29T17:47:00",
   "airQualities" : [ {
     "id" : 624,
     "measurePlace" : "TERRACE_ROOF",
@@ -702,8 +702,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 756,
-  "messageIssued" : "2020-10-29T17:48:00.000",
-  "messageReceived" : "2020-10-29T17:48:00.547",
+  "messageIssued" : "2020-10-29T17:48:00",
+  "messageReceived" : "2020-10-29T17:48:00",
   "airQualities" : [ {
     "id" : 625,
     "measurePlace" : "TERRACE_ROOF",
@@ -729,8 +729,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 757,
-  "messageIssued" : "2020-10-29T17:49:00.000",
-  "messageReceived" : "2020-10-29T17:49:00.587",
+  "messageIssued" : "2020-10-29T17:49:00",
+  "messageReceived" : "2020-10-29T17:49:00",
   "airQualities" : [ {
     "id" : 626,
     "measurePlace" : "TERRACE_ROOF",
@@ -756,8 +756,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 758,
-  "messageIssued" : "2020-10-29T17:50:00.000",
-  "messageReceived" : "2020-10-29T17:50:00.610",
+  "messageIssued" : "2020-10-29T17:50:00",
+  "messageReceived" : "2020-10-29T17:50:00",
   "airQualities" : [ {
     "id" : 627,
     "measurePlace" : "TERRACE_ROOF",
@@ -783,8 +783,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 759,
-  "messageIssued" : "2020-10-29T17:51:00.000",
-  "messageReceived" : "2020-10-29T17:51:00.636",
+  "messageIssued" : "2020-10-29T17:51:00",
+  "messageReceived" : "2020-10-29T17:51:00",
   "airQualities" : [ {
     "id" : 628,
     "measurePlace" : "TERRACE_ROOF",
@@ -810,8 +810,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 760,
-  "messageIssued" : "2020-10-29T17:52:00.000",
-  "messageReceived" : "2020-10-29T17:52:00.635",
+  "messageIssued" : "2020-10-29T17:52:00",
+  "messageReceived" : "2020-10-29T17:52:00",
   "airQualities" : [ {
     "id" : 629,
     "measurePlace" : "TERRACE_ROOF",
@@ -837,8 +837,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 761,
-  "messageIssued" : "2020-10-29T17:53:00.000",
-  "messageReceived" : "2020-10-29T17:53:00.655",
+  "messageIssued" : "2020-10-29T17:53:00",
+  "messageReceived" : "2020-10-29T17:53:00",
   "airQualities" : [ {
     "id" : 630,
     "measurePlace" : "TERRACE_ROOF",
@@ -864,8 +864,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 762,
-  "messageIssued" : "2020-10-29T18:00:00.000",
-  "messageReceived" : "2020-10-29T18:00:01.799",
+  "messageIssued" : "2020-10-29T18:00:00",
+  "messageReceived" : "2020-10-29T18:00:01",
   "airQualities" : [ {
     "id" : 631,
     "measurePlace" : "TERRACE_ROOF",
@@ -891,8 +891,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 763,
-  "messageIssued" : "2020-10-29T18:01:00.000",
-  "messageReceived" : "2020-10-29T18:01:00.769",
+  "messageIssued" : "2020-10-29T18:01:00",
+  "messageReceived" : "2020-10-29T18:01:00",
   "airQualities" : [ {
     "id" : 632,
     "measurePlace" : "TERRACE_ROOF",
@@ -918,8 +918,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 764,
-  "messageIssued" : "2020-10-29T18:02:00.000",
-  "messageReceived" : "2020-10-29T18:02:00.770",
+  "messageIssued" : "2020-10-29T18:02:00",
+  "messageReceived" : "2020-10-29T18:02:00",
   "airQualities" : [ {
     "id" : 633,
     "measurePlace" : "TERRACE_ROOF",
@@ -945,8 +945,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 765,
-  "messageIssued" : "2020-10-29T18:03:00.000",
-  "messageReceived" : "2020-10-29T18:03:00.785",
+  "messageIssued" : "2020-10-29T18:03:00",
+  "messageReceived" : "2020-10-29T18:03:00",
   "airQualities" : [ {
     "id" : 634,
     "measurePlace" : "TERRACE_ROOF",
@@ -972,8 +972,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 766,
-  "messageIssued" : "2020-10-29T18:04:00.000",
-  "messageReceived" : "2020-10-29T18:04:00.800",
+  "messageIssued" : "2020-10-29T18:04:00",
+  "messageReceived" : "2020-10-29T18:04:00",
   "airQualities" : [ {
     "id" : 635,
     "measurePlace" : "TERRACE_ROOF",
@@ -999,8 +999,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 767,
-  "messageIssued" : "2020-10-29T18:05:00.000",
-  "messageReceived" : "2020-10-29T18:05:00.813",
+  "messageIssued" : "2020-10-29T18:05:00",
+  "messageReceived" : "2020-10-29T18:05:00",
   "airQualities" : [ {
     "id" : 636,
     "measurePlace" : "TERRACE_ROOF",
@@ -1026,8 +1026,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 768,
-  "messageIssued" : "2020-10-29T18:06:00.000",
-  "messageReceived" : "2020-10-29T18:06:00.821",
+  "messageIssued" : "2020-10-29T18:06:00",
+  "messageReceived" : "2020-10-29T18:06:00",
   "airQualities" : [ {
     "id" : 637,
     "measurePlace" : "TERRACE_ROOF",
@@ -1053,8 +1053,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 769,
-  "messageIssued" : "2020-10-29T18:07:00.000",
-  "messageReceived" : "2020-10-29T18:07:00.846",
+  "messageIssued" : "2020-10-29T18:07:00",
+  "messageReceived" : "2020-10-29T18:07:00",
   "airQualities" : [ {
     "id" : 638,
     "measurePlace" : "TERRACE_ROOF",
@@ -1080,8 +1080,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 770,
-  "messageIssued" : "2020-10-29T18:08:00.000",
-  "messageReceived" : "2020-10-29T18:08:00.853",
+  "messageIssued" : "2020-10-29T18:08:00",
+  "messageReceived" : "2020-10-29T18:08:00",
   "airQualities" : [ {
     "id" : 639,
     "measurePlace" : "TERRACE_ROOF",
@@ -1107,8 +1107,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 771,
-  "messageIssued" : "2020-10-29T18:09:00.000",
-  "messageReceived" : "2020-10-29T18:09:00.874",
+  "messageIssued" : "2020-10-29T18:09:00",
+  "messageReceived" : "2020-10-29T18:09:00",
   "airQualities" : [ {
     "id" : 640,
     "measurePlace" : "TERRACE_ROOF",
@@ -1134,8 +1134,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 772,
-  "messageIssued" : "2020-10-29T18:10:00.000",
-  "messageReceived" : "2020-10-29T18:10:03.152",
+  "messageIssued" : "2020-10-29T18:10:00",
+  "messageReceived" : "2020-10-29T18:10:03",
   "airQualities" : [ {
     "id" : 641,
     "measurePlace" : "TERRACE_ROOF",
@@ -1161,8 +1161,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 773,
-  "messageIssued" : "2020-10-29T18:11:00.000",
-  "messageReceived" : "2020-10-29T18:11:00.903",
+  "messageIssued" : "2020-10-29T18:11:00",
+  "messageReceived" : "2020-10-29T18:11:00",
   "airQualities" : [ {
     "id" : 642,
     "measurePlace" : "TERRACE_ROOF",
@@ -1188,8 +1188,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 774,
-  "messageIssued" : "2020-10-29T18:12:00.000",
-  "messageReceived" : "2020-10-29T18:12:00.920",
+  "messageIssued" : "2020-10-29T18:12:00",
+  "messageReceived" : "2020-10-29T18:12:00",
   "airQualities" : [ {
     "id" : 643,
     "measurePlace" : "TERRACE_ROOF",
@@ -1215,8 +1215,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 775,
-  "messageIssued" : "2020-10-29T18:13:00.000",
-  "messageReceived" : "2020-10-29T18:13:00.949",
+  "messageIssued" : "2020-10-29T18:13:00",
+  "messageReceived" : "2020-10-29T18:13:00",
   "airQualities" : [ {
     "id" : 644,
     "measurePlace" : "TERRACE_ROOF",
@@ -1242,8 +1242,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 776,
-  "messageIssued" : "2020-10-29T18:14:00.000",
-  "messageReceived" : "2020-10-29T18:14:00.950",
+  "messageIssued" : "2020-10-29T18:14:00",
+  "messageReceived" : "2020-10-29T18:14:00",
   "airQualities" : [ {
     "id" : 645,
     "measurePlace" : "TERRACE_ROOF",
@@ -1269,8 +1269,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 777,
-  "messageIssued" : "2020-10-29T18:15:00.000",
-  "messageReceived" : "2020-10-29T18:15:00.963",
+  "messageIssued" : "2020-10-29T18:15:00",
+  "messageReceived" : "2020-10-29T18:15:00",
   "airQualities" : [ {
     "id" : 646,
     "measurePlace" : "TERRACE_ROOF",
@@ -1296,8 +1296,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 778,
-  "messageIssued" : "2020-10-29T18:16:00.000",
-  "messageReceived" : "2020-10-29T18:16:00.979",
+  "messageIssued" : "2020-10-29T18:16:00",
+  "messageReceived" : "2020-10-29T18:16:00",
   "airQualities" : [ {
     "id" : 647,
     "measurePlace" : "TERRACE_ROOF",
@@ -1323,8 +1323,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 779,
-  "messageIssued" : "2020-10-29T18:17:00.000",
-  "messageReceived" : "2020-10-29T18:17:01.053",
+  "messageIssued" : "2020-10-29T18:17:00",
+  "messageReceived" : "2020-10-29T18:17:01",
   "airQualities" : [ {
     "id" : 648,
     "measurePlace" : "TERRACE_ROOF",
@@ -1350,8 +1350,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 780,
-  "messageIssued" : "2020-10-29T18:18:00.000",
-  "messageReceived" : "2020-10-29T18:18:01.028",
+  "messageIssued" : "2020-10-29T18:18:00",
+  "messageReceived" : "2020-10-29T18:18:01",
   "airQualities" : [ {
     "id" : 649,
     "measurePlace" : "TERRACE_ROOF",
@@ -1377,8 +1377,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 781,
-  "messageIssued" : "2020-10-29T18:19:00.000",
-  "messageReceived" : "2020-10-29T18:19:01.042",
+  "messageIssued" : "2020-10-29T18:19:00",
+  "messageReceived" : "2020-10-29T18:19:01",
   "airQualities" : [ {
     "id" : 650,
     "measurePlace" : "TERRACE_ROOF",
@@ -1404,8 +1404,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 782,
-  "messageIssued" : "2020-10-29T18:20:00.000",
-  "messageReceived" : "2020-10-29T18:20:01.060",
+  "messageIssued" : "2020-10-29T18:20:00",
+  "messageReceived" : "2020-10-29T18:20:01",
   "airQualities" : [ {
     "id" : 651,
     "measurePlace" : "TERRACE_ROOF",
@@ -1431,8 +1431,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 783,
-  "messageIssued" : "2020-10-29T18:21:00.000",
-  "messageReceived" : "2020-10-29T18:21:01.081",
+  "messageIssued" : "2020-10-29T18:21:00",
+  "messageReceived" : "2020-10-29T18:21:01",
   "airQualities" : [ {
     "id" : 652,
     "measurePlace" : "TERRACE_ROOF",
@@ -1458,8 +1458,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 784,
-  "messageIssued" : "2020-10-29T18:22:00.000",
-  "messageReceived" : "2020-10-29T18:22:01.104",
+  "messageIssued" : "2020-10-29T18:22:00",
+  "messageReceived" : "2020-10-29T18:22:01",
   "airQualities" : [ {
     "id" : 653,
     "measurePlace" : "TERRACE_ROOF",
@@ -1485,8 +1485,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 785,
-  "messageIssued" : "2020-10-29T18:23:00.000",
-  "messageReceived" : "2020-10-29T18:23:01.941",
+  "messageIssued" : "2020-10-29T18:23:00",
+  "messageReceived" : "2020-10-29T18:23:01",
   "airQualities" : [ {
     "id" : 654,
     "measurePlace" : "TERRACE_ROOF",
@@ -1512,8 +1512,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 786,
-  "messageIssued" : "2020-10-29T18:24:00.000",
-  "messageReceived" : "2020-10-29T18:27:42.430",
+  "messageIssued" : "2020-10-29T18:24:00",
+  "messageReceived" : "2020-10-29T18:27:42",
   "airQualities" : [ {
     "id" : 655,
     "measurePlace" : "TERRACE_ROOF",
@@ -1539,8 +1539,8 @@
   "windIndications" : [ ]
 }, {
   "id" : 787,
-  "messageIssued" : "2020-10-29T18:29:00.000",
-  "messageReceived" : "2020-10-29T18:29:01.259",
+  "messageIssued" : "2020-10-29T18:29:00",
+  "messageReceived" : "2020-10-29T18:29:01",
   "airQualities" : [ {
     "id" : 656,
     "measurePlace" : "TERRACE_ROOF",
