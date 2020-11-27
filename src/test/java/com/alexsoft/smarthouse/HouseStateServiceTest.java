@@ -72,4 +72,10 @@ public class HouseStateServiceTest {
 
     }
 
+    @Test
+    public void houseStateAveragingTestWithZeroAggregatingInterval () {
+        // todo
+
+    }
+
 }

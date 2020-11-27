@@ -19,6 +19,7 @@ import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
+import com.alexsoft.smarthouse.exception.BadRequestException;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
 import com.alexsoft.smarthouse.utils.TempUtils;
@@ -39,9 +40,13 @@ public class HouseStateService {
 
     @Value("${mqtt.msgSavingEnabled}")
     private final Boolean msgSavingEnabled;
+
     private final HouseStateRepository houseStateRepository;
+
     private final HouseStateToDtoMapper houseStateToDtoMapper;
+
     private final HouseStateMsgConverter houseStateMsgConverter;
+
     private final TempUtils tempUtils = new TempUtils();
 
     public HouseState save(String msg) {
@@ -83,32 +88,42 @@ public class HouseStateService {
     }
 
     public List<HouseStateDto> aggregateOnInterval(
-            Integer aggregateIntervalMinutes, Integer minutes, Integer hours, Integer days
+            Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {
+
+        if (aggregationIntervalMinutes < 61 && aggregationIntervalMinutes % 5 != 0) {
+            throw new BadRequestException("aggregationIntervalMinutes (less or equal 60) must be multiple of 5");
+        } else if (aggregationIntervalMinutes % 60 != 0) {
+            throw new BadRequestException("aggregationIntervalMinutes (greater than 60) must be multiple of 60");
+        }
+
         LOGGER.debug("Aggregating houseStates on {} min interval, requested period: {} days, {} hours, {} minutes",
-            aggregateIntervalMinutes, days, hours, minutes);
+            aggregationIntervalMinutes, days, hours, minutes);
         long startMillis = System.currentTimeMillis();
         LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
-        List<HouseState> measures = houseStateRepository.findAfter(interval);
+        List<HouseState> fetchedHouseStates = houseStateRepository.findAfter(interval);
         LOGGER.debug("Fetched {} houseStates, measures: {}, time: {} ms",
-            measures.size(), measures.stream().flatMap(HouseState::getAllMeasures).count(),
+            fetchedHouseStates.size(), fetchedHouseStates.stream().flatMap(HouseState::getAllMeasures).count(),
             System.currentTimeMillis() - startMillis
         );
-        long aggregationStart = System.currentTimeMillis();
-        List<HouseStateDto> houseStateDtos = measures.stream().collect(
+        if (aggregationIntervalMinutes != 0) {
+            long aggregationStart = System.currentTimeMillis();
+            List<HouseStateDto> houseStateDtos = fetchedHouseStates.stream().collect(
                 Collectors.groupingBy(
-                        houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregateIntervalMinutes),
-                        TreeMap::new,
-                        Collectors.collectingAndThen(toList(), this::averageList)
+                    houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregationIntervalMinutes),
+                    TreeMap::new,
+                    Collectors.collectingAndThen(toList(), this::averageList)
                 )
-        ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey()))
+            ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey()))
                 .map(Entry::getValue).sorted().map(houseStateToDtoMapper::toDto).collect(toList());
-        LOGGER.debug("Aggregating completed, aggregation time: {} ms, total: {} ms", System.currentTimeMillis() - aggregationStart,
-            System.currentTimeMillis() - startMillis);
-        return houseStateDtos;
+            LOGGER.debug("Aggregating completed, aggregation time: {} ms, total: {} ms", System.currentTimeMillis() - aggregationStart,
+                System.currentTimeMillis() - startMillis);
+            return houseStateDtos;
+        }
+        return fetchedHouseStates.stream().sorted().map(houseStateToDtoMapper::toDto).collect(toList());
     }
 
     private HouseState averageList(List<HouseState> houseStates) {

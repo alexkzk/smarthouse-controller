@@ -14,6 +14,7 @@ import lombok.*;
 @Builder
 public class HouseStateDto {
 
+    private Integer id;
     private LocalDateTime messageIssued;
     private LocalDateTime messageReceived;
     @lombok.Builder.Default
