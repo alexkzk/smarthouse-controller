@@ -91,9 +91,9 @@ public class HouseStateService {
             Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {
 
-        if (aggregationIntervalMinutes < 61 && aggregationIntervalMinutes % 5 != 0) {
+        if (aggregationIntervalMinutes < 60 && aggregationIntervalMinutes % 5 != 0) {
             throw new BadRequestException("aggregationIntervalMinutes (less or equal 60) must be multiple of 5");
-        } else if (aggregationIntervalMinutes % 60 != 0) {
+        } else if (aggregationIntervalMinutes > 60 && aggregationIntervalMinutes % 60 != 0) {
             throw new BadRequestException("aggregationIntervalMinutes (greater than 60) must be multiple of 60");
         }
 

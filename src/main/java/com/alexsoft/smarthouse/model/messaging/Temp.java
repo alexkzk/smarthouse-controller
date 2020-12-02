@@ -6,4 +6,5 @@ import lombok.Data;
 public class Temp {
     private Double celsius;
     private Integer rh;
+    private Double ah;
 }

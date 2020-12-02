@@ -26,4 +26,7 @@ public class Temp {
 
     private Integer rh;
 
+    private Double ah;
+
+
 }
