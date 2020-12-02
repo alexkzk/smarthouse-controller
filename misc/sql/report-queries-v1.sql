@@ -45,7 +45,7 @@ from main.house_state
 -- where measure_place = 'TERRACE_ROOF'
 -- where measure_place = 'CHERNIVTSI_AIRPORT'
 -- where measure_place = 'LIVING_ROOM'
--- where measure_place = 'CHILDRENS' AND
+where measure_place = 'CHILDRENS' /*AND*/
 --         message_received > '2020-11-10 11:10:00'
 group by air_quality_indication.measure_place,
          date_trunc('hour', message_received) + (FLOOR(DATE_PART('minute', message_received) / :interval_min ) * :interval_min || 'minutes')::interval
