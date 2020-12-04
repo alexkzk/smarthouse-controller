@@ -16,9 +16,9 @@ import lombok.ToString;
 public class Pressure {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "pressure_indication_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "pressure_indication_sq",
-        name = "pressure_indication_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_pressure_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "air_pressure_sq",
+        name = "air_pressure_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 

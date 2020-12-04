@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.dto;
+package com.alexsoft.smarthouse.dto.v1;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

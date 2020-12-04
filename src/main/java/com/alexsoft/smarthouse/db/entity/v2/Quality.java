@@ -30,6 +30,6 @@ public class Quality {
     private Double pm10;
 
     @OneToOne
-    private AirQualityMeta airQualityMeta;
+    private Bme680Meta bme680Meta;
 
 }

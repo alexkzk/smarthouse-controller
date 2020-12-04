@@ -2,8 +2,8 @@ package com.alexsoft.smarthouse.mappers;
 
 
 import com.alexsoft.smarthouse.db.entity.v1.AirQualityIndication;
-import com.alexsoft.smarthouse.dto.AirQualityIndicationDto;
-import com.alexsoft.smarthouse.dto.AirQualityIndicationDto.AirQualityIndicationDtoBuilder;
+import com.alexsoft.smarthouse.dto.v1.AirQualityIndicationDto;
+import com.alexsoft.smarthouse.dto.v1.AirQualityIndicationDto.AirQualityIndicationDtoBuilder;
 import com.alexsoft.smarthouse.dto.mapper.AqiDtoMapper;
 
 public class AqiDtoMapperImpl implements AqiDtoMapper {

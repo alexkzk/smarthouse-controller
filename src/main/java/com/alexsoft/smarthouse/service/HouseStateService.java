@@ -17,7 +17,7 @@ import com.alexsoft.smarthouse.db.entity.v1.Measure;
 import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
 import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
-import com.alexsoft.smarthouse.dto.HouseStateDto;
+import com.alexsoft.smarthouse.dto.v1.HouseStateDto;
 import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
 import com.alexsoft.smarthouse.exception.BadRequestException;
 import com.alexsoft.smarthouse.utils.DateUtils;
@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import static com.alexsoft.smarthouse.utils.DateUtils.getInterval;
 import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_PRODUCER_TIMEZONE_ID;
 import static java.util.stream.Collectors.toList;
 
@@ -68,11 +69,7 @@ public class HouseStateService {
     }
 
     private List<HouseState> findHouseStates(Integer minutes, Integer hours, Integer days) {
-        LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
-                .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
-                .minus(Duration.ofDays(days == null || days < 0 ? 0 : days))
-                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
-        return houseStateRepository.findAfter(interval);
+        return houseStateRepository.findAfter(getInterval(minutes, hours, days, false));
     }
 
     public HouseState avgWithinInterval(Integer minutes, Integer hours, Integer days) {

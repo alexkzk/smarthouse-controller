@@ -2,13 +2,30 @@ package com.alexsoft.smarthouse.db.entity.v2;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 
 import lombok.Data;
+import lombok.ToString;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Data
-@Embeddable
+@Entity
+@Table(schema = "main")
 public class Air {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "air_sq", name = "air_sq", allocationSize = 1)
+    @ToString.Include
+    private Integer id;
 
     @OneToOne(cascade = CascadeType.ALL)
     private Temp temp;

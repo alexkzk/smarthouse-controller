@@ -2,7 +2,7 @@ package com.alexsoft.smarthouse.controller.presentation;
 
 import java.util.List;
 
-import com.alexsoft.smarthouse.dto.HouseStateDto;
+import com.alexsoft.smarthouse.dto.v1.HouseStateDto;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;

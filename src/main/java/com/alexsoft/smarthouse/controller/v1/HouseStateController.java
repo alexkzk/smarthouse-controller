@@ -1,8 +1,8 @@
-package com.alexsoft.smarthouse.controller;
+package com.alexsoft.smarthouse.controller.v1;
 
 import java.util.List;
 
-import com.alexsoft.smarthouse.dto.HouseStateDto;
+import com.alexsoft.smarthouse.dto.v1.HouseStateDto;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

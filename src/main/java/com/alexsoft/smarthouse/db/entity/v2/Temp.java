@@ -16,9 +16,8 @@ import lombok.ToString;
 public class Temp {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "temp_indication_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "temp_indication_sq",
-        name = "temp_indication_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_temp_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "air_temp_sq", name = "air_temp_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 

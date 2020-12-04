@@ -16,13 +16,13 @@ import lombok.ToString;
  */
 @Data
 @Entity
-@Table(name = "air_quality_meta", schema = "main")
-public class AirQualityMeta {
+@Table(schema = "main")
+public class Bme680Meta {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_quality_meta_indication_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "air_quality_meta_indication_sq",
-        name = "air_quality_meta_indication_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bme680_meta_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "bme680_meta_sq",
+        name = "bme680_meta_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
