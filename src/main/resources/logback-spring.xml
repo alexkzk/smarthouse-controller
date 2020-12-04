@@ -14,6 +14,9 @@
   <springProperty name="messaging-log-filename" source="logging.msg.name"/>
   <springProperty name="messaging-log-lifetime" source="logging.msg.max-history"/>
 
+  <springProperty name="sql-log-filename" source="logging.sql.name"/>
+  <springProperty name="sql-log-lifetime" source="logging.sql.max-history"/>
+
   <appender name="MAIN_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${filePath}/${main-log-filename}.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -36,6 +39,17 @@
     </encoder>
   </appender>
 
+  <appender name="SQL_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${filePath}/${sql-log-filename}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${filePath}/${sql-log-filename}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>${sql-log-lifetime}</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
       <pattern>${CONSOLE_LOG_PATTERN}</pattern>
@@ -47,8 +61,8 @@
     <appender-ref ref="MAIN_LOG"/>
   </root>
 
-  <logger name="com.alexsoft.smarthouse.messaging" additivity="false">
-    <appender-ref ref="MSG_LOG"/>
+  <logger name="org.hibernate.SQL" additivity="false">
+    <appender-ref ref="SQL_LOG"/>
   </logger>
 
 </configuration>

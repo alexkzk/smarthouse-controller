@@ -24,9 +24,11 @@ logging:
     name: smarthouse
     max-history: 90
   msg:
-    path: /var/log/smarthouse
     name: smarthouse-msg
     max-history: 3
+  sql:
+    name: smarthouse-sql
+    max-history: 1
   level:
     root: info
     com.alexsoft.smarthouse: debug
