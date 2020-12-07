@@ -2,15 +2,15 @@ server:
   servlet:
     context-path: /smarthouse
 
-  spring:
+spring:
   application:
     name: smarthouse
-  #  liquibase:
-  #    liquibase-schema: liquibase
-  #    change-log: classpath:db/changelog.xml
+#    liquibase: # todo temporary disabled until the database schema is finalized
+#      liquibase-schema: liquibase
+#      change-log: classpath:db/changelog.xml
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     database: postgresql
   datasource:
     url: jdbc:postgresql://185.212.128.246:5432/smarthouse
@@ -19,11 +19,14 @@ server:
     password: guessword<G13
 
 logging:
-  file:
-    enabled: true
-    path: /var/log/smarthouse
-    file-name: smarthouse
+  filepath: /var/log/smarthouse
+  main:
+    name: smarthouse
     max-history: 90
+  msg:
+    path: /var/log/smarthouse
+    name: smarthouse-msg
+    max-history: 3
   level:
     root: info
     com.alexsoft.smarthouse: debug
@@ -35,3 +38,9 @@ mqtt:
   subscriber: smarthouse-controller
   user: alexkzk
   password: Vlena<G13
+  msgSavingEnabled: true
+
+avwx:
+  baseUri: https://avwx.rest/api
+  metarSubUri: /metar/UKLN?options=&airport=true&reporting=true&format=json&onfail=cache
+  token: ${AVWX_TOKEN:your-avwx-token-here}
