@@ -11,7 +11,6 @@ public class HouseStateMessageDeserializationTest {
     public void houseStateMessageDeserializationTest() {
         HouseStateMessage houseStateMessage = SerializationUtils.deSerializeFromFile("mqtt-message.json",
             new TypeReference<HouseStateMessage>() {}, true);
-        System.out.println();
     }
 
 }

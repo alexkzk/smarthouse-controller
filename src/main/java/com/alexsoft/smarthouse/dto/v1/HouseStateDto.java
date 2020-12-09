@@ -31,6 +31,18 @@ public class HouseStateDto {
     }
 
     @JsonIgnore
+    public HeatIndicationDto getOutdoorAirportHeat() {
+        return heatIndications.stream().filter(hi -> hi.getMeasurePlace() == MeasurePlace.CHERNIVTSI_AIRPORT).findFirst()
+            .orElse(HeatIndicationDto.builder().build());
+    }
+
+    @JsonIgnore
+    public HeatIndicationDto getIndoorHeat() {
+        return heatIndications.stream().filter(hi -> hi.getMeasurePlace() == MeasurePlace.LIVING_ROOM).findFirst()
+            .orElse(HeatIndicationDto.builder().build());
+    }
+
+    @JsonIgnore
     public HeatIndicationDto getAirportHeat() {
         return heatIndications.stream().filter(hi -> hi.getMeasurePlace() == MeasurePlace.CHERNIVTSI_AIRPORT).findFirst()
                 .orElse(HeatIndicationDto.builder().build());

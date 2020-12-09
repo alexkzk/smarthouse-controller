@@ -1,0 +1,60 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script th:inline="javascript" >
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var tempData = google.visualization.arrayToDataTable(/*[[${tempData}]]*/'noValue');
+      var humidData = google.visualization.arrayToDataTable(/*[[${humidData}]]*/'noValue');
+
+      var tempOptions = {
+        title: 'Indoor/Outdoor temperatures',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: {targetAxisIndex: 0},
+          1: {targetAxisIndex: 1}
+        },
+        vAxes: {
+          // Adds titles to each axis.
+          0: {title: 'Outdoor'},
+          1: {title: 'Indoor'}
+        }
+      };
+
+      var humidOptions = {
+        title: 'Indoor/Outdoor humidity',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: {targetAxisIndex: 0},
+          1: {targetAxisIndex: 0},
+          2: {targetAxisIndex: 1},
+          3: {targetAxisIndex: 1}
+        },
+        vAxes: {
+          // Adds titles to each axis.
+          0: {title: 'Out RH'},
+          3: {title: 'In RH'},
+          1: {title: 'Out AH'},
+          2: {title: 'In AH'},
+        }
+      };
+
+      var tempChart = new google.visualization.LineChart(document.getElementById('curve_temp_chart'));
+      tempChart.draw(tempData, tempOptions);
+
+      var humidChart = new google.visualization.LineChart(document.getElementById('curve_humid_chart'));
+      humidChart.draw(humidData, humidOptions);
+    }
+  </script>
+</head>
+<body>
+<div id="curve_temp_chart" style="width: 1200px; height: 500px"></div>
+<div id="curve_humid_chart" style="width: 1200px; height: 500px"></div>
+</body>
+</html>

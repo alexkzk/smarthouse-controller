@@ -11,7 +11,7 @@ public class TempUtilsTest {
 
     private final TempUtils tempUtils = new TempUtils();
 
-    //todo to unite next for tests to a parametrized one
+    //todo to unite next four tests to a parametrized one
     @Test
     public void calculateRelativeHumidityTest() {
         assertThat(tempUtils.calculateRelativeHumidity(18.17F, 14.0F), is(77));
