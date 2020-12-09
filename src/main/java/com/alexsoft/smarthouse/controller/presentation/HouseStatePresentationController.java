@@ -34,7 +34,9 @@ public class HouseStatePresentationController {
     @GetMapping("/temp")
     public String tempChart(Model model) {
         List<HouseStateDto> hourlyList = houseStateService.hourlyAggregatedMeasures();
+        List<HouseStateDto> minutelyList = houseStateService.minutelyAggregatedMeasures();
         Collections.reverse(hourlyList);
+        Collections.reverse(minutelyList);
 
         List<List<Object>> tempData = new ArrayList<>();
         tempData.add(Arrays.asList("Hour", "Outdoor", "Indoor"));    //  todo move adding this header to JavaScript
@@ -59,14 +61,23 @@ public class HouseStatePresentationController {
         });
 
         List<List<Object>> aqiData = new ArrayList<>();
-        aqiData.add(Arrays.asList("Hour", "IAQ", "MAX IAQ", "PM 2.5", "PM 10"));    //  todo move adding this header to JavaScript
+        aqiData.add(Arrays.asList("Hour", "IAQ", "PM 2.5"));    //  todo move adding this header to JavaScript
         hourlyList.forEach(hlist -> {
             aqiData.add(Arrays.asList(
                     hlist.getMessageReceived().format(HOURLY_DATE_TIME_FORMAT),
                     hlist.getOutdoorAQI().getStaticIaq(),
-                    hlist.getOutdoorAQI().getMaxIaq(),
-                    hlist.getOutdoorAQI().getPm25(),
-                    hlist.getOutdoorAQI().getPm10()
+                    hlist.getOutdoorAQI().getPm25()
+            ));
+        });
+
+
+        aqiData.remove(aqiData.size() - 1);
+
+        minutelyList.forEach(hlist -> {
+            aqiData.add(Arrays.asList(
+                hlist.getMessageReceived().format(HOURLY_DATE_TIME_FORMAT),
+                hlist.getOutdoorAQI().getStaticIaq(),
+                hlist.getOutdoorAQI().getPm25()
             ));
         });
 
