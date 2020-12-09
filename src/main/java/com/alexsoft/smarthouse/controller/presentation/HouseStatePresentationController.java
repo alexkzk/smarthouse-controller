@@ -58,8 +58,21 @@ public class HouseStatePresentationController {
             ));
         });
 
+        List<List<Object>> aqiData = new ArrayList<>();
+        aqiData.add(Arrays.asList("Hour", "IAQ", "MAX IAQ", "PM 2.5", "PM 10"));    //  todo move adding this header to JavaScript
+        hourlyList.forEach(hlist -> {
+            aqiData.add(Arrays.asList(
+                    hlist.getMessageReceived().format(HOURLY_DATE_TIME_FORMAT),
+                    hlist.getOutdoorAQI().getStaticIaq(),
+                    hlist.getOutdoorAQI().getMaxIaq(),
+                    hlist.getOutdoorAQI().getPm25(),
+                    hlist.getOutdoorAQI().getPm10()
+            ));
+        });
+
         model.addAttribute("tempData", tempData);
         model.addAttribute("humidData", humidData);
+        model.addAttribute("aqiData", aqiData);
         return "temp/chart";
     }
 
