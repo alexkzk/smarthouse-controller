@@ -3,8 +3,9 @@ package com.alexsoft.smarthouse.db.entity.v2;
 import java.time.LocalDateTime;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -12,6 +13,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.alexsoft.smarthouse.db.entity.InOut;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -19,8 +21,6 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.ToString;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
@@ -49,6 +49,9 @@ public class HouseStateV2 {
     private String publisherId;
 
     private String measurePlace;
+
+    @Enumerated(EnumType.STRING)
+    private InOut inOut;
 
     @OneToOne(cascade = CascadeType.ALL)
     private Air air;
