@@ -1,197 +1,300 @@
 package com.alexsoft.smarthouse.service;
 
-import java.time.Duration;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import com.alexsoft.smarthouse.db.entity.v1.AirQualityIndication;
-import com.alexsoft.smarthouse.db.entity.v1.HeatIndication;
-import com.alexsoft.smarthouse.db.entity.v1.HouseState;
-import com.alexsoft.smarthouse.db.entity.v1.Measure;
-import com.alexsoft.smarthouse.db.entity.v1.MeasurePlace;
-import com.alexsoft.smarthouse.db.entity.v1.WindIndication;
+import com.alexsoft.smarthouse.db.entity.InOut;
+import com.alexsoft.smarthouse.db.entity.HouseState;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
-import com.alexsoft.smarthouse.dto.v1.HouseStateDto;
-import com.alexsoft.smarthouse.dto.mapper.HouseStateToDtoMapper;
-import com.alexsoft.smarthouse.exception.BadRequestException;
+import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.utils.DateUtils;
-import com.alexsoft.smarthouse.utils.HouseStateMsgConverter;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import static com.alexsoft.smarthouse.utils.DateUtils.getInterval;
-import static com.alexsoft.smarthouse.utils.HouseStateMsgConverter.MQTT_PRODUCER_TIMEZONE_ID;
-import static java.util.stream.Collectors.toList;
-
 @Service
 @RequiredArgsConstructor
 public class HouseStateService {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+    public static final String IN_PREFIX = "IN-";
+    public static final String OUT_PREFIX = "OUT-";
+    public static final String DATE = "Date";
+    public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
+    public static final String PM_10 = "PM10 ";
+    public static final String PM_2_5 = "PM2.5 ";
+    public static final String IAQ = "IAQ ";
+    public static final String SIAQ = "SIAQ ";
+    public static final String GR = "GR ";
 
     @Value("${mqtt.msgSavingEnabled}")
-    private final Boolean msgSavingEnabled;
+    private Boolean msgSavingEnabled;
+
+    @Value("${sensor.bme680-temp-adjustment}")
+    private final Double bme680TempAdjustment;
 
     private final HouseStateRepository houseStateRepository;
-
-    private final HouseStateToDtoMapper houseStateToDtoMapper;
-
-    private final HouseStateMsgConverter houseStateMsgConverter;
-
     private final TempUtils tempUtils = new TempUtils();
+    private final DateUtils dateUtils;
 
-    public HouseState save(String msg) {
-        HouseState houseState = houseStateMsgConverter.toEntity(msg);
-        if (!houseState.isNull() && msgSavingEnabled) {
-            return houseStateRepository.saveAndFlush(houseState);
+    public void save(String msg) {
+        HouseState houseState = null;
+        if (!msg.contains("{")) {
+            return;
         }
-        return null;
-    }
-
-    public Integer getFiveMinuteAvgIaq() {
-        Float iaq = houseStateToDtoMapper.toDto(avgWithinInterval(5, 0, 0)).getOutdoorAqi().getStaticIaq();
-        return iaq == null || Float.isNaN(iaq) ? 0 : iaq.intValue();
-    }
-
-    public List<HouseStateDto> findWithinInterval(Integer minutes, Integer hours, Integer days) {
-        List<HouseState> measures = findHouseStates(minutes, hours, days);
-        return houseStateToDtoMapper.toDtos(measures);
-    }
-
-    private List<HouseState> findHouseStates(Integer minutes, Integer hours, Integer days) {
-        return houseStateRepository.findAfter(getInterval(minutes, hours, days, false));
-    }
-
-    public HouseState avgWithinInterval(Integer minutes, Integer hours, Integer days) {
-        return averageList(findHouseStates(minutes, hours, days));
-    }
-
-    public List<HouseStateDto> minutelyAggregatedMeasures() {
-        return aggregateOnInterval(5, null, 1, null);
-    }
-
-    public List<HouseStateDto> hourlyAggregatedMeasures() {
-        return aggregateOnInterval(60, null, null, 3);
-    }
-
-    public List<HouseStateDto> aggregateOnInterval(
-            Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
-    ) {
-
-        if (aggregationIntervalMinutes < 60 && aggregationIntervalMinutes % 5 != 0) {
-            throw new BadRequestException("aggregationIntervalMinutes (less or equal 60) must be multiple of 5");
-        } else if (aggregationIntervalMinutes > 60 && aggregationIntervalMinutes % 60 != 0) {
-            throw new BadRequestException("aggregationIntervalMinutes (greater than 60) must be multiple of 60");
-        }
-
-        LOGGER.debug("Aggregating houseStates on {} min interval, requested period: {} days, {} hours, {} minutes",
-            aggregationIntervalMinutes, days, hours, minutes);
-        long startMillis = System.currentTimeMillis();
-        LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
-                .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
-                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
-                .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
-        List<HouseState> fetchedHouseStates = houseStateRepository.findAfter(interval);
-        LOGGER.debug("Fetched {} houseStates, measures: {}, time: {} ms",
-            fetchedHouseStates.size(), fetchedHouseStates.stream().flatMap(HouseState::getAllMeasures).count(),
-            System.currentTimeMillis() - startMillis
-        );
-        if (aggregationIntervalMinutes != 0) {
-            long aggregationStart = System.currentTimeMillis();
-            List<HouseStateDto> houseStateDtos = fetchedHouseStates.stream().collect(
-                Collectors.groupingBy(
-                    houseState -> DateUtils.roundDateTime(houseState.getMessageReceived(), aggregationIntervalMinutes),
-                    TreeMap::new,
-                    Collectors.collectingAndThen(toList(), this::averageList)
-                )
-            ).entrySet().stream().peek(el -> el.getValue().setMessageReceived(el.getKey()))
-                .map(Entry::getValue).sorted().map(houseStateToDtoMapper::toDto).collect(toList());
-            LOGGER.debug("Aggregating completed, aggregation time: {} ms, total: {} ms", System.currentTimeMillis() - aggregationStart,
-                System.currentTimeMillis() - startMillis);
-            return houseStateDtos;
-        }
-        return fetchedHouseStates.stream().sorted().map(houseStateToDtoMapper::toDto).collect(toList());
-    }
-
-    private HouseState averageList(List<HouseState> houseStates) {
-
-        long startMillis = System.currentTimeMillis();
-
-        HouseState averagedHouseState = new HouseState();
-
-        List<Measure> measures = houseStates.stream().flatMap(HouseState::getAllMeasures).peek(measure -> {
-            if (measure instanceof AirQualityIndication) {
-                measure.setMeasurePlace(MeasurePlace.OUTDOOR);
-            } else if (measure.getMeasurePlace() == MeasurePlace.CHILDRENS && measure instanceof HeatIndication) {
-                measure.setMeasurePlace(MeasurePlace.BALCONY);
+        try {
+            houseState = OBJECT_MAPPER.readValue(msg, HouseState.class);
+            if (hasTempAndHumidMeasurements(houseState)) {
+                Float aH = tempUtils.calculateAbsoluteHumidity(
+                        houseState.getAir().getTemp().getCelsius().floatValue(),
+                        houseState.getAir().getTemp().getRh()
+                );
+                houseState.getAir().getTemp().setAh(aH.doubleValue());
+                if (houseState.getMeasurePlace().equals("OUT-NORTH")) {
+                    houseState.getAir().getTemp().setCelsius(houseState.getAir().getTemp().getCelsius() + bme680TempAdjustment);
+                }
             }
-        }).collect(Collectors.toList());
-        Set<MeasurePlace> measurePlaces = measures.stream().map(Measure::getMeasurePlace).collect(Collectors.toSet());
-
-        for (MeasurePlace measurePlace : measurePlaces) {
-
-            List<AirQualityIndication> aqis = houseStates.stream().flatMap(houseState -> houseState.getAirQualities().stream())
-                    .filter(aqi -> aqi.getMeasurePlace() == measurePlace)
-                    .collect(Collectors.toList());
-            AirQualityIndication averagedAqi = AirQualityIndication.builder()
-                    .measurePlace(measurePlace)
-                    .pm25((float) aqis.stream().map(AirQualityIndication::getPm25).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .pm10((float) aqis.stream().map(AirQualityIndication::getPm10).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .co2((float) aqis.stream().map(AirQualityIndication::getCo2).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .iaq((float) aqis.stream().map(AirQualityIndication::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .gasResistance((float) aqis.stream().map(AirQualityIndication::getGasResistance).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .iaqAccuracy( (int) Math.round(aqis.stream().map(AirQualityIndication::getIaqAccuracy).filter(Objects::nonNull).mapToInt(Integer::valueOf).average().orElse(Float.NaN)))
-                    .staticIaq((float) aqis.stream().map(AirQualityIndication::getStaticIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .maxIaq((float) aqis.stream().map(AirQualityIndication::getStaticIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).max().orElse(Double.NaN))
-                    .voc((float) aqis.stream().map(AirQualityIndication::getVoc).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                    .build();
-
-            List<HeatIndication> temps = houseStates.stream().flatMap(houseState -> houseState.getHeatIndications().stream())
-                    .filter(heatIndication -> heatIndication.getMeasurePlace() == measurePlace)
-                    .collect(Collectors.toList());
-            double averageRh = temps.stream().filter(temp -> temp.getRelativeHumidity() != null).mapToInt(HeatIndication::getRelativeHumidity).average().orElse(Double.NaN);
-            HeatIndication heatIndication = HeatIndication.builder()
-                    .measurePlace(measurePlace)
-                    .tempCelsius((float) temps.stream().filter(temp -> temp.getTempCelsius() != null).mapToDouble(HeatIndication::getTempCelsius).average().orElse(Double.NaN))
-                    .absoluteHumidity((float) temps.stream().filter(temp -> temp.getAbsoluteHumidity() != null).mapToDouble(HeatIndication::getAbsoluteHumidity).average().orElse(Double.NaN))
-                    .relativeHumidity(Double.isNaN(averageRh) ? null : (int) Math.round(averageRh))
-                    .build();
-            if (heatIndication.getAbsoluteHumidity() == null && heatIndication.getRelativeHumidity() != null && heatIndication.getTempCelsius() != null) {
-                heatIndication.setAbsoluteHumidity(tempUtils.calculateAbsoluteHumidity(heatIndication.getTempCelsius(), heatIndication.getRelativeHumidity()));
+            if (houseState.getMeasurePlace().startsWith(IN_PREFIX)) { //  todo temporary, remove after changing the msg format on publishers
+                houseState.setInOut(InOut.IN);
+                houseState.setMeasurePlace(houseState.getMeasurePlace().replace(IN_PREFIX, ""));
+            } else if (houseState.getMeasurePlace().startsWith(OUT_PREFIX)) {
+                houseState.setInOut(InOut.OUT);
+                houseState.setMeasurePlace(houseState.getMeasurePlace().replace(OUT_PREFIX, ""));
             }
-
-            List<WindIndication> winds = houseStates.stream().flatMap(houseState -> houseState.getWindIndications().stream())
-                    .filter(windIndication -> windIndication.getMeasurePlace() == measurePlace)
-                    .collect(Collectors.toList());
-            double windDir = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getDirection).average().orElse(Double.NaN);
-            double windSpeed = winds.stream().filter(temp -> temp.getDirection() != null).mapToInt(WindIndication::getSpeed).average().orElse(Double.NaN);
-            WindIndication averagedWinds = WindIndication.builder()
-                    .measurePlace(measurePlace)
-                    .direction(Double.isNaN(windDir) ? null : (int) Math.round(windDir))
-                    .speed(Double.isNaN(windSpeed) ? null : (int) Math.round(windSpeed))
-                    .build();
-
-            averagedHouseState.addIndication(averagedWinds);
-            averagedHouseState.addIndication(heatIndication);
-            averagedHouseState.addIndication(averagedAqi);
-
+            houseState.setMessageReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+            if (msgSavingEnabled) {
+                houseStateRepository.saveAndFlush(houseState);
+            }
+        } catch (JsonProcessingException e) {
+            LOGGER.error(e.getMessage(), e);
         }
-
-        LOGGER.trace("Averaged a list of HouseState's of size {}, time {}ms, averaged value: {}",
-                houseStates.size(), System.currentTimeMillis() - startMillis, averagedHouseState);
-
-        return averagedHouseState;
-
     }
 
+    private boolean hasTempAndHumidMeasurements(HouseState houseState) {
+        return houseState.getAir() != null && houseState.getAir().getTemp() != null &&
+                houseState.getAir().getTemp().getCelsius() != null && houseState.getAir().getTemp().getRh() != null &&
+                houseState.getAir().getTemp().getAh() == null;
+    }
+
+    public List<HouseState> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
+        return houseStateRepository.findAfter(dateUtils.getInterval(minutes, hours, days, true));
+    }
+
+    public List<HouseState> findAll() {
+        return houseStateRepository.findAll();
+    }
+
+    public ChartDto aggregate() {
+        List<Map<String, Object>> aggregates = houseStateRepository.aggregate();
+        ChartDto chartDto = new ChartDto();
+
+        setTemps(aggregates, chartDto);
+        setRhs(aggregates, chartDto);
+        setAhs(aggregates, chartDto);
+        setAqis(aggregates, chartDto);
+
+        return chartDto;
+    }
+
+    private void setAqis(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
+
+        Map<Timestamp, Object[]> aqiValuesMap = new TreeMap<>();
+        List<Map<String, Object>> aqis = aggregates.stream().filter(map -> map.get("pm10") != null ||
+            map.get("pm25") != null || map.get("iaq") != null).collect(Collectors.toList());
+        List<Object> aqiHeader = new ArrayList<>();
+        aqiHeader.add(DATE);
+        aqiHeader.addAll(aqis.stream().map(m -> m.get("measure_place")).distinct().map(place ->
+            List.of(PM_10 + place, PM_2_5 + place, IAQ + place, SIAQ + place, GR + place)).flatMap(Collection::stream).collect(Collectors.toList()));
+        aqiHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+
+        Set<String> placesAdded = new LinkedHashSet<>();
+        for (Map<String, Object> map : aqis) {
+            Object pm10 = map.get("pm10");
+            Object pm25 = map.get("pm25");
+            Object iaq = map.get("iaq");
+            Object siaq = map.get("siaq");
+            Object gr = map.get("gas_resistance");
+            String place = (String) map.get("measure_place");
+            Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
+            Object[] valueArr = aqiValuesMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[aqiHeader.size()]);
+            if (pm10 != null) {
+                String currPlace = PM_10 + place;
+                placesAdded.add(currPlace);
+                valueArr[aqiHeader.indexOf(currPlace)] = ((BigDecimal) pm10).doubleValue();
+            }
+            if (pm25 != null) {
+                String currPlace = PM_2_5 + place;
+                placesAdded.add(currPlace);
+                valueArr[aqiHeader.indexOf(currPlace)] = ((BigDecimal) pm25).doubleValue();
+            }
+            if (gr != null) {
+                String currPlace = GR + place;
+                placesAdded.add(currPlace);
+                valueArr[aqiHeader.indexOf(currPlace)] = ((BigDecimal) gr).doubleValue();
+            }
+            if (iaq != null) {
+                String currPlace = IAQ + place;
+                placesAdded.add(currPlace);
+                valueArr[aqiHeader.indexOf(currPlace)] = ((BigDecimal) iaq).doubleValue();
+            }
+            if (siaq != null) {
+                String currPlace = SIAQ + place;
+                placesAdded.add(currPlace);
+                valueArr[aqiHeader.indexOf(currPlace)] = ((BigDecimal) siaq).doubleValue();
+            }
+            valueArr[aqiHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+        }
+
+        List<String> placesAddedList = new ArrayList<>(placesAdded);
+        Collection<Object[]> aqisFinal = aqiValuesMap.values().stream().map(arr -> {
+                Object[] newArr = new Object[placesAddedList.size() + 1];
+                newArr[0] = arr[0];
+                for (int i = 0; i < placesAddedList.size(); i++) {
+                    newArr[i + 1] = arr[aqiHeader.indexOf(placesAddedList.get(i))];
+                }
+                return newArr;
+            }
+        ).collect(Collectors.toList());
+        List<Object[]> aqiList = new ArrayList<>(aqisFinal.size()+1);
+        placesAddedList.add(0, DATE);
+        if(CollectionUtils.isNotEmpty(aqisFinal)) {
+            aqiList.add(placesAddedList.toArray());
+        }
+        aqiList.addAll(aqisFinal);
+        chartDto.setAqi(!aqiList.isEmpty() ? aqiList.toArray() : getEmptyDataArray());
+    }
+
+    private void setAhs(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
+        Map<Timestamp, Object[]> ahsMap = new TreeMap<>();
+        List<Map<String, Object>> ahs = aggregates.stream().filter(map -> map.get("ah") != null)
+                .collect(Collectors.toList());
+        List<Object> ahsHeader = new ArrayList<>();
+        ahsHeader.add(DATE);
+        for (Map<String, Object> map : ahs) {
+            String place = (String) map.get("measure_place");
+            if (!ahsHeader.contains(place)) {
+                ahsHeader.add(place);
+            }
+        }
+        ahsHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        for (Map<String, Object> map : ahs) {
+            Object dbAh = map.get("ah");
+            String place = (String) map.get("measure_place");
+            Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
+            Object[] valueArr = ahsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[ahsHeader.size()]);
+            valueArr[ahsHeader.indexOf(place)] = ((BigDecimal) dbAh).doubleValue();
+            valueArr[ahsHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+        }
+        Collection<Object[]> ahValues = ahsMap.values();
+        List<Object[]> ahList = new ArrayList<>(ahValues.size()+1);
+        if(CollectionUtils.isNotEmpty(ahValues)) {
+            ahList.add(ahsHeader.toArray());
+        }
+        ahList.addAll(ahValues);
+        chartDto.setAhs(!ahList.isEmpty() ? ahList.toArray() : getEmptyDataArray());
+    }
+
+    private void setRhs(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
+        Map<Timestamp, Object[]> rhsMap = new TreeMap<>();
+        List<Map<String, Object>> rhs = aggregates.stream().filter(map -> map.get("rh") != null)
+                .collect(Collectors.toList());
+        List<Object> rhsHeader = new ArrayList<>();
+        rhsHeader.add(DATE);
+        for (Map<String, Object> map : rhs) {
+            String place = (String) map.get("measure_place");
+            if (!rhsHeader.contains(place)) {
+                rhsHeader.add(place);
+            }
+        }
+        rhsHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        for (Map<String, Object> map : rhs) {
+            Object dbRh = map.get("rh");
+            String place = (String) map.get("measure_place");
+            Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
+            Object[] valueArr = rhsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[rhsHeader.size()]);
+            valueArr[rhsHeader.indexOf(place)] = ((BigDecimal) dbRh).doubleValue();
+            valueArr[rhsHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+        }
+        Collection<Object[]> rhValues = rhsMap.values();
+        List<Object[]> rhList = new ArrayList<>(rhValues.size()+1);
+        if(CollectionUtils.isNotEmpty(rhValues)){
+            rhList.add(rhsHeader.toArray());
+        }
+        rhList.addAll(rhValues);
+        chartDto.setRhs(!rhList.isEmpty() ? rhList.toArray() : getEmptyDataArray());
+    }
+
+    private void setTemps(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
+        Map<Timestamp, Object[]> inTempsMap = new TreeMap<>();
+        List<Map<String, Object>> inTemp = aggregates.stream().filter(map -> map.get("in_out").equals("IN") && map.get("temp") != null)
+            .collect(Collectors.toList());
+        List<Object> inTempHeader = new ArrayList<>();
+        inTempHeader.add(DATE);
+        for (Map<String, Object> map : inTemp) {
+            String place = (String) map.get("measure_place");
+            if (!inTempHeader.contains(place)) {
+                inTempHeader.add(place);
+            }
+        }
+        inTempHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        for (Map<String, Object> map : inTemp) {
+            Object dbTemp = map.get("temp");
+            String place = (String) map.get("measure_place");
+            Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
+            Object[] valueArr = inTempsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[inTempHeader.size()]);
+            valueArr[inTempHeader.indexOf(place)] = ((BigDecimal) dbTemp).doubleValue();
+            valueArr[inTempHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+        }
+        Collection<Object[]> inTempsValues = inTempsMap.values();
+        List<Object[]> inTempsList = new ArrayList<>(inTempsValues.size()+1);
+        if (CollectionUtils.isNotEmpty(inTempsValues)) {
+            inTempsList.add(inTempHeader.toArray());
+        }
+        inTempsList.addAll(inTempsValues);
+        chartDto.setIndoorTemps(!inTempsList.isEmpty() ? inTempsList.toArray() : getEmptyDataArray());
+
+        Map<Timestamp, Object[]> outTempsMap = new TreeMap<>();
+        List<Map<String, Object>> outTemp = aggregates.stream().filter(map -> map.get("in_out").equals("OUT") && map.get("temp") != null)
+                .collect(Collectors.toList());
+        List<Object> outTempHeader = new ArrayList<>();
+        outTempHeader.add(DATE);
+        for (Map<String, Object> map : outTemp) {
+            String place = (String) map.get("measure_place");
+            if (!outTempHeader.contains(place)) {
+                outTempHeader.add(place);
+            }
+        }
+        outTempHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        for (Map<String, Object> map : outTemp) {
+            Object dbTemp = map.get("temp");
+            String place = (String) map.get("measure_place");
+            Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
+            Object[] valueArr = outTempsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[outTempHeader.size()]);
+            valueArr[outTempHeader.indexOf(place)] = ((BigDecimal) dbTemp).doubleValue();
+            valueArr[outTempHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+        }
+        Collection<Object[]> outTempValues = outTempsMap.values();
+        List<Object[]> outTempList = new ArrayList<>(outTempsMap.size()+1);
+        if (CollectionUtils.isNotEmpty(outTempValues)) {
+            outTempList.add(outTempHeader.toArray());
+        }
+        outTempList.addAll(outTempValues);
+        chartDto.setOutdoorTemps(!outTempList.isEmpty() ? outTempList.toArray() : getEmptyDataArray());
+    }
+
+    private Object[][] getEmptyDataArray() {
+        return new Object[][] {{DATE, "NO DATA"}, {dateUtils.localDateTimeToString(LocalDateTime.now()), 0D}};
+    }
 }

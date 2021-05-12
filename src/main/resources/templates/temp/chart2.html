@@ -1,0 +1,98 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script th:inline="javascript" >
+    google.charts.load('current', {'packages':['corechart']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var inTempData = google.visualization.arrayToDataTable(/*[[${chartDto.getIndoorTemps()}]]*/'noValue');
+      var outTempData = google.visualization.arrayToDataTable(/*[[${chartDto.getOutdoorTemps()}]]*/'noValue');
+      var humidData = google.visualization.arrayToDataTable(/*[[${chartDto.getRhs()}]]*/'noValue');
+      var ahHumidData = google.visualization.arrayToDataTable(/*[[${chartDto.getAhs()}]]*/'noValue');
+      var aqiData = google.visualization.arrayToDataTable(/*[[${chartDto.getAqi()}]]*/'noValue');
+
+      var inTempOptions = {
+        title: 'INDOOR TEMP °C',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: {targetAxisIndex: 0}
+        },
+        vAxes: {
+          // Adds titles to each axis.
+          1: {title: 'Indoor'}
+        }
+      };
+
+      var outTempOptions = {
+        title: 'OUTDOOR TEMP °C',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        series: {
+          0: {targetAxisIndex: 0}
+        },
+        vAxes: {
+          // Adds titles to each axis.
+          1: {title: 'Outdoor'}
+        }
+      };
+
+      var humidOptions = {
+        title: 'RELATIVE HUMIDITY %',
+        curveType: 'function',
+        legend: { position: 'bottom' }
+      };
+
+      var ahHumidOptions = {
+        title: 'ABSOLUTE HUMIDITY g/m3',
+        curveType: 'function',
+        legend: { position: 'bottom' }
+      };
+
+      var aqiOptions = {
+        title: 'AIR QUALITY',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        colors:['#791d00', '#ff0000', '#e27f67', '#969eff', '#4254f5'],
+        series: {
+          0: {targetAxisIndex: 0},
+          1: {targetAxisIndex: 0},
+          2: {targetAxisIndex: 0},
+          3: {targetAxisIndex: 1},
+          4: {targetAxisIndex: 1}
+        },
+        vAxes: {
+          // Adds titles to each axis.
+          0: {title: 'PM'},
+          1: {title: 'IAQ'}
+        }
+      };
+
+      var tempChart = new google.visualization.LineChart(document.getElementById('curve_temp_chart'));
+      tempChart.draw(inTempData, inTempOptions);
+
+      var outTempChart = new google.visualization.LineChart(document.getElementById('curve_out_temp_chart'));
+      outTempChart.draw(outTempData, outTempOptions);
+
+      var humidChart = new google.visualization.LineChart(document.getElementById('curve_humid_chart'));
+      humidChart.draw(humidData, humidOptions);
+
+      var ahHumidChart = new google.visualization.LineChart(document.getElementById('curve_ah_humid_chart'));
+      ahHumidChart.draw(ahHumidData, ahHumidOptions);
+
+      var aqiChart = new google.visualization.LineChart(document.getElementById('curve_aqi_chart'));
+      aqiChart.draw(aqiData, aqiOptions);
+    }
+  </script>
+</head>
+<body>
+<div id="curve_aqi_chart" style="width: 1200px; height: 500px"></div>
+<div id="curve_temp_chart" style="width: 1200px; height: 500px"></div>
+<div id="curve_out_temp_chart" style="width: 1200px; height: 500px"></div>
+<div id="curve_humid_chart" style="width: 1200px; height: 500px"></div>
+<div id="curve_ah_humid_chart" style="width: 1200px; height: 500px"></div>
+</body>
+</html>

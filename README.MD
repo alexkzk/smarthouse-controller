@@ -36,3 +36,13 @@ You'll need JDK and Maven installed for next steps
 `mvn -f <path to pom.xml> clean install`
 
 `java -jar <path to JAR file previously built>`
+
+sudo docker build -t alexsoft/smarthouse ~/IdeaProjects/SmartHouse && sudo docker tag alexsoft/smarthouse alexkzk/alexsoft:smarthouse5 && sudo docker push alexkzk/alexsoft:smarthouse5
+sudo docker stop smarthouse && sudo docker rm smarthouse && sudo docker run -p 8080:8080 --name=smarthouse --restart=always alexkzk/alexsoft:smarthouse5
+
+## Redeployment steps
+-- From dev machine
+sudo docker build -t alexsoft/smarthouse ~/IdeaProjects/smarthouse && sudo docker tag alexsoft/smarthouse smarthouse:1.02 && sudo docker push smarthouse:1.02
+
+-- From server
+sudo docker stop smarthouse && sudo docker rm smarthouse && sudo docker run --restart=always -d -p 8080:8080 --name=smarthouse smarthouse:1.05 && sudo docker logs -f smarthouse
