@@ -13,8 +13,8 @@ public interface HouseStateRepository extends JpaRepository<HouseState, Integer>
 
     @Query("from HouseState as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
-            " left join fetch air.wind where hs.messageReceived > :localDateTime")
-    List<HouseState> findAfter(@Param("localDateTime") LocalDateTime localDateTime);
+            " left join fetch air.wind where hs.messageReceived > :startDate AND hs.messageReceived < :endDate")
+    List<HouseState> findAfter(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("from HouseState as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +

@@ -27,8 +27,9 @@ public class MetarReceiver {
         this.restTemplate = restTemplateBuilder.build();
     }
 
-    public Metar getMetar() {
+    public Metar getMetar(String icao) {
         String url = baseUri + metarSubUri + "&token=" + avwxToken;
+        url = url.replace("{ICAO}", icao);
         Metar forObject = null;
         try {
             forObject = this.restTemplate.getForObject(url, Metar.class);

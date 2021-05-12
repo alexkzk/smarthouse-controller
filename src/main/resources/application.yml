@@ -46,8 +46,10 @@ mqtt:
 
 avwx:
   baseUri: https://avwx.rest/api
-  metarSubUri: /metar/UKLN?options=&airport=true&reporting=true&format=json&onfail=error
+  metarSubUri: /metar/{ICAO}?options=&airport=true&reporting=true&format=json&onfail=error
   token: ${AVWX_TOKEN:your-avwx-token-here}
+  chernivtsi-icao: UKLN
+  seattle-icao: KBFI
 
 time:
   local-time-zone: Europe/Kiev

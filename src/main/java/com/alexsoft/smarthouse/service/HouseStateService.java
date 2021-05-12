@@ -74,11 +74,15 @@ public class HouseStateService {
                 houseState.setMeasurePlace(houseState.getMeasurePlace().replace(OUT_PREFIX, ""));
             }
             houseState.setMessageReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            if (msgSavingEnabled) {
-                houseStateRepository.saveAndFlush(houseState);
-            }
+            save(houseState);
         } catch (JsonProcessingException e) {
             LOGGER.error(e.getMessage(), e);
+        }
+    }
+
+    public void save(HouseState houseState) {
+        if (msgSavingEnabled) {
+            houseStateRepository.saveAndFlush(houseState);
         }
     }
 
@@ -89,7 +93,7 @@ public class HouseStateService {
     }
 
     public List<HouseState> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
-        return houseStateRepository.findAfter(dateUtils.getInterval(minutes, hours, days, true));
+        return houseStateRepository.findAfter(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
     }
 
     public List<HouseState> findAll() {
