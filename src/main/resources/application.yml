@@ -13,10 +13,9 @@ spring:
       ddl-auto: validate
     database: postgresql
   datasource:
-    url: jdbc:postgresql://185.212.128.246:5432/smarthouse
+    url: jdbc:postgresql://192.168.1.100:5432/smarthouse
     driver-class-name: org.postgresql.Driver
-    username: guessword
-    password: guessword<G13
+    username: smarthouse
 
 logging:
   filepath: /var/log/smarthouse
@@ -24,15 +23,20 @@ logging:
     name: smarthouse
     max-history: 90
   msg:
-    path: /var/log/smarthouse
     name: smarthouse-msg
     max-history: 3
+  sql:
+    name: smarthouse-sql
+    max-history: 1
   level:
     root: info
     com.alexsoft.smarthouse: debug
 
+sensor:
+  bme680-temp-adjustment: 0
+
 mqtt:
-  server: 185.212.128.246
+  server: 192.168.1.100
   port: 1883
   topic: ALEXKZK-SMARTHOUSE
   subscriber: smarthouse-controller
@@ -42,5 +46,11 @@ mqtt:
 
 avwx:
   baseUri: https://avwx.rest/api
-  metarSubUri: /metar/UKLN?options=&airport=true&reporting=true&format=json&onfail=cache
+  metarSubUri: /metar/{ICAO}?options=&airport=true&reporting=true&format=json&onfail=error
   token: ${AVWX_TOKEN:your-avwx-token-here}
+  chernivtsi-icao: UKLN
+  seattle-icao: KBFI
+
+time:
+  local-time-zone: Europe/Kiev
+  chart-date-time-pattern: E d, HH:mm

@@ -2,7 +2,6 @@ package com.alexsoft.smarthouse.configuration;
 
 import java.util.UUID;
 
-import com.alexsoft.smarthouse.service.HouseStateV2Service;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -23,7 +22,6 @@ public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
 
-    private final HouseStateV2Service houseStateV2Service;
     private final HouseStateService houseStateService;
 
     @Value("tcp://${mqtt.server}:${mqtt.port}")
@@ -61,12 +59,7 @@ public class MqttConfiguration {
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
             LOGGER.debug("Received a message {}", message);
-            if (message.contains("{")) {    // todo temporary workaround to distinct messages in JSON format from
-                // simple text ones, in future all MQTT messages will be in JSON format
-                houseStateV2Service.save(message);
-            } else {
-                houseStateService.save(message);
-            }
+            houseStateService.save(message);
         }).get();
     }
 

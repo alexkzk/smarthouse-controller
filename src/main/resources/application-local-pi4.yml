@@ -1,0 +1,24 @@
+mqtt:
+  msgSavingEnabled: false
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    password: Vlena<H13
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+#    com.alexsoft.smarthouse: trace
+#server:
+#  ssl:
+#    enabled: true
+#    key-store: classpath:keystore/smarthouse.p12
+#    key-store-type: PKCS12
+#    key-store-password: Vlena<G13
+#    key-alias: smarthouse
