@@ -51,6 +51,7 @@ public interface HouseStateRepository extends JpaRepository<HouseState, Integer>
             "   AND date_trunc('month', message_received) = date_trunc('month', now() at time zone 'utc')\n" +
             "   AND date_trunc('year', message_received) = date_trunc('year', now() at time zone 'utc')\n" +
             "   AND DATE_PART('hour', now() at time zone 'utc') - DATE_PART('hour', message_received) <= 1\n" +
+            "    AND message_received <= now() at time zone 'utc'\n" +
             " group by msg_received, in_out, measure_place\n" +
             " union all\n" +
             " select date_trunc('hour', message_received) +\n" +
@@ -99,6 +100,7 @@ public interface HouseStateRepository extends JpaRepository<HouseState, Integer>
             "   AND DATE_PART('day', AGE(now() at time zone 'utc', message_received)) <= 2\n" +
             "   AND DATE_PART('month', AGE(now() at time zone 'utc', message_received)) = 0\n" +
             "   AND DATE_PART('year', AGE(now() at time zone 'utc', message_received)) = 0\n" +
+            "   AND message_received <= now() at time zone 'utc'\n" +
             " group by msg_received, in_out, measure_place\n" +
             ") order by msg_received DESC, measure_place", nativeQuery = true)
     List<Map<String, Object>> aggregate();

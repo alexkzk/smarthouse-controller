@@ -74,6 +74,14 @@ public class HouseStateService {
                 houseState.setMeasurePlace(houseState.getMeasurePlace().replace(OUT_PREFIX, ""));
             }
             houseState.setMessageReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+            if (houseState.getMeasurePlace().equals("TERRACE") && houseState.getInOut() == InOut.IN) {
+                return; // temporary disabled due to sensor malfunction
+            }
+            if (houseState.getMeasurePlace().equals("TERRACE") && houseState.getInOut() == InOut.OUT) {
+                // temporary disabled due to sensor malfunction
+                houseState.getAir().getTemp().setAh(null);
+                houseState.getAir().getTemp().setRh(null);
+            }
             save(houseState);
         } catch (JsonProcessingException e) {
             LOGGER.error(e.getMessage(), e);
