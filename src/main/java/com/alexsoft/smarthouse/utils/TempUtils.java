@@ -19,6 +19,5 @@ public class TempUtils {
         }
         double ah = 6.112 * Math.pow(2.71828, 17.67 * temp / (243.5 + temp)) * rh * 2.1674 / (273.15 + temp);
         return Math.round(ah * 10) / 10.0F;
-
     }
 }

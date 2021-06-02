@@ -17,7 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.alexsoft.smarthouse.utils.Constants.SEATTLE_MEASURE_PLACE;
-import static java.lang.Math.round;
+import static com.alexsoft.smarthouse.utils.MathUtils.measureToString;
+import static com.alexsoft.smarthouse.utils.MathUtils.round;
 
 @RestController
 @RequestMapping("/v2/measures")
@@ -69,7 +70,11 @@ public class HouseStateController {
                 .mapToInt(hst -> hst.getAir().getQuality().getIaq()).average().orElse(Double.NaN));
         Long avgPm25 = round(avg.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getPm25() != null)
                 .mapToDouble(hst -> hst.getAir().getQuality().getPm25()).average().orElse(Double.NaN));
-        String str = String.format("%d°C/%d [SEA %d°C/%d] - IAQ %d/%d", MathUtils.min(terraceTemp, northTemp), northAh, seattleTemp, seattleAh, avgIaq, avgPm25);
+        String str = String.format("%s°C/%s [SEA %s°C/%s] - IAQ %s/%s",
+                measureToString(MathUtils.min(terraceTemp, northTemp)), measureToString(northAh),
+                measureToString(seattleTemp), measureToString(seattleAh),
+                measureToString(avgIaq), measureToString(avgPm25)
+        );
         return ResponseEntity.ok(str);
     }
 
@@ -82,6 +87,4 @@ public class HouseStateController {
     public ResponseEntity<ChartDto> aggregate() {
         return ResponseEntity.ok(houseStateService.aggregate());
     }
-
-
 }
