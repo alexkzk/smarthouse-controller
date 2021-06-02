@@ -39,9 +39,13 @@ public class HouseStateController {
                 .filter(hst -> !hst.getMeasurePlace().equalsIgnoreCase("UKLN"))
                 .filter(hst -> hst.getInOut() == InOut.OUT)
                 .collect(Collectors.toList());
+        List<HouseState> hourlyAvg = houseStateService.findWithinInterval(0, 1, 0).stream()
+                .filter(hst -> hst.getMeasurePlace().equalsIgnoreCase("SEATTLE"))
+                .filter(hst -> hst.getInOut() == InOut.OUT)
+                .collect(Collectors.toList());
         List<HouseState> terrace = avg.stream().filter(hst -> hst.getMeasurePlace().equalsIgnoreCase("terrace")).collect(Collectors.toList());
         List<HouseState> north = avg.stream().filter(hst -> hst.getMeasurePlace().equalsIgnoreCase("north")).collect(Collectors.toList());
-        List<HouseState> seattle = avg.stream().filter(hst -> hst.getMeasurePlace().equalsIgnoreCase(SEATTLE_MEASURE_PLACE)).collect(Collectors.toList());
+        List<HouseState> seattle = hourlyAvg.stream().filter(hst -> hst.getMeasurePlace().equalsIgnoreCase(SEATTLE_MEASURE_PLACE)).collect(Collectors.toList());
         Long terraceTemp = round(terrace.stream()
                 .filter(hst -> hst.getAir().getTemp() != null && hst.getAir().getTemp().getCelsius() != null)
                 .mapToDouble(hst -> hst.getAir().getTemp().getCelsius()).average().orElse(Double.NaN));
