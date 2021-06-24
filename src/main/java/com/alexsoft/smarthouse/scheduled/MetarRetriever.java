@@ -20,6 +20,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import static com.alexsoft.smarthouse.utils.Constants.MIAMI_MEASURE_PLACE;
 import static com.alexsoft.smarthouse.utils.Constants.SEATTLE_MEASURE_PLACE;
 
 @Service
@@ -32,6 +33,9 @@ public class MetarRetriever {
 
     @Value("${avwx.seattle-icao}")
     private String seattleIcao;
+
+    @Value("${avwx.miami-icao}")
+    private String miamiIcao;
 
     @Value("${avwx.token}")
     private String avwxToken;
@@ -68,6 +72,18 @@ public class MetarRetriever {
             houseState.setMeasurePlace(SEATTLE_MEASURE_PLACE);
             //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
             houseState.setMessageReceived(houseState.getMessageReceived().plus(14, ChronoUnit.HOURS));
+            houseStateService.save(houseState);
+        }
+    }
+
+    @Scheduled(cron = "${avwx.metar-receiving-cron}")
+    public void getMiamiMetar() {
+        Metar metar = getMetar(miamiIcao);
+        if (metarIsNotExpired(metar)) {
+            HouseState houseState = houseStateFromMetar(metar);
+            houseState.setMeasurePlace(MIAMI_MEASURE_PLACE);
+            //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
+            houseState.setMessageReceived(houseState.getMessageReceived().plus(17, ChronoUnit.HOURS));
             houseStateService.save(houseState);
         }
     }

@@ -50,6 +50,7 @@ avwx:
   token: ${AVWX_TOKEN:your-avwx-token-here}
   chernivtsi-icao: UKLN
   seattle-icao: KSEA
+  miami-icao: KMIA
   metar-receiving-cron: 0 */2 * * * *
 
 time:
