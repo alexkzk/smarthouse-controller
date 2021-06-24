@@ -1,18 +1,11 @@
 package com.alexsoft.smarthouse.service;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import com.alexsoft.smarthouse.db.entity.InOut;
 import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.InOut;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.utils.DateUtils;
+import com.alexsoft.smarthouse.utils.MathUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +15,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static com.alexsoft.smarthouse.utils.Constants.*;
+import static com.alexsoft.smarthouse.utils.MathUtils.measureToString;
+import static com.alexsoft.smarthouse.utils.MathUtils.round;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +52,9 @@ public class HouseStateService {
     public static final String IAQ = "IAQ ";
     public static final String SIAQ = "SIAQ ";
     public static final String GR = "GR ";
+    public static final String OUTSIDE_STATUS_PATTERN = "%s - %s";
+    public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
+
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
@@ -51,9 +68,6 @@ public class HouseStateService {
 
     public void save(String msg) {
         HouseState houseState = null;
-        if (!msg.contains("{")) {
-            return;
-        }
         try {
             houseState = OBJECT_MAPPER.readValue(msg, HouseState.class);
             if (hasTempAndHumidMeasurements(houseState)) {
@@ -74,6 +88,14 @@ public class HouseStateService {
                 houseState.setMeasurePlace(houseState.getMeasurePlace().replace(OUT_PREFIX, ""));
             }
             houseState.setMessageReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+            if (houseState.getMeasurePlace().equals("TERRACE") && houseState.getInOut() == InOut.IN) {
+                return; // temporary disabled due to sensor malfunction
+            }
+            if (houseState.getMeasurePlace().equals("TERRACE") && houseState.getInOut() == InOut.OUT) {
+                // temporary disabled due to sensor malfunction
+                houseState.getAir().getTemp().setAh(null);
+                houseState.getAir().getTemp().setRh(null);
+            }
             save(houseState);
         } catch (JsonProcessingException e) {
             LOGGER.error(e.getMessage(), e);
@@ -92,15 +114,90 @@ public class HouseStateService {
                 houseState.getAir().getTemp().getAh() == null;
     }
 
+    public List<HouseState> findHourly() {
+        return houseStateRepository.findAfter(dateUtils.getInterval(0, 1, 0, true), dateUtils.getInterval(0, 0, 0, true));
+    }
+
     public List<HouseState> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
         return houseStateRepository.findAfter(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
+    }
+
+    public String getHourlyAveragedShortStatus() {
+
+        List<HouseState> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(Collectors.toList());
+
+        List<HouseState> northMeasurements = filterByPlace(hourlyAverage, NORTH_MEASURE_PLACE);
+        List<HouseState> terraceMeasurements = filterByPlace(hourlyAverage, TERRACE_MEASURE_PLACE);
+        List<HouseState> seattleMeasurements = filterByPlace(hourlyAverage, SEATTLE_MEASURE_PLACE);
+        List<HouseState> miamiMeasurements = filterByPlace(hourlyAverage, MIAMI_MEASURE_PLACE);
+        List<HouseState> uklnMeasurements = filterByPlace(hourlyAverage, UKLN_MEASURE_PLACE);
+
+        Long terraceTemp = calculateAverageTemperature(terraceMeasurements);
+        Long northTemp = calculateAverageTemperature(northMeasurements);
+        Long northAh = calculateAverageAh(northMeasurements);
+        Long uklnTemp = calculateAverageTemperature(uklnMeasurements);
+        Long uklnAh = calculateAverageAh(uklnMeasurements);
+
+        Long seattleTemp = null;
+        Long seattleAh = null;
+        if (!CollectionUtils.isEmpty(seattleMeasurements)) {
+            seattleTemp = calculateAverageTemperature(seattleMeasurements);
+            seattleAh = calculateAverageAh(seattleMeasurements);
+        }
+
+        Long miamiTemp = null;
+        Long miamiAh = null;
+        if (!CollectionUtils.isEmpty(miamiMeasurements)) {
+            miamiTemp = calculateAverageTemperature(miamiMeasurements);
+            miamiAh = calculateAverageAh(miamiMeasurements);
+        }
+
+        Long avgIaq = calculateAverageIaq(hourlyAverage);
+        Long avgPm25 = calculateAveragePm25(hourlyAverage);
+
+        String chernivtsiStatus = terraceTemp == null && northTemp == null ? toTempAndAhString(uklnTemp, uklnAh, "UKLN") : toTempAndAhString(MathUtils.min(terraceTemp, northTemp), northAh, "CWC");
+        String seattleStatus = toTempAndAhString(seattleTemp, seattleAh, "SEA");
+        String miamiStatus = toTempAndAhString(miamiTemp, miamiAh, "MIA");
+
+        return String.format(OUTSIDE_STATUS_PATTERN, Stream.of(chernivtsiStatus, seattleStatus, miamiStatus).filter(Objects::nonNull).collect(Collectors.joining(" ")), toAirQualityString(avgIaq, avgPm25));
+    }
+
+    private String toAirQualityString(Long avgIaq, Long avgPm25) {
+        return String.format("IAQ %s/%s", measureToString(avgIaq), measureToString(avgPm25));
+    }
+
+    private String toTempAndAhString(Long temp, Long ah, String iata) {
+        if(temp == null && ah == null) {
+            return null;
+        }
+        return String.format(TEMP_AND_AH_PATTERN, iata, measureToString(temp), measureToString(ah));
+    }
+
+    private List<HouseState> filterByPlace(List<HouseState> hourlyAverage, String measurePlace) {
+        return hourlyAverage.stream().filter(hst -> hst.getMeasurePlace().equalsIgnoreCase(measurePlace)).collect(Collectors.toList());
+    }
+
+    public Long calculateAveragePm25(List<HouseState> houseStates) {
+        return round(houseStates.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getPm25() != null).mapToDouble(hst -> hst.getAir().getQuality().getPm25()).average().orElse(Double.NaN));
+    }
+
+    public Long calculateAverageIaq(List<HouseState> houseStates) {
+        return round(houseStates.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getIaq() != null).mapToInt(hst -> hst.getAir().getQuality().getIaq()).average().orElse(Double.NaN));
+    }
+    
+    public Long calculateAverageTemperature(List<HouseState> houseStates) {
+        return round(houseStates.stream().filter(hst -> hst.getAir().getTemp() != null && hst.getAir().getTemp().getCelsius() != null).mapToDouble(hst -> hst.getAir().getTemp().getCelsius()).average().orElse(Double.NaN));
+    }
+
+    public Long calculateAverageAh(List<HouseState> houseStates) {
+        return round(houseStates.stream().filter(hst -> hst.getAir().getTemp() != null && hst.getAir().getTemp().getAh() != null).mapToDouble(hst -> hst.getAir().getTemp().getAh()).average().orElse(Double.NaN));
     }
 
     public List<HouseState> findAll() {
         return houseStateRepository.findAll();
     }
 
-    public ChartDto aggregate() {
+    public ChartDto getAggregatedData() {
         List<Map<String, Object>> aggregates = houseStateRepository.aggregate();
         ChartDto chartDto = new ChartDto();
 

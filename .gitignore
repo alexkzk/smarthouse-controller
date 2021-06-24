@@ -1,4 +1,3 @@
-
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
@@ -19,16 +18,10 @@ target/
 
 # Package Files #
 *.jar
-# Except Legacy libs
-!/src/main/resources/legacy/lib/**/*.jar
 *.war
 *.nar
 *.ear
 *.zip
 *.tar.gz
 *.rar
-# IBM MQ Files
-/FFDC
-
-#Mac Os file
-*.DS_Store
+*.pid

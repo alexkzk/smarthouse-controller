@@ -2,15 +2,25 @@ package com.alexsoft.smarthouse.utils;
 
 public class MathUtils {
 
+    public static final String STATUS_STRING_NULL_MEASURE = "-";
+
     public static Float round(Float floatToRound, int accuracy) {
         return floatToRound == null || Float.isNaN(floatToRound) ? null : (float) Math.round(floatToRound * accuracy) / accuracy;
     }
 
-    private Long round(Double d) {
-        if (d.isNaN()) {
-            return null;
+    public static Long round(Double d) {
+        return roundDouble(d);
+    }
+
+    public static Long round(double d) {
+        return roundDouble(d);
+    }
+
+    public static String measureToString(Long measure) {
+        if (measure == null) {
+            return STATUS_STRING_NULL_MEASURE;
         } else {
-            return Math.round(d);
+            return String.valueOf(measure);
         }
     }
 
@@ -35,6 +45,14 @@ public class MathUtils {
             return null;
         } else {
             return Math.min(a, b);
+        }
+    }
+
+    private static Long roundDouble(double d) {
+        if (Double.isNaN(d)) {
+            return null;
+        } else {
+            return Math.round(d);
         }
     }
 

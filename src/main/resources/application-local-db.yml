@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/smarthouse
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      ddl-auto: validate
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+#    com.alexsoft.smarthouse: trace
