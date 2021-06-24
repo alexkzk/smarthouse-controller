@@ -29,8 +29,8 @@ public class HouseStateStatusRestController {
     }
 
     @GetMapping("/average/short")
-    public ResponseEntity<String> findWithinInterval(@RequestParam Integer minutes) {
-        return ResponseEntity.ok(houseStateService.getOutsideStatus(minutes));
+    public ResponseEntity<String> findWithinInterval() {
+        return ResponseEntity.ok(houseStateService.getHourlyAveragedShortStatus());
     }
 
     @GetMapping
