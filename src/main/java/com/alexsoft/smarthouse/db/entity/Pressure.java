@@ -12,15 +12,19 @@ import lombok.ToString;
 
 @Data
 @Entity
-@Table(name = "air_pressure", schema = "main")
+@Table(name = "air_pressure_indication", schema = "main")
 public class Pressure {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_pressure_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "air_pressure_sq",
-        name = "air_pressure_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_pressure_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "air_pressure_indication_sq",
+        name = "air_pressure_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
     private Integer mmHg;
+
+    public boolean isEmpty() {
+        return getMmHg() != null;
+    }
 }

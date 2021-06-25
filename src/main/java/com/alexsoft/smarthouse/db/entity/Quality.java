@@ -15,7 +15,7 @@ import lombok.ToString;
 
 @Data
 @Entity
-@Table(name = "air_quality", schema = "main")
+@Table(name = "air_quality_indication", schema = "main")
 public class Quality {
 
     @Id
@@ -34,5 +34,9 @@ public class Quality {
     @OneToOne(cascade = CascadeType.ALL)
     @JsonProperty("meta")
     private Bme680Meta bme680Meta;
+
+    public boolean isEmpty() {
+        return getIaq() == null && getPm25() == null && getPm10() == null;
+    }
 
 }

@@ -16,7 +16,7 @@ import lombok.ToString;
  */
 @Data
 @Entity
-@Table(schema = "main")
+@Table(name = "bme_680_meta", schema = "main")
 public class Bme680Meta {
 
     @Id

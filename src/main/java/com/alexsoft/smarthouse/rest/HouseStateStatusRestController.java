@@ -1,8 +1,6 @@
 package com.alexsoft.smarthouse.rest;
 
-import java.util.List;
-
-import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import lombok.AllArgsConstructor;
@@ -12,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.alexsoft.smarthouse.utils.MathUtils.round;
+import java.util.List;
 
 @RestController
 @RequestMapping("/status")
@@ -22,7 +20,7 @@ public class HouseStateStatusRestController {
     private final HouseStateService houseStateService;
 
     @GetMapping("/average")
-    public ResponseEntity<List<HouseState>> findWithinInterval(
+    public ResponseEntity<List<Indication>> findWithinInterval(
         @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
     ) {
         return ResponseEntity.ok(houseStateService.findWithinInterval(minutes, hours, days));
@@ -34,7 +32,7 @@ public class HouseStateStatusRestController {
     }
 
     @GetMapping
-    public ResponseEntity<List<HouseState>> findAll() {
+    public ResponseEntity<List<Indication>> findAll() {
         return ResponseEntity.ok(houseStateService.findAll());
     }
 

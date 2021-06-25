@@ -7,7 +7,7 @@ import java.time.temporal.ChronoUnit;
 
 import com.alexsoft.smarthouse.db.entity.InOut;
 import com.alexsoft.smarthouse.db.entity.Air;
-import com.alexsoft.smarthouse.db.entity.HouseState;
+import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.Temp;
 import com.alexsoft.smarthouse.model.metar.Metar;
 import com.alexsoft.smarthouse.service.HouseStateService;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import static com.alexsoft.smarthouse.utils.Constants.MIAMI_MEASURE_PLACE;
@@ -59,8 +60,8 @@ public class MetarRetriever {
     public void getChernivtsiMetar() {
         Metar metar = getMetar(chernivtsiIcao);
         if (metarIsNotExpired(metar)) {
-            HouseState houseState = houseStateFromMetar(metar);
-            houseStateService.save(houseState);
+            Indication indication = houseStateFromMetar(metar);
+            houseStateService.save(indication);
         }
     }
 
@@ -68,11 +69,11 @@ public class MetarRetriever {
     public void getSeattleMetar() {
         Metar metar = getMetar(seattleIcao);
         if (metarIsNotExpired(metar)) {
-            HouseState houseState = houseStateFromMetar(metar);
-            houseState.setMeasurePlace(SEATTLE_MEASURE_PLACE);
+            Indication indication = houseStateFromMetar(metar);
+            indication.setIndicationPlace(SEATTLE_MEASURE_PLACE);
             //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
-            houseState.setMessageReceived(houseState.getMessageReceived().plus(14, ChronoUnit.HOURS));
-            houseStateService.save(houseState);
+            indication.setReceived(indication.getReceived().plus(14, ChronoUnit.HOURS));
+            houseStateService.save(indication);
         }
     }
 
@@ -80,33 +81,33 @@ public class MetarRetriever {
     public void getMiamiMetar() {
         Metar metar = getMetar(miamiIcao);
         if (metarIsNotExpired(metar)) {
-            HouseState houseState = houseStateFromMetar(metar);
-            houseState.setMeasurePlace(MIAMI_MEASURE_PLACE);
+            Indication indication = houseStateFromMetar(metar);
+            indication.setIndicationPlace(MIAMI_MEASURE_PLACE);
             //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
-            houseState.setMessageReceived(houseState.getMessageReceived().plus(17, ChronoUnit.HOURS));
-            houseStateService.save(houseState);
+            indication.setReceived(indication.getReceived().plus(17, ChronoUnit.HOURS));
+            houseStateService.save(indication);
         }
     }
 
-    private HouseState houseStateFromMetar(Metar metar) {
+    private Indication houseStateFromMetar(Metar metar) {
         Float temp = Float.valueOf(metar.getTemperature().getValue());
         Integer devpoint = metar.getDewpoint().getValue();
         Integer rh = tempUtils.calculateRelativeHumidity(temp, Float.valueOf(devpoint));
         LocalDateTime now = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
-        HouseState houseState = new HouseState();
-        houseState.setMeasurePlace(metar.getStation());
-        houseState.setInOut(InOut.OUT);
-        houseState.setMessageIssued(metar.getTime().getIssueDateTime().toLocalDateTime());
-        houseState.setMessageReceived(now);
-        houseState.setPublisherId(metar.getStation());
+        Indication indication = new Indication();
+        indication.setIndicationPlace(metar.getStation());
+        indication.setInOut(InOut.OUT);
+        indication.setIssued(metar.getTime().getIssueDateTime().toLocalDateTime());
+        indication.setReceived(now);
+        indication.setPublisherId(metar.getStation());
         Air air = new Air();
-        houseState.setAir(air);
+        indication.setAir(air);
         Temp temp1 = new Temp();
         air.setTemp(temp1);
         temp1.setCelsius(temp.doubleValue());
         temp1.setRh(rh);
         temp1.setAh(tempUtils.calculateAbsoluteHumidity(temp, rh).doubleValue());
-        return houseState;
+        return indication;
     }
 
     public static boolean metarIsNotExpired(final Metar metar) {
@@ -120,6 +121,9 @@ public class MetarRetriever {
         Metar forObject = null;
         try {
             forObject = this.restTemplate.getForObject(url, Metar.class);
+        } catch (HttpClientErrorException e) {
+            // TODO just return null in this case and not to check on the metar's expirity the URL should be changed to onfail=error
+            LOGGER.warn(e.getMessage(), e);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }

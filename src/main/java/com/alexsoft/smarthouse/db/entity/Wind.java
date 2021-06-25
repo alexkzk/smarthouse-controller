@@ -12,12 +12,12 @@ import lombok.ToString;
 
 @Data
 @Entity
-@Table(schema = "main")
+@Table(name = "air_wind_indication", schema = "main")
 public class Wind {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "wind_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "wind_sq", name = "wind_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "wind_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "wind_indication_sq", name = "wind_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 

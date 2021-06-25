@@ -1,6 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/smarthouse
+    username: smarthouse
+    password: 571564
   jpa:
     properties:
       hibernate:
