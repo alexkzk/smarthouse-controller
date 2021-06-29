@@ -13,11 +13,14 @@
       var humidData = google.visualization.arrayToDataTable(/*[[${chartDto.getRhs()}]]*/'noValue');
       var ahHumidData = google.visualization.arrayToDataTable(/*[[${chartDto.getAhs()}]]*/'noValue');
       var aqiData = google.visualization.arrayToDataTable(/*[[${chartDto.getAqi()}]]*/'noValue');
+      var aqiColors = /*[[${chartDto.getAqiColors()}]]*/'noValue';
+      var outdoorColors = /*[[${chartDto.getOutdoorColors()}]]*/'noValue';
 
       var inTempOptions = {
         title: 'INDOOR TEMP °C',
         curveType: 'function',
         legend: { position: 'bottom' },
+        colors: /*[[${chartDto.getIndoorColors()}]]*/'noValue',
         series: {
           0: {targetAxisIndex: 0}
         },
@@ -31,6 +34,7 @@
         title: 'OUTDOOR TEMP °C',
         curveType: 'function',
         legend: { position: 'bottom' },
+        colors: outdoorColors,
         series: {
           0: {targetAxisIndex: 0}
         },
@@ -43,12 +47,14 @@
       var humidOptions = {
         title: 'RELATIVE HUMIDITY %',
         curveType: 'function',
+        colors: /*[[${chartDto.getRhsColors()}]]*/'noValue',
         legend: { position: 'bottom' }
       };
 
       var ahHumidOptions = {
         title: 'ABSOLUTE HUMIDITY g/m3',
         curveType: 'function',
+        colors: /*[[${chartDto.getAhsColors()}]]*/'noValue',
         legend: { position: 'bottom' }
       };
 
@@ -56,7 +62,7 @@
         title: 'AIR QUALITY',
         curveType: 'function',
         legend: { position: 'bottom' },
-        colors:['#791d00', '#ff0000', '#e27f67', '#969eff', '#4254f5'],
+        colors: aqiColors,
         series: {
           0: {targetAxisIndex: 0},
           1: {targetAxisIndex: 0},

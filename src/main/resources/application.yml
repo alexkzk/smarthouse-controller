@@ -56,3 +56,12 @@ avwx:
 time:
   local-time-zone: Europe/Kiev
   chart-date-time-pattern: E d, HH:mm
+
+smarthouse:
+  colors:
+    MIAMI: '#00B0FF'
+    UKLN: '#8d47b5'
+    SEATTLE: '#109618'
+    NORTH: '#3769cd'
+    NORTH2: grey
+    LIVING-ROOM: '#dc3912'

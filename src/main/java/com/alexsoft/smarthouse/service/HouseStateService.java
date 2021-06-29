@@ -1,5 +1,6 @@
 package com.alexsoft.smarthouse.service;
 
+import com.alexsoft.smarthouse.configuration.SmarthouseConfiguration;
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.InOut;
 import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -43,6 +45,8 @@ public class HouseStateService {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+
+
     public static final String IN_PREFIX = "IN-";
     public static final String OUT_PREFIX = "OUT-";
     public static final String DATE = "Date";
@@ -62,6 +66,7 @@ public class HouseStateService {
     @Value("${sensor.bme680-temp-adjustment}")
     private final Double bme680TempAdjustment;
 
+    private final SmarthouseConfiguration smarthouseConfiguration;
     private final HouseStateRepository houseStateRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
@@ -220,13 +225,44 @@ public class HouseStateService {
     public ChartDto getAggregatedData() {
         List<Map<String, Object>> aggregates = houseStateRepository.aggregate();
         ChartDto chartDto = new ChartDto();
-
+        chartDto.setAqiColors(new String[] {"#791d00", "#ff0000", "#e27f67", "#969eff", "#4254f5"});
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
         setAhs(aggregates, chartDto);
         setAqis(aggregates, chartDto);
+        setColors(chartDto);
 
         return chartDto;
+    }
+
+    private void setColors(ChartDto chartDto) {
+        Object[] aqiColors = new Object[]{"#791d00", "#ff0000", "#e27f67", "#969eff", "#4254f5"};
+        chartDto.setAqiColors(aqiColors);
+
+        Object[] outdoorTemp = (Object[]) chartDto.getOutdoorTemps()[0];
+        List<Object> outdoorTempHeader = Arrays.stream(outdoorTemp).collect(Collectors.toList());
+        outdoorTempHeader = outdoorTempHeader.subList(1, outdoorTempHeader.size());
+        Object[] outdoorColors = outdoorTempHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        chartDto.setOutdoorColors(outdoorColors);
+
+        Object[] rhs = (Object[]) chartDto.getRhs()[0];
+        List<Object> rhHeader = Arrays.stream(rhs).collect(Collectors.toList());
+        rhHeader = rhHeader.subList(1, rhHeader.size());
+        Object[] rhColors = rhHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        chartDto.setRhsColors(rhColors);
+
+        Object[] ahs = (Object[]) chartDto.getAhs()[0];
+        List<Object> ahHeader = Arrays.stream(ahs).collect(Collectors.toList());
+        ahHeader = ahHeader.subList(1, ahHeader.size());
+        Object[] ahColors = ahHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        chartDto.setAhsColors(ahColors);
+
+        Object[] indoor = (Object[]) chartDto.getIndoorTemps()[0];
+        List<Object> indoorHeader = Arrays.stream(indoor).collect(Collectors.toList());
+        indoorHeader = indoorHeader.subList(1, indoorHeader.size());
+        Object[] indoorColors = indoorHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        chartDto.setIndoorColors(indoorColors);
+
     }
 
     private void setAqis(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
