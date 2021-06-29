@@ -51,7 +51,7 @@ avwx:
   chernivtsi-icao: UKLN
   seattle-icao: KSEA
   miami-icao: KMIA
-  metar-receiving-cron: 0 */2 * * * *
+  metar-receiving-cron: 0 */10 * * * *
 
 time:
   local-time-zone: Europe/Kiev

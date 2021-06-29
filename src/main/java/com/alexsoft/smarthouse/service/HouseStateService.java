@@ -140,7 +140,7 @@ public class HouseStateService {
     }
 
     public List<Indication> findHourly() {
-        return houseStateRepository.findAfter(dateUtils.getInterval(0, 1, 0, true), dateUtils.getInterval(0, 0, 0, true));
+        return houseStateRepository.findAfter(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
     }
 
     public List<Indication> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
