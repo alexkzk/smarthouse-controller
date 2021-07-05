@@ -63,5 +63,6 @@ smarthouse:
     UKLN: '#8d47b5'
     SEATTLE: '#109618'
     NORTH: '#3769cd'
+    SOUTH: '#379bcd'
     NORTH2: grey
     LIVING-ROOM: '#dc3912'

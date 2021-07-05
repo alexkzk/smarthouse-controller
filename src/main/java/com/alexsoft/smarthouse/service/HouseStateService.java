@@ -57,6 +57,7 @@ public class HouseStateService {
     public static final String SIAQ = "SIAQ ";
     public static final String GR = "GR ";
     public static final String OUTSIDE_STATUS_PATTERN = "%s - %s";
+    public static final String OUTSIDE_STATUS_PATTERN2 = "C[%s]SM %d/%d/%d[°C] %d/%d/%d[AH]";
     public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
 
 
@@ -152,14 +153,15 @@ public class HouseStateService {
         List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(Collectors.toList());
 
         List<Indication> northMeasurements = filterByPlace(hourlyAverage, NORTH_MEASURE_PLACE);
-        List<Indication> terraceMeasurements = filterByPlace(hourlyAverage, TERRACE_MEASURE_PLACE);
+        List<Indication> southMeasurements = filterByPlace(hourlyAverage, SOUTH_MEASURE_PLACE);
         List<Indication> seattleMeasurements = filterByPlace(hourlyAverage, SEATTLE_MEASURE_PLACE);
         List<Indication> miamiMeasurements = filterByPlace(hourlyAverage, MIAMI_MEASURE_PLACE);
         List<Indication> uklnMeasurements = filterByPlace(hourlyAverage, UKLN_MEASURE_PLACE);
 
-        Long terraceTemp = calculateAverageTemperature(terraceMeasurements);
+        Long southTemp = calculateAverageTemperature(southMeasurements);
         Long northTemp = calculateAverageTemperature(northMeasurements);
         Long northAh = calculateAverageAh(northMeasurements);
+        Long southAh = calculateAverageAh(southMeasurements);
         Long uklnTemp = calculateAverageTemperature(uklnMeasurements);
         Long uklnAh = calculateAverageAh(uklnMeasurements);
 
@@ -180,11 +182,22 @@ public class HouseStateService {
         Long avgIaq = calculateAverageIaq(hourlyAverage);
         Long avgPm25 = calculateAveragePm25(hourlyAverage);
 
-        String chernivtsiStatus = terraceTemp == null && northTemp == null ? toTempAndAhString(uklnTemp, uklnAh, "UKLN") : toTempAndAhString(MathUtils.min(terraceTemp, northTemp), northAh, "CWC");
+        boolean actualMeasuresNorth = southTemp == null || (southTemp == null && northTemp == null) || northTemp < southTemp;
+
+        String chernivtsiStatus = southTemp == null && northTemp == null ? toTempAndAhString(uklnTemp, uklnAh, "UKLN") : toTempAndAhString(MathUtils.min(southTemp, northTemp), northAh, "CWC");
         String seattleStatus = toTempAndAhString(seattleTemp, seattleAh, "SEA");
         String miamiStatus = toTempAndAhString(miamiTemp, miamiAh, "MIA");
 
-        return String.format(OUTSIDE_STATUS_PATTERN, Stream.of(chernivtsiStatus, seattleStatus, miamiStatus).filter(Objects::nonNull).collect(Collectors.joining(" ")), toAirQualityString(avgIaq, avgPm25));
+//        return String.format(OUTSIDE_STATUS_PATTERN, Stream.of(chernivtsiStatus, seattleStatus, miamiStatus).filter(Objects::nonNull).collect(Collectors.joining(" ")), toAirQualityString(avgIaq, avgPm25));
+        return String.format(OUTSIDE_STATUS_PATTERN2,
+                actualMeasuresNorth ? "N" : "S",
+                actualMeasuresNorth ? northTemp : southTemp,
+                seattleTemp,
+                miamiTemp,
+                actualMeasuresNorth ? northAh : southAh,
+                seattleAh,
+                miamiAh
+                );
     }
 
     private String toAirQualityString(Long avgIaq, Long avgPm25) {
@@ -242,25 +255,33 @@ public class HouseStateService {
         Object[] outdoorTemp = (Object[]) chartDto.getOutdoorTemps()[0];
         List<Object> outdoorTempHeader = Arrays.stream(outdoorTemp).collect(Collectors.toList());
         outdoorTempHeader = outdoorTempHeader.subList(1, outdoorTempHeader.size());
-        Object[] outdoorColors = outdoorTempHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        Object[] outdoorColors = outdoorTempHeader.stream().map(
+                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
+        ).toArray();
         chartDto.setOutdoorColors(outdoorColors);
 
         Object[] rhs = (Object[]) chartDto.getRhs()[0];
         List<Object> rhHeader = Arrays.stream(rhs).collect(Collectors.toList());
         rhHeader = rhHeader.subList(1, rhHeader.size());
-        Object[] rhColors = rhHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        Object[] rhColors = rhHeader.stream().map(
+                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
+        ).toArray();
         chartDto.setRhsColors(rhColors);
 
         Object[] ahs = (Object[]) chartDto.getAhs()[0];
         List<Object> ahHeader = Arrays.stream(ahs).collect(Collectors.toList());
         ahHeader = ahHeader.subList(1, ahHeader.size());
-        Object[] ahColors = ahHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        Object[] ahColors = ahHeader.stream().map(
+                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
+        ).toArray();
         chartDto.setAhsColors(ahColors);
 
         Object[] indoor = (Object[]) chartDto.getIndoorTemps()[0];
         List<Object> indoorHeader = Arrays.stream(indoor).collect(Collectors.toList());
         indoorHeader = indoorHeader.subList(1, indoorHeader.size());
-        Object[] indoorColors = indoorHeader.stream().map(s -> smarthouseConfiguration.getColors().get(s)).toArray();
+        Object[] indoorColors = indoorHeader.stream().map(
+                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
+        ).toArray();
         chartDto.setIndoorColors(indoorColors);
 
     }
