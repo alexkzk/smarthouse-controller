@@ -94,9 +94,6 @@ public class HouseStateService {
                 indication.setIndicationPlace(indication.getIndicationPlace().replace(OUT_PREFIX, ""));
             }
             indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            if (indication.getIndicationPlace().equals("TERRACE") && indication.getInOut() == InOut.IN) {
-                return; // TODO temporary disabled due to sensor malfunction
-            }
             if (indication.getIndicationPlace().equals("TERRACE") && indication.getInOut() == InOut.OUT) {
                 // TODO temporary disabled due to sensor malfunction
                 indication.getAir().getTemp().setAh(null);
