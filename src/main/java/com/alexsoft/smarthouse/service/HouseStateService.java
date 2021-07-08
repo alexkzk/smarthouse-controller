@@ -235,7 +235,6 @@ public class HouseStateService {
     public ChartDto getAggregatedData() {
         List<Map<String, Object>> aggregates = houseStateRepository.aggregate();
         ChartDto chartDto = new ChartDto();
-        chartDto.setAqiColors(new String[] {"#791d00", "#ff0000", "#e27f67", "#969eff", "#4254f5"});
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
         setAhs(aggregates, chartDto);
@@ -246,7 +245,7 @@ public class HouseStateService {
     }
 
     private void setColors(ChartDto chartDto) {
-        Object[] aqiColors = new Object[]{"#791d00", "#ff0000", "#e27f67", "#969eff", "#4254f5"};
+        Object[] aqiColors = new Object[]{"#ff0000", "#791d00", "#e27f67", "#969eff", "#4254f5"};
         chartDto.setAqiColors(aqiColors);
 
         Object[] outdoorTemp = (Object[]) chartDto.getOutdoorTemps()[0];
