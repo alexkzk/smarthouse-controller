@@ -87,7 +87,10 @@ where indication_place = 'NORTH' and (received > '2021-07-03 00:00:00.000000' an
 
 update main.air_temp_indication set celsius = null, ah = null, rh = null where id in(
     select temp_id from main.air_temp_indication temp inner join main.air air on air.temp_id = temp.id
-                                                      inner join main.indication ind on air.id = ind.air_id where indication_place = 'SOUTH' AND (celsius < 20 OR celsius > 40 OR ah > 20 OR ah < 8 OR celsius is null ));
+                                                      inner join main.indication ind on air.id = ind.air_id
+    where indication_place = 'TERRACE' AND in_out = 'OUT' and received > '2021-07-03 23:59:00.000000'
+      AND (celsius < 20 OR celsius > 40 OR ah > 20 OR ah < 8 OR celsius is null)
+    );
 
 update main.air_quality_indication set pm10 = null, pm25 = null where id in(
     select quality_id
@@ -111,3 +114,7 @@ from main.air_quality_indication where id in (select quality_id
                                                        inner join main.indication ind on air.id = ind.air_id
                                               where (temp.pm25 > 25 OR temp.pm10 > 25)
                                                 AND received > '2021-06-01 00:00:00.000000') ORDER BY id;
+
+select temp_id from main.air_temp_indication temp inner join main.air air on air.temp_id = temp.id
+                                                  inner join main.indication ind on air.id = ind.air_id
+where (celsius < -50 OR celsius > 50)

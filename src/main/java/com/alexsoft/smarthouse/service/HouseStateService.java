@@ -29,11 +29,9 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.alexsoft.smarthouse.utils.Constants.*;
 import static com.alexsoft.smarthouse.utils.MathUtils.measureToString;
@@ -76,7 +74,16 @@ public class HouseStateService {
         Indication indication = null;
         try {
             indication = OBJECT_MAPPER.readValue(msg, Indication.class);
-            if (hasTempAndHumidMeasurements(indication)) {
+
+            //  Normalize temp and humid values for fault measurements
+            if (indication.getAir() != null && indication.getAir().getTemp() != null) {
+                if (indication.getAir().getTemp().normalize()) {
+                    LOGGER.warn("Out of range temp measurements observed");
+                }
+            }
+
+            //  Calculate Absolute Humidity if needed
+            if (hasNoAhCalculated(indication)) {
                 Float aH = tempUtils.calculateAbsoluteHumidity(
                         indication.getAir().getTemp().getCelsius().floatValue(),
                         indication.getAir().getTemp().getRh()
@@ -131,7 +138,7 @@ public class HouseStateService {
         }
     }
 
-    private boolean hasTempAndHumidMeasurements(Indication indication) {
+    private boolean hasNoAhCalculated(Indication indication) {
         return indication.getAir() != null && indication.getAir().getTemp() != null &&
                 indication.getAir().getTemp().getCelsius() != null && indication.getAir().getTemp().getRh() != null &&
                 indication.getAir().getTemp().getAh() == null;

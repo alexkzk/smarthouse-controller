@@ -43,7 +43,7 @@ sudo docker stop smarthouse && sudo docker rm smarthouse && sudo docker run -p 8
 ## Redeployment steps
 -- From dev machine
 
-`sudo docker build -t alexsoft/smarthouse ~/IdeaProjects/smarthouse && sudo docker tag alexsoft/smarthouse smarthouse:1.02 && sudo docker push smarthouse:1.02`
+`sudo docker build -t alexsoft/smarthouse ~/IdeaProjects/smarthouse-controller && sudo docker tag alexsoft/smarthouse smarthouse:1.37 && sudo docker push smarthouse:1.37`
 
 -- From server
 

@@ -31,5 +31,23 @@ public class Temp {
         return getCelsius() == null && getRh() == null && getAh() == null;
     }
 
+    public boolean normalize() {
+        boolean normalized = false;
+        if (celsius != null && celsius > 50D) {
+            celsius = 50D;
+            normalized = true;
+        } else if (celsius != null && celsius < -50D) {
+            celsius = -50D;
+            normalized = true;
+        } else if (rh != null && rh > 100) {
+            rh = 100;
+            normalized = true;
+        } else if (rh != null && rh < 0) {
+            rh = 0;
+            normalized = true;
+        }
+        return normalized;
+    }
+
 
 }
