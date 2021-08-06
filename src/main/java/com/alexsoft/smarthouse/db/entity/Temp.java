@@ -36,13 +36,16 @@ public class Temp {
         if (celsius != null && celsius > 50D) {
             celsius = 50D;
             normalized = true;
-        } else if (celsius != null && celsius < -50D) {
+        }
+        if (celsius != null && celsius < -50D) {
             celsius = -50D;
             normalized = true;
-        } else if (rh != null && rh > 100) {
+        }
+        if (rh != null && rh > 100) {
             rh = 100;
             normalized = true;
-        } else if (rh != null && rh < 0) {
+        }
+        if (rh != null && rh < 0) {
             rh = 0;
             normalized = true;
         }
