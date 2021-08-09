@@ -34,19 +34,27 @@ public class Temp {
     public boolean normalize() {
         boolean normalized = false;
         if (celsius != null && celsius > 50D) {
-            celsius = 50D;
+            celsius = null;
             normalized = true;
         }
         if (celsius != null && celsius < -50D) {
-            celsius = -50D;
+            celsius = null;
             normalized = true;
         }
         if (rh != null && rh > 100) {
-            rh = 100;
+            rh = null;
             normalized = true;
         }
         if (rh != null && rh < 0) {
-            rh = 0;
+            rh = null;
+            normalized = true;
+        }
+        if (ah != null && ah > 30) {
+            ah = null;
+            normalized = true;
+        }
+        if (ah != null && ah < 0) {
+            ah = null;
             normalized = true;
         }
         return normalized;
