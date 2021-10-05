@@ -22,9 +22,9 @@ public class Pressure {
     @ToString.Include
     private Integer id;
 
-    private Integer mmHg;
+    private Double mmHg;
 
     public boolean isEmpty() {
-        return getMmHg() != null;
+        return getMmHg() == null;
     }
 }

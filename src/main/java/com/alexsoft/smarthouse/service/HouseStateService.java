@@ -120,6 +120,9 @@ public class HouseStateService {
             if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty()) {
                 LOGGER.debug("Indication's Pressure is empty, setting it as NULL\n{}", indication);
                 indication.getAir().setPressure(null);
+            } else if (indication.getAir().getPressure() != null){
+                // Convert to mm Rh
+                indication.getAir().getPressure().setMmHg(indication.getAir().getPressure().getMmHg() * 0.00750062);
             }
 
 
