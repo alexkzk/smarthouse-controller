@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model.metar;
+package com.alexsoft.smarthouse.model.avwx.metar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,17 +27,14 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
     "repr",
-    "value",
-    "spoken"
+    "value"
 })
-public class TemperatureDecimal {
+public class WxCode {
 
     @JsonProperty("repr")
     public String repr;
     @JsonProperty("value")
-    public Integer value;
-    @JsonProperty("spoken")
-    public String spoken;
+    public String value;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

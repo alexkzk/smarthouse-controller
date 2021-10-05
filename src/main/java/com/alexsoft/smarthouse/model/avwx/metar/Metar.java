@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model.metar;
+package com.alexsoft.smarthouse.model.avwx.metar;
 
 import java.util.HashMap;
 import java.util.List;

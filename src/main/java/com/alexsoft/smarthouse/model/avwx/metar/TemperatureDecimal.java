@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model.metar;
+package com.alexsoft.smarthouse.model.avwx.metar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,12 +30,12 @@ import lombok.ToString;
     "value",
     "spoken"
 })
-public class Altimeter {
+public class TemperatureDecimal {
 
     @JsonProperty("repr")
     public String repr;
     @JsonProperty("value")
-    public Double value;
+    public Integer value;
     @JsonProperty("spoken")
     public String spoken;
     @JsonIgnore

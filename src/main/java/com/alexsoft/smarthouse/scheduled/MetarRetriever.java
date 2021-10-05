@@ -9,7 +9,7 @@ import com.alexsoft.smarthouse.db.entity.InOut;
 import com.alexsoft.smarthouse.db.entity.Air;
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.Temp;
-import com.alexsoft.smarthouse.model.metar.Metar;
+import com.alexsoft.smarthouse.model.avwx.metar.Metar;
 import com.alexsoft.smarthouse.service.HouseStateService;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import org.slf4j.Logger;

@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model.metar;
+package com.alexsoft.smarthouse.model.avwx.metar;
 
 import java.time.ZonedDateTime;
 import java.util.HashMap;
@@ -27,12 +27,15 @@ import lombok.ToString;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "timestamp"
+    "repr",
+    "dt"
 })
-public class Meta {
+public class Time {
 
-    @JsonProperty("timestamp")
-    public ZonedDateTime timestamp;
+    @JsonProperty("repr")
+    public String repr;
+    @JsonProperty("dt")
+    public ZonedDateTime issueDateTime;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

@@ -1,7 +1,6 @@
 
-package com.alexsoft.smarthouse.model.metar;
+package com.alexsoft.smarthouse.model.avwx.metar;
 
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -27,15 +26,15 @@ import lombok.ToString;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({
-    "repr",
-    "dt"
+    "dewpoint_decimal",
+    "temperature_decimal"
 })
-public class Time {
+public class RemarksInfo {
 
-    @JsonProperty("repr")
-    public String repr;
-    @JsonProperty("dt")
-    public ZonedDateTime issueDateTime;
+    @JsonProperty("dewpoint_decimal")
+    public DewpointDecimal dewpointDecimal;
+    @JsonProperty("temperature_decimal")
+    public TemperatureDecimal temperatureDecimal;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 

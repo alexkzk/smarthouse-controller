@@ -1,5 +1,5 @@
 
-package com.alexsoft.smarthouse.model.metar;
+package com.alexsoft.smarthouse.model.avwx.metar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ import lombok.ToString;
     "value",
     "spoken"
 })
-public class WindSpeed {
+public class Temperature {
 
     @JsonProperty("repr")
     public String repr;
