@@ -59,7 +59,11 @@ public class MqttConfiguration {
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
             LOGGER.debug("Received a message {}", message);
-            houseStateService.save(message);
+            try {
+                houseStateService.save(message);
+            } catch (Exception e) {
+                LOGGER.error("Error during saving an MQTT message", e);
+            }
         }).get();
     }
 
