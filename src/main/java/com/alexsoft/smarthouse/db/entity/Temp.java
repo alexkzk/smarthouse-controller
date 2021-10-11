@@ -12,12 +12,12 @@ import lombok.ToString;
 
 @Data
 @Entity
-@Table(name = "air_temp", schema = "main")
+@Table(name = "air_temp_indication", schema = "main")
 public class Temp {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_temp_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "air_temp_sq", name = "air_temp_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "air_temp_indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "air_temp_indication_sq", name = "air_temp_indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
@@ -26,6 +26,39 @@ public class Temp {
     private Integer rh;
 
     private Double ah;
+
+    public boolean isEmpty() {
+        return getCelsius() == null && getRh() == null && getAh() == null;
+    }
+
+    public boolean normalize() {
+        boolean normalized = false;
+        if (celsius != null && celsius > 50D) {
+            celsius = null;
+            normalized = true;
+        }
+        if (celsius != null && celsius < -50D) {
+            celsius = null;
+            normalized = true;
+        }
+        if (rh != null && rh > 100) {
+            rh = null;
+            normalized = true;
+        }
+        if (rh != null && rh < 0) {
+            rh = null;
+            normalized = true;
+        }
+        if (ah != null && ah > 30) {
+            ah = null;
+            normalized = true;
+        }
+        if (ah != null && ah < 0) {
+            ah = null;
+            normalized = true;
+        }
+        return normalized;
+    }
 
 
 }

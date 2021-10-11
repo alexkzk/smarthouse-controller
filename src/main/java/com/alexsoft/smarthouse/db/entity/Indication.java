@@ -1,6 +1,13 @@
 package com.alexsoft.smarthouse.db.entity;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import lombok.Data;
+import lombok.ToString;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -12,42 +19,38 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import lombok.Data;
-import lombok.ToString;
+import java.time.LocalDateTime;
 
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
 @Data
 @Entity
-@Table(name = "house_state_v2", schema = "main")
-public class HouseState {
+@Table(schema = "main")
+public class Indication {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "house_state_v2_sq")
-    @SequenceGenerator(schema = "main", sequenceName = "house_state_v2_sq",
-        name = "house_state_v2_sq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "indication_sq")
+    @SequenceGenerator(schema = "main", sequenceName = "indication_sq",
+        name = "indication_sq", allocationSize = 1)
     @ToString.Include
     private Integer id;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime messageIssued;
+    @JsonProperty("messageIssued")
+    private LocalDateTime issued;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime messageReceived;
+    @JsonProperty("messageReceived")
+    private LocalDateTime received;
 
     private String publisherId;
 
-    private String measurePlace;
+    @JsonProperty("measurePlace")
+    private String indicationPlace;
 
     @Enumerated(EnumType.STRING)
     private InOut inOut;

@@ -46,13 +46,24 @@ mqtt:
 
 avwx:
   baseUri: https://avwx.rest/api
-  metarSubUri: /metar/{ICAO}?options=&airport=true&reporting=true&format=json&onfail=error
+  metarSubUri: /metar/{ICAO}?options=&airport=true&reporting=true&format=json&onfail=cache
   token: ${AVWX_TOKEN:your-avwx-token-here}
   chernivtsi-icao: UKLN
   seattle-icao: KSEA
   miami-icao: KMIA
-  metar-receiving-cron: 0 */2 * * * *
+  metar-receiving-cron: 0 */10 * * * *
 
 time:
   local-time-zone: Europe/Kiev
   chart-date-time-pattern: E d, HH:mm
+
+smarthouse:
+  colors:
+    MIAMI: '#00B0FF'
+    UKLN: '#8d47b5'
+    SEATTLE: '#109618'
+    NORTH: '#3769cd'
+    SOUTH: '#379bcd'
+    NORTH2: grey
+    LIVING-ROOM: '#dc3912'
+    TERRACE: '#ff5959'
