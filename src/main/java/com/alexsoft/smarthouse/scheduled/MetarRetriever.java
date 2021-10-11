@@ -5,7 +5,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
-import com.alexsoft.smarthouse.db.entity.InOut;
+import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.db.entity.Air;
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.Temp;

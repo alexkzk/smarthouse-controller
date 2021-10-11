@@ -21,9 +21,9 @@ public class HouseStateStatusRestController {
 
     @GetMapping("/average")
     public ResponseEntity<List<Indication>> findWithinInterval(
-        @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
+            @RequestParam Integer interval, @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
     ) {
-        return ResponseEntity.ok(houseStateService.findWithinInterval(minutes, hours, days));
+        return ResponseEntity.ok(houseStateService.aggregateOnInterval(interval, minutes, hours, days));
     }
 
     @GetMapping("/average/short")

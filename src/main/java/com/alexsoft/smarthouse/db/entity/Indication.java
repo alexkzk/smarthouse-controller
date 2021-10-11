@@ -1,12 +1,16 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import com.alexsoft.smarthouse.enums.InOut;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.persistence.CascadeType;
@@ -24,9 +28,12 @@ import java.time.LocalDateTime;
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Entity
 @Table(schema = "main")
-public class Indication {
+public class Indication implements Comparable<Indication> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "indication_sq")
@@ -58,4 +65,14 @@ public class Indication {
     @OneToOne(cascade = CascadeType.ALL)
     private Air air;
 
+    @Override
+    public int compareTo(Indication o) {
+        if (received == null) {
+            return -1;
+        } else if (o == null || o.getReceived() == null) {
+            return  -1;
+        } else {
+            return o.getReceived().compareTo(received);
+        }
+    }
 }
