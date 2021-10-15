@@ -12,7 +12,6 @@ import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.MathUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -46,10 +45,9 @@ import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
-public class HouseStateService {
+public class IndicationService {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndicationService.class);
 
 
     public static final String IN_PREFIX = "IN-";

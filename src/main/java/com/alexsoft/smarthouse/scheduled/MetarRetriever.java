@@ -10,7 +10,7 @@ import com.alexsoft.smarthouse.db.entity.Air;
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.Temp;
 import com.alexsoft.smarthouse.model.avwx.metar.Metar;
-import com.alexsoft.smarthouse.service.HouseStateService;
+import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +48,12 @@ public class MetarRetriever {
     private String metarSubUri;
 
     private final RestTemplate restTemplate;
-    private final HouseStateService houseStateService;
+    private final IndicationService indicationService;
     private final TempUtils tempUtils = new TempUtils();
 
-    public MetarRetriever(RestTemplateBuilder restTemplateBuilder, HouseStateService houseStateService) {
+    public MetarRetriever(RestTemplateBuilder restTemplateBuilder, IndicationService indicationService) {
         this.restTemplate = restTemplateBuilder.build();
-        this.houseStateService = houseStateService;
+        this.indicationService = indicationService;
     }
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
@@ -61,13 +61,13 @@ public class MetarRetriever {
         Metar metar = getMetar(chernivtsiIcao);
         if (metarIsNotExpired(metar)) {
             Indication indication = houseStateFromMetar(metar);
-            houseStateService.save(indication);
+            indicationService.save(indication);
             // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
             // but we cannot afford to ping the remote server so often
             indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
-            houseStateService.save(indication);
+            indicationService.save(indication);
             indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
-            houseStateService.save(indication);
+            indicationService.save(indication);
         }
     }
 
@@ -79,13 +79,13 @@ public class MetarRetriever {
             indication.setIndicationPlace(SEATTLE_MEASURE_PLACE);
             //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
             indication.setReceived(indication.getReceived().plus(14, ChronoUnit.HOURS));
-            houseStateService.save(indication);
+            indicationService.save(indication);
             // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
             // but we cannot afford to ping the remote server so often
             indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
-            houseStateService.save(indication);
+            indicationService.save(indication);
             indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
-            houseStateService.save(indication);
+            indicationService.save(indication);
         }
     }
 
@@ -97,13 +97,13 @@ public class MetarRetriever {
             indication.setIndicationPlace(MIAMI_MEASURE_PLACE);
             //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
             indication.setReceived(indication.getReceived().plus(17, ChronoUnit.HOURS));
-            houseStateService.save(indication);
+            indicationService.save(indication);
             // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
             // but we cannot afford to ping the remote server so often
             indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
-            houseStateService.save(indication);
+            indicationService.save(indication);
             indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
-            houseStateService.save(indication);
+            indicationService.save(indication);
         }
     }
 

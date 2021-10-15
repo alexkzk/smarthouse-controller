@@ -2,7 +2,7 @@ package com.alexsoft.smarthouse.rest;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.dto.ChartDto;
-import com.alexsoft.smarthouse.service.HouseStateService;
+import com.alexsoft.smarthouse.service.IndicationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,27 +17,27 @@ import java.util.List;
 @AllArgsConstructor
 public class HouseStateStatusRestController {
 
-    private final HouseStateService houseStateService;
+    private final IndicationService indicationService;
 
     @GetMapping("/average")
     public ResponseEntity<List<Indication>> findWithinInterval(
             @RequestParam Integer interval, @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
     ) {
-        return ResponseEntity.ok(houseStateService.aggregateOnInterval(interval, minutes, hours, days));
+        return ResponseEntity.ok(indicationService.aggregateOnInterval(interval, minutes, hours, days));
     }
 
     @GetMapping("/average/short")
     public ResponseEntity<String> findWithinInterval() {
-        return ResponseEntity.ok(houseStateService.getHourlyAveragedShortStatus());
+        return ResponseEntity.ok(indicationService.getHourlyAveragedShortStatus());
     }
 
     @GetMapping
     public ResponseEntity<List<Indication>> findAll() {
-        return ResponseEntity.ok(houseStateService.findAll());
+        return ResponseEntity.ok(indicationService.findAll());
     }
 
     @GetMapping("/aggregate")
     public ResponseEntity<ChartDto> aggregate() {
-        return ResponseEntity.ok(houseStateService.getAggregatedData());
+        return ResponseEntity.ok(indicationService.getAggregatedData());
     }
 }

@@ -3,7 +3,7 @@ package com.alexsoft.smarthouse.configuration;
 import java.util.UUID;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.service.HouseStateService;
+import com.alexsoft.smarthouse.service.IndicationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ public class MqttConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final HouseStateService houseStateService;
+    private final IndicationService indicationService;
 
     @Value("tcp://${mqtt.server}:${mqtt.port}")
     private String mqttUrl;
@@ -65,7 +65,7 @@ public class MqttConfiguration {
             LOGGER.debug("Received a message {}", message);
             try {
                 Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
-                houseStateService.save(indication);
+                indicationService.save(indication);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Error reading an MQTT message", e);
             } catch (Exception e) {
