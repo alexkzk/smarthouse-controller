@@ -12,7 +12,6 @@ import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.MathUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
@@ -69,9 +68,6 @@ public class HouseStateService {
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
-
-    @Value("${sensor.bme680-temp-adjustment}")
-    private final Double bme680TempAdjustment;
 
     private final SmarthouseConfiguration smarthouseConfiguration;
     private final HouseStateRepository houseStateRepository;
@@ -172,74 +168,21 @@ public class HouseStateService {
 
     }
 
-    public void save(String msg) {
-        Indication indication = null;
-        try {
-            indication = OBJECT_MAPPER.readValue(msg, Indication.class);
+    public void save(Indication indicationToSave) {
 
-            //  Normalize temp and humid values for fault measurements
-            if (indication.getAir() != null && indication.getAir().getTemp() != null) {
-                if (indication.getAir().getTemp().normalize()) {
-                    LOGGER.warn("Out of range temp measurements observed");
-                }
-            }
+        normalizeTempAndHumidValues(indicationToSave);
+        calculateAbsoluteHumidity(indicationToSave);
+        setInOut(indicationToSave);
+        setRecievedDateTime(indicationToSave);
+        resetTempAndHumidForPlace("TERRACE", indicationToSave);
+        setEmptyMeasurementsToNull(indicationToSave);
+        convertPressureToMmHg(indicationToSave);
 
-            //  Calculate Absolute Humidity if needed
-            if (hasNoAhCalculated(indication)) {
-                Float aH = tempUtils.calculateAbsoluteHumidity(
-                        indication.getAir().getTemp().getCelsius().floatValue(),
-                        indication.getAir().getTemp().getRh()
-                );
-                indication.getAir().getTemp().setAh(aH.doubleValue());
-                if (indication.getIndicationPlace().equals("OUT-NORTH")) {
-                    indication.getAir().getTemp().setCelsius(indication.getAir().getTemp().getCelsius() + bme680TempAdjustment);
-                }
-            }
-            if (indication.getIndicationPlace().startsWith(IN_PREFIX)) { //  todo temporary, remove after changing the msg format on publishers
-                indication.setInOut(InOut.IN);
-                indication.setIndicationPlace(indication.getIndicationPlace().replace(IN_PREFIX, ""));
-            } else if (indication.getIndicationPlace().startsWith(OUT_PREFIX)) {
-                indication.setInOut(InOut.OUT);
-                indication.setIndicationPlace(indication.getIndicationPlace().replace(OUT_PREFIX, ""));
-            }
-            indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            if (indication.getIndicationPlace().equals("TERRACE") && indication.getInOut() == InOut.OUT) {
-                // TODO temporary disabled due to sensor malfunction
-                indication.getAir().getTemp().setAh(null);
-                indication.getAir().getTemp().setRh(null);
-            }
-
-            if (indication.getAir().getTemp() != null && indication.getAir().getTemp().isEmpty()) {
-                LOGGER.debug("Indication's Temp is empty, setting it as NULL\n{}", indication);
-                indication.getAir().setTemp(null);
-            }
-
-            if (indication.getAir().getQuality() != null && indication.getAir().getQuality().isEmpty()) {
-                LOGGER.debug("Indication's Quality is empty, setting it as NULL\n{}", indication);
-                indication.getAir().setQuality(null);
-            }
-
-            if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty()) {
-                LOGGER.debug("Indication's Pressure is empty, setting it as NULL\n{}", indication);
-                indication.getAir().setPressure(null);
-            } else if (indication.getAir().getPressure() != null){
-                // Convert to mm Rh
-                indication.getAir().getPressure().setMmHg(indication.getAir().getPressure().getMmHg() * 0.00750062);
-            }
-
-
-            save(indication);
-        } catch (JsonProcessingException e) {
-            LOGGER.error(e.getMessage(), e);
-        }
-    }
-
-    public void save(Indication indication) {
         if (msgSavingEnabled) {
-            Indication savedIndication = houseStateRepository.saveAndFlush(indication);
+            Indication savedIndication = houseStateRepository.saveAndFlush(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
         } else {
-            LOGGER.debug("Skipping of saving indication {}", indication);
+            LOGGER.debug("Skipping of saving indication {}", indicationToSave);
         }
     }
 
@@ -582,5 +525,70 @@ public class HouseStateService {
 
     private Object[][] getEmptyDataArray() {
         return new Object[][] {{DATE, "NO DATA"}, {dateUtils.localDateTimeToString(LocalDateTime.now()), 0D}};
+    }
+
+    private void convertPressureToMmHg(Indication indication) {
+        if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty() && indication.getAir().getPressure() != null) {
+            // Convert to mm Rh
+            indication.getAir().getPressure().setMmHg(indication.getAir().getPressure().getMmHg() * 0.00750062);
+        }
+    }
+
+    private void setEmptyMeasurementsToNull(Indication indication) {
+        if (indication.getAir().getTemp() != null && indication.getAir().getTemp().isEmpty()) {
+            LOGGER.debug("Indication's Temp is empty, setting it as NULL\n{}", indication);
+            indication.getAir().setTemp(null);
+        }
+
+        if (indication.getAir().getQuality() != null && indication.getAir().getQuality().isEmpty()) {
+            LOGGER.debug("Indication's Quality is empty, setting it as NULL\n{}", indication);
+            indication.getAir().setQuality(null);
+        }
+
+        if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty()) {
+            LOGGER.debug("Indication's Pressure is empty, setting it as NULL\n{}", indication);
+            indication.getAir().setPressure(null);
+        }
+    }
+
+    private void resetTempAndHumidForPlace(String place, Indication indication) {
+        if (indication.getIndicationPlace().equals(place) && indication.getInOut() == InOut.OUT) {
+            // TODO temporary disabled due to sensor malfunction
+            indication.getAir().getTemp().setAh(null);
+            indication.getAir().getTemp().setRh(null);
+        }
+    }
+
+    private void setRecievedDateTime(Indication indication) {
+        indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+    }
+
+    private void setInOut(Indication indication) {
+        //  todo temporary, remove after changing the msg format on publishers
+        if (indication.getIndicationPlace().startsWith(IN_PREFIX)) {
+            indication.setInOut(InOut.IN);
+            indication.setIndicationPlace(indication.getIndicationPlace().replace(IN_PREFIX, ""));
+        } else if (indication.getIndicationPlace().startsWith(OUT_PREFIX)) {
+            indication.setInOut(InOut.OUT);
+            indication.setIndicationPlace(indication.getIndicationPlace().replace(OUT_PREFIX, ""));
+        }
+    }
+
+    private void calculateAbsoluteHumidity(Indication indication) {
+        if (hasNoAhCalculated(indication)) {
+            Float aH = tempUtils.calculateAbsoluteHumidity(
+                    indication.getAir().getTemp().getCelsius().floatValue(),
+                    indication.getAir().getTemp().getRh()
+            );
+            indication.getAir().getTemp().setAh(aH.doubleValue());
+        }
+    }
+
+    private void normalizeTempAndHumidValues(Indication indication) {
+        if (indication.getAir() != null && indication.getAir().getTemp() != null) {
+            if (indication.getAir().getTemp().normalize()) {
+                LOGGER.warn("Out of range temp measurements observed");
+            }
+        }
     }
 }

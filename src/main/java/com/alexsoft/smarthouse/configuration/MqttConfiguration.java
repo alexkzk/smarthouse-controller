@@ -2,7 +2,10 @@ package com.alexsoft.smarthouse.configuration;
 
 import java.util.UUID;
 
+import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.service.HouseStateService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
@@ -21,6 +24,7 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final HouseStateService houseStateService;
 
@@ -60,7 +64,10 @@ public class MqttConfiguration {
             String message = String.valueOf(m.getPayload());
             LOGGER.debug("Received a message {}", message);
             try {
-                houseStateService.save(message);
+                Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
+                houseStateService.save(indication);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error reading an MQTT message", e);
             } catch (Exception e) {
                 LOGGER.error("Error during saving an MQTT message", e);
             }

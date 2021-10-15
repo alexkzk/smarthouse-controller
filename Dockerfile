@@ -6,6 +6,7 @@ COPY pom.xml .
 COPY src src
 RUN ./mvnw clean install
 
+#FROM openjdk:11-jdk-slim
 FROM arm64v8/adoptopenjdk:11-jdk-hotspot-focal
 ARG DEPENDENCY=/var/tmp/smarthouse/target
 COPY --from=build ${DEPENDENCY}/*.jar /opt/smarthouse/smarthouse.jar
