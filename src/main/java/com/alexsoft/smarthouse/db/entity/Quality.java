@@ -1,5 +1,14 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -8,15 +17,13 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import static com.alexsoft.smarthouse.utils.MathUtils.isNullOrNan;
 
-@Data
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -41,8 +48,21 @@ public class Quality {
     @JsonProperty("meta")
     private Bme680Meta bme680Meta;
 
+    @JsonIgnore
     public boolean isEmpty() {
-        return getIaq() == null && getPm25() == null && getPm10() == null;
+        return (iaq == null || iaq < 1) && isNullOrNan(pm25) && isNullOrNan(pm10);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Quality quality = (Quality) o;
+        return Objects.equals(id, quality.id) && Objects.equals(iaq, quality.iaq) && Objects.equals(pm25, quality.pm25) && Objects.equals(pm10, quality.pm10) && Objects.equals(bme680Meta, quality.bme680Meta);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, iaq, pm25, pm10, bme680Meta);
+    }
 }

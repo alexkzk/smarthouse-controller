@@ -1,19 +1,26 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.util.Objects;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import static com.alexsoft.smarthouse.utils.MathUtils.isNullOrNan;
 
-@Data
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -30,7 +37,21 @@ public class Pressure {
 
     private Double mmHg;
 
+    @JsonIgnore
     public boolean isEmpty() {
-        return getMmHg() == null;
+        return isNullOrNan(getMmHg());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pressure pressure = (Pressure) o;
+        return Objects.equals(id, pressure.id) && Objects.equals(mmHg, pressure.mmHg);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, mmHg);
     }
 }

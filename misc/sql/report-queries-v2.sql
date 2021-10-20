@@ -138,14 +138,38 @@ from main.air_quality_indication temp
 -- where (temp.pm25 > 40 OR temp.pm10 > 40)
   AND received > '2021-06-05 00:00:00.000000' order by received;
 
-select *
-from main.air_quality_indication where id in (select quality_id
-                                              from main.air_quality_indication temp
-                                                       inner join main.air air on air.quality_id = temp.id
-                                                       inner join main.indication ind on air.id = ind.air_id
-                                              where (temp.pm25 > 25 OR temp.pm10 > 25)
-                                                AND received > '2021-06-01 00:00:00.000000') ORDER BY id;
+select * from main.air_quality_indication where id in
+            (select quality_id from main.air_quality_indication temp inner join main.air air on air.quality_id = temp.id
+                inner join main.indication ind on air.id = ind.air_id where (temp.pm25 > 25 OR temp.pm10 > 25)
+                                                                        AND received > '2021-06-01 00:00:00.000000') ORDER BY id;
 
 select temp_id from main.air_temp_indication temp inner join main.air air on air.temp_id = temp.id
-                                                  inner join main.indication ind on air.id = ind.air_id
-where (celsius < -50 OR celsius > 50)
+    inner join main.indication ind on air.id = ind.air_id where (celsius < -50 OR celsius > 50);
+
+-- RESET CERTAIN (INCORRECT) AIR TEMP VALUES
+update main.air_temp_indication
+set celsius = null,
+    ah      = null,
+    rh      = null
+where id in (
+    select temp_id
+    from main.air_temp_indication temp
+             inner join main.air air on air.temp_id = temp.id
+             inner join main.indication ind on air.id = ind.air_id
+    where indication_place = 'LIVING-ROOM'
+      AND (celsius < 10 OR celsius > 40 OR rh > 100 OR ah < 0)
+);
+
+-- RESET CERTAIN (INCORRECT) AIR QUALITY VALUES
+update main.air_quality_indication
+set pm10 = null,
+    pm25 = null
+where id in (
+    select quality_id
+    from main.air_quality_indication q
+             inner join main.air air on air.quality_id = q.id
+             inner join main.indication ind on air.id = ind.air_id
+    where indication_place = 'TERRACE'
+      and received > '2021-10-19 00:00:00.000000'
+      AND (q.pm10 > 50 OR q.pm25 > 50)
+);

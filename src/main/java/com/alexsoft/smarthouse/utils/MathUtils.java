@@ -16,12 +16,28 @@ public class MathUtils {
         return roundDouble(d);
     }
 
+    public static Integer doubleToInt(double d) {
+        if (Double.isNaN(d)){
+            return null;
+        } else {
+            long round = Math.round(d);
+            if (round > Integer.MAX_VALUE) {
+                throw new RuntimeException();
+            }
+            return (int) round;
+        }
+    }
+
     public static String measureToString(Long measure) {
         if (measure == null) {
             return STATUS_STRING_NULL_MEASURE;
         } else {
             return String.valueOf(measure);
         }
+    }
+
+    public static boolean isNullOrNan(Double d) {
+        return d == null || Double.isNaN(d);
     }
 
     private static Double min(Double a, Double b) {

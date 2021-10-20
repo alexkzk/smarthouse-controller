@@ -1,8 +1,9 @@
 server:
   servlet:
     context-path: /smarthouse
-
 spring:
+  jackson:
+    default-property-inclusion: non_null
   application:
     name: smarthouse
 #    liquibase: # todo temporary disabled until the database schema is finalized
