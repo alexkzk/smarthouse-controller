@@ -73,25 +73,23 @@ public class IndicationService {
     public List<Indication> aggregateOnInterval(
             Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {
-        LOGGER.debug("Aggregating houseStates on {} min interval, requested period: {} days, {} hours, {} minutes",
+        LOGGER.debug("Aggregating houseStates on {} min startDate, requested period: {} days, {} hours, {} minutes",
                 aggregationIntervalMinutes, days, hours, minutes);
 
-        LocalDateTime interval = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
+        LocalDateTime startDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
 
-        return aggregateOnInterval(aggregationIntervalMinutes, interval, LocalDateTime.now());
+        return aggregateOnInterval(aggregationIntervalMinutes, startDate, LocalDateTime.now());
     }
 
-    public void aggregateOnInterval(Integer interval, AggregationPeriod aggregationPeriod) {
+    public void aggregateOnInterval(Integer intervalMinutes, AggregationPeriod aggregationPeriod) {
 
         LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
-        LocalDateTime startDate = endDate
-                .minusHours(aggregationPeriod == AggregationPeriod.HOURLY ? interval : 0)
-                .minusMinutes(aggregationPeriod == AggregationPeriod.MINUTELY ? interval : 0);
+        LocalDateTime startDate = endDate.minusMinutes(intervalMinutes);
 
-        List<Indication> indications = aggregateOnInterval(interval, startDate, endDate);
+        List<Indication> indications = aggregateOnInterval(intervalMinutes, startDate, endDate);
 
         indications.forEach(ind -> {
             ind.setIssued(endDate);
@@ -99,8 +97,8 @@ public class IndicationService {
         });
 
         List<Indication> savedIndications = indicationRepository.saveAll(indications);
-        LOGGER.info("Saved aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.\n{}",
-                startDate, endDate, interval, aggregationPeriod, savedIndications);
+        LOGGER.info("Saved aggregated measurements for the following intervalMinutes: {} - {}. Aggregation period: {} {}.\n{}",
+                startDate, endDate, intervalMinutes, aggregationPeriod, savedIndications);
     }
 
     public List<Indication> aggregateOnInterval(
