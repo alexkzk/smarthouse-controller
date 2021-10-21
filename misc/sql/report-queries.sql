@@ -24,7 +24,8 @@
           left join main.air_quality_indication aq on a.quality_id = aq.id
           left join main.bme_680_meta b680m on b680m.id = aq.bme680meta_id
           left join main.air_wind_indication w on w.id = a.wind_id
- where date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')
+ where aggregation_period = 'INSTANT'
+   AND date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')
    AND date_trunc('month', received) = date_trunc('month', now() at time zone 'utc')
    AND date_trunc('year', received) = date_trunc('year', now() at time zone 'utc')
    AND DATE_PART('hour', now() at time zone 'utc') - DATE_PART('hour', received) <= 1
@@ -58,7 +59,8 @@
           left join main.air_quality_indication aq on a.quality_id = aq.id
           left join main.bme_680_meta b680m on b680m.id = aq.bme680meta_id
           left join main.air_wind_indication w on w.id = a.wind_id
- where received <
+ where  aggregation_period = 'INSTANT'
+   AND received <
        (select min(msg_received)
         from (select date_trunc('hour', received) +
                      cast((FLOOR(DATE_PART('minute', received) / 5) * 5 || 'minutes') as interval) as msg_received

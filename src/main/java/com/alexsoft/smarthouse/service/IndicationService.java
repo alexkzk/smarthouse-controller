@@ -13,6 +13,8 @@ import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -39,7 +41,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static com.alexsoft.smarthouse.utils.Constants.*;
-import static com.alexsoft.smarthouse.utils.DateUtils.MQTT_PRODUCER_TIMEZONE_ID;
 import static com.alexsoft.smarthouse.utils.MathUtils.*;
 import static java.util.stream.Collectors.toList;
 
@@ -73,22 +74,56 @@ public class IndicationService {
     public List<Indication> aggregateOnInterval(
             Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
     ) {
-
         LOGGER.debug("Aggregating houseStates on {} min interval, requested period: {} days, {} hours, {} minutes",
                 aggregationIntervalMinutes, days, hours, minutes);
 
-        long startMillis = System.currentTimeMillis();
-        LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
+        LocalDateTime interval = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
-        List<Indication> fetchedHouseStates = houseStateRepository.findAfter(interval, LocalDateTime.now());
+
+        return aggregateOnInterval(aggregationIntervalMinutes, interval, LocalDateTime.now());
+    }
+
+    public void aggregateOnInterval(Integer interval, AggregationPeriod aggregationPeriod) {
+        LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
+        LocalDateTime startDate = endDate
+                .minusHours(aggregationPeriod == AggregationPeriod.HOURLY ? interval : 0)
+                .minusMinutes(aggregationPeriod == AggregationPeriod.MINUTELY ? interval : 0)
+                .withSecond(0).withNano(0);
+        List<Indication> indications = aggregateOnInterval(interval, startDate, endDate);
+        indications.forEach(ind -> {
+            ind.setIssued(endDate);
+            ind.setAggregationPeriod(aggregationPeriod);
+        });
+        List<Indication> savedIndications = houseStateRepository.saveAll(indications);
+        String s = null;
+        try {
+            s = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(savedIndications);
+        } catch (JsonProcessingException e) {
+            LOGGER.warn(e.getMessage(), e);
+        }
+        LOGGER.info("Saved aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.\n{}",
+                startDate, endDate, interval, aggregationPeriod, s);
+    }
+
+    public List<Indication> aggregateOnInterval(
+            Integer aggregationIntervalMinutes, LocalDateTime startDate, LocalDateTime endDate
+    ) {
+
+        long startMillis = System.currentTimeMillis();
+        List<Indication> fetchedHouseStates = houseStateRepository.findAfter(startDate, endDate);
 
         if (aggregationIntervalMinutes != null && 0 != aggregationIntervalMinutes) {
             long aggregationStart = System.currentTimeMillis();
-            List<Indication> indications = fetchedHouseStates.stream().collect(Collectors.groupingBy(Indication::getIndicationPlace))
-                    .entrySet().stream().flatMap(entry -> aggregateByInterval(aggregationIntervalMinutes, entry.getValue()).stream())
-                    .sorted().collect(Collectors.toList());
+            List<Indication> indications = fetchedHouseStates.stream().collect(Collectors.groupingBy(ind -> ind.getIndicationPlace() + "&" + ind.getInOut()))
+                    .entrySet().stream().flatMap(
+                            entry -> aggregateByInterval(
+                                    aggregationIntervalMinutes,
+                                    entry.getValue(),
+                                    entry.getKey().split("&")[0],
+                                    InOut.valueOf(entry.getKey().split("&")[1])
+                            ).stream()).sorted().collect(Collectors.toList());
 
             LOGGER.debug("Aggregating completed, aggregation time: {} ms, total: {} ms", System.currentTimeMillis() - aggregationStart,
                     System.currentTimeMillis() - startMillis);
@@ -99,18 +134,18 @@ public class IndicationService {
         }
     }
 
-    private List<Indication> aggregateByInterval(Integer aggregationIntervalMinutes, List<Indication> fetchedHouseStates) {
+    private List<Indication> aggregateByInterval(Integer aggregationIntervalMinutes, List<Indication> fetchedHouseStates, String indicationPlace, InOut inOut) {
         return fetchedHouseStates.stream().collect(
                         Collectors.groupingBy(
                                 houseState -> dateUtils.roundDateTime(houseState.getReceived(), aggregationIntervalMinutes),
                                 TreeMap::new,
-                                Collectors.collectingAndThen(toList(), this::averageList)
+                                Collectors.collectingAndThen(toList(), indications -> averageList(indications, indicationPlace, inOut))
                         )
                 ).entrySet().stream().peek(el -> el.getValue().setReceived(el.getKey()))
                 .map(Map.Entry::getValue).sorted().collect(toList());
     }
 
-    private Indication averageList(List<Indication> indications) {
+    private Indication averageList(List<Indication> indications, String indicationPlace, InOut inOut) {
 
         Indication averagedIndication = new Indication();
         Set<String> places = indications.stream().map(Indication::getIndicationPlace).collect(Collectors.toSet());
@@ -118,8 +153,9 @@ public class IndicationService {
         if (places.size() != 1 || publisherIds.size() != 1) {
             throw new RuntimeException();
         }
-        averagedIndication.setIndicationPlace(new ArrayList<>(places).get(0));
+        averagedIndication.setIndicationPlace(indicationPlace);
         averagedIndication.setPublisherId(new ArrayList<>(publisherIds).get(0));
+        averagedIndication.setInOut(inOut);
 
         List<Quality> aqis = indications.stream().map(indication -> indication.getAir().getQuality()).filter(Objects::nonNull).collect(Collectors.toList());
         Quality quality = Quality.builder()
@@ -424,7 +460,8 @@ public class IndicationService {
 
     private void setTemps(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
         Map<Timestamp, Object[]> inTempsMap = new TreeMap<>();
-        List<Map<String, Object>> inTemp = aggregates.stream().filter(map -> map.get("in_out").equals("IN") && map.get("temp") != null)
+        List<Map<String, Object>> inTemp = aggregates.stream()
+                .filter(map -> (map.get("in_out") != null && map.get("in_out").equals("IN")) && map.get("temp") != null)
             .collect(toList());
         List<Object> inTempHeader = new ArrayList<>();
         inTempHeader.add(DATE);
@@ -452,7 +489,7 @@ public class IndicationService {
         chartDto.setIndoorTemps(!inTempsList.isEmpty() ? inTempsList.toArray() : getEmptyDataArray());
 
         Map<Timestamp, Object[]> outTempsMap = new TreeMap<>();
-        List<Map<String, Object>> outTemp = aggregates.stream().filter(map -> map.get("in_out").equals("OUT") && map.get("temp") != null)
+        List<Map<String, Object>> outTemp = aggregates.stream().filter(map -> (map.get("in_out") != null && map.get("in_out").equals("OUT")) && map.get("temp") != null)
                 .collect(toList());
         List<Object> outTempHeader = new ArrayList<>();
         outTempHeader.add(DATE);

@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.db.entity.Air;
 import com.alexsoft.smarthouse.db.entity.Indication;
@@ -54,6 +55,16 @@ public class MetarRetriever {
     public MetarRetriever(RestTemplateBuilder restTemplateBuilder, IndicationService indicationService) {
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
+    }
+
+    @Scheduled(cron = "0 0 */1 * * *")
+    public void aggregateHourly(){
+        indicationService.aggregateOnInterval(60, AggregationPeriod.HOURLY);
+    }
+
+    @Scheduled(cron = "0 */5 * * * *")
+    public void aggregateMinutely(){
+        indicationService.aggregateOnInterval(5, AggregationPeriod.MINUTELY);
     }
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")

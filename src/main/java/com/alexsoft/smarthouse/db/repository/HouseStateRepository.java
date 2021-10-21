@@ -13,7 +13,7 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
-            " left join fetch air.wind where hs.received > :startDate AND hs.received < :endDate")
+            " left join fetch air.wind where hs.received > :startDate AND hs.received < :endDate AND hs.aggregationPeriod = 'INSTANT'")
     List<Indication> findAfter(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
@@ -47,7 +47,8 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
             "          left join main.air_quality_indication aq on a.quality_id = aq.id\n" +
             "          left join main.bme_680_meta b680m on b680m.id = aq.bme680meta_id\n" +
             "          left join main.air_wind_indication w on w.id = a.wind_id\n" +
-            " where date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')\n" +
+            " where aggregation_period = 'INSTANT'\n" +
+            "   AND date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')\n" +
             "   AND date_trunc('month', received) = date_trunc('month', now() at time zone 'utc')\n" +
             "   AND date_trunc('year', received) = date_trunc('year', now() at time zone 'utc')\n" +
             "   AND DATE_PART('hour', now() at time zone 'utc') - DATE_PART('hour', received) <= 1\n" +
@@ -80,7 +81,8 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
             "          left join main.air_quality_indication aq on a.quality_id = aq.id\n" +
             "          left join main.bme_680_meta b680m on b680m.id = aq.bme680meta_id\n" +
             "          left join main.air_wind_indication w on w.id = a.wind_id\n" +
-            " where received <\n" +
+            " where  aggregation_period = 'INSTANT'\n" +
+            "   AND received <\n" +
             "       (select min(msg_received)\n" +
             "        from (select date_trunc('hour', received) +\n" +
             "                     cast((FLOOR(DATE_PART('minute', received) / 5) * 5 || 'minutes') as interval) as msg_received\n" +
