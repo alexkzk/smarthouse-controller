@@ -5,16 +5,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface HouseStateRepository extends JpaRepository<Indication, Integer> {
+public interface IndicationRepository extends JpaRepository<Indication, Integer> {
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
             " left join fetch air.wind where hs.received > :startDate AND hs.received < :endDate AND hs.aggregationPeriod = 'INSTANT'")
-    List<Indication> findAfter(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    List<Indication> findBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
@@ -107,5 +108,8 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
             ") order by msg_received DESC, indication_place", nativeQuery = true)
     List<Map<String, Object>> aggregate();
 
-
+    @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
+            " air.pressure left join fetch air.quality left join fetch air.temp" +
+            " left join fetch air.wind where hs.received > :startDate AND hs.aggregationPeriod = :period order by hs.received DESC")
+    List<Indication> findAfter(@Param("startDate") LocalDateTime startDate, @Param("period") AggregationPeriod period);
 }

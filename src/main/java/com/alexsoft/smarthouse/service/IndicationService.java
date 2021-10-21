@@ -7,14 +7,12 @@ import com.alexsoft.smarthouse.db.entity.Pressure;
 import com.alexsoft.smarthouse.db.entity.Quality;
 import com.alexsoft.smarthouse.db.entity.Temp;
 import com.alexsoft.smarthouse.db.entity.Wind;
-import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
+import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -28,6 +26,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,7 +63,7 @@ public class IndicationService {
     public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
 
     private final SmarthouseConfiguration smarthouseConfiguration;
-    private final HouseStateRepository houseStateRepository;
+    private final IndicationRepository indicationRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
 
@@ -86,25 +85,22 @@ public class IndicationService {
     }
 
     public void aggregateOnInterval(Integer interval, AggregationPeriod aggregationPeriod) {
-        LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
+
+        LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
         LocalDateTime startDate = endDate
                 .minusHours(aggregationPeriod == AggregationPeriod.HOURLY ? interval : 0)
-                .minusMinutes(aggregationPeriod == AggregationPeriod.MINUTELY ? interval : 0)
-                .withSecond(0).withNano(0);
+                .minusMinutes(aggregationPeriod == AggregationPeriod.MINUTELY ? interval : 0);
+
         List<Indication> indications = aggregateOnInterval(interval, startDate, endDate);
+
         indications.forEach(ind -> {
             ind.setIssued(endDate);
             ind.setAggregationPeriod(aggregationPeriod);
         });
-        List<Indication> savedIndications = houseStateRepository.saveAll(indications);
-        String s = null;
-        try {
-            s = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(savedIndications);
-        } catch (JsonProcessingException e) {
-            LOGGER.warn(e.getMessage(), e);
-        }
+
+        List<Indication> savedIndications = indicationRepository.saveAll(indications);
         LOGGER.info("Saved aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.\n{}",
-                startDate, endDate, interval, aggregationPeriod, s);
+                startDate, endDate, interval, aggregationPeriod, savedIndications);
     }
 
     public List<Indication> aggregateOnInterval(
@@ -112,12 +108,13 @@ public class IndicationService {
     ) {
 
         long startMillis = System.currentTimeMillis();
-        List<Indication> fetchedHouseStates = houseStateRepository.findAfter(startDate, endDate);
+        List<Indication> fetchedHouseStates = indicationRepository.findBetween(startDate, endDate);
 
         if (aggregationIntervalMinutes != null && 0 != aggregationIntervalMinutes) {
             long aggregationStart = System.currentTimeMillis();
-            List<Indication> indications = fetchedHouseStates.stream().collect(Collectors.groupingBy(ind -> ind.getIndicationPlace() + "&" + ind.getInOut()))
-                    .entrySet().stream().flatMap(
+            List<Indication> indications = fetchedHouseStates.stream().collect(
+                    Collectors.groupingBy(ind -> ind.getIndicationPlace() + "&" + ind.getInOut())
+                    ).entrySet().stream().flatMap(
                             entry -> aggregateByInterval(
                                     aggregationIntervalMinutes,
                                     entry.getValue(),
@@ -134,7 +131,9 @@ public class IndicationService {
         }
     }
 
-    private List<Indication> aggregateByInterval(Integer aggregationIntervalMinutes, List<Indication> fetchedHouseStates, String indicationPlace, InOut inOut) {
+    private List<Indication> aggregateByInterval(Integer aggregationIntervalMinutes, List<Indication> fetchedHouseStates,
+                                                 String indicationPlace, InOut inOut) {
+        LOGGER.info("Aggregating {} measurements for {} {} indication place", fetchedHouseStates.size(), indicationPlace, inOut);
         return fetchedHouseStates.stream().collect(
                         Collectors.groupingBy(
                                 houseState -> dateUtils.roundDateTime(houseState.getReceived(), aggregationIntervalMinutes),
@@ -205,7 +204,7 @@ public class IndicationService {
         convertPressureToMmHg(indicationToSave);
 
         if (msgSavingEnabled) {
-            Indication savedIndication = houseStateRepository.saveAndFlush(indicationToSave);
+            Indication savedIndication = indicationRepository.saveAndFlush(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
         } else {
             LOGGER.debug("Skipping of saving indication {}", indicationToSave);
@@ -219,7 +218,7 @@ public class IndicationService {
     }
 
     public List<Indication> findHourly() {
-        return houseStateRepository.findAfter(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
+        return indicationRepository.findBetween(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
     }
 
     public String getHourlyAveragedShortStatus() {
@@ -277,11 +276,11 @@ public class IndicationService {
     }
 
     public List<Indication> findAll() {
-        return houseStateRepository.findAll();
+        return indicationRepository.findAll();
     }
 
     public ChartDto getAggregatedData() {
-        List<Map<String, Object>> aggregates = houseStateRepository.aggregate();
+        List<Map<String, Object>> aggregates = indicationRepository.aggregate();
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
@@ -587,7 +586,7 @@ public class IndicationService {
     }
 
     public List<Indication> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
-        return houseStateRepository.findAfter(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
+        return indicationRepository.findBetween(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
     }
 
     private Long calculateAveragePm25(List<Indication> indications) {
@@ -607,5 +606,11 @@ public class IndicationService {
             return null;
         }
         return String.format(TEMP_AND_AH_PATTERN, iata, measureToString(temp), measureToString(ah));
+    }
+
+    public List<Indication> findAfter(String date, AggregationPeriod period) {
+        LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm"));
+        LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev")).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+        return indicationRepository.findAfter(utcLocalDateTime, period);
     }
 }

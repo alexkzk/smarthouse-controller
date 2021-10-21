@@ -67,6 +67,11 @@ public class MetarRetriever {
         indicationService.aggregateOnInterval(5, AggregationPeriod.MINUTELY);
     }
 
+    @Scheduled(cron = "0 0 22 * * *")
+    public void aggregateDaily(){
+        indicationService.aggregateOnInterval(24 * 60, AggregationPeriod.DAILY);
+    }
+
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void getChernivtsiMetar() {
         Metar metar = getMetar(chernivtsiIcao);

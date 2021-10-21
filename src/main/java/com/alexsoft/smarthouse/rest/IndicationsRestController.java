@@ -2,6 +2,7 @@ package com.alexsoft.smarthouse.rest;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.dto.ChartDto;
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.service.IndicationService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/status")
+@RequestMapping("/indications")
 @AllArgsConstructor
-public class HouseStateStatusRestController {
+public class IndicationsRestController {
 
     private final IndicationService indicationService;
 
@@ -34,6 +35,11 @@ public class HouseStateStatusRestController {
     @GetMapping
     public ResponseEntity<List<Indication>> findAll() {
         return ResponseEntity.ok(indicationService.findAll());
+    }
+
+    @GetMapping(params = "startDate")
+    public ResponseEntity<List<Indication>> findAfter(@RequestParam String startDate, @RequestParam AggregationPeriod period) {
+        return ResponseEntity.ok(indicationService.findAfter(startDate, period));
     }
 
     @GetMapping("/aggregate")
