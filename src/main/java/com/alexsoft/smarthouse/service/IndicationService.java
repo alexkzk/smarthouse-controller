@@ -27,9 +27,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -71,52 +73,50 @@ public class IndicationService {
     private Boolean msgSavingEnabled;
 
     public List<Indication> aggregateOnInterval(
-            Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
+            Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days
     ) {
         LOGGER.debug("Aggregating houseStates on {} min startDate, requested period: {} days, {} hours, {} minutes",
-                aggregationIntervalMinutes, days, hours, minutes);
+                amount, temporalUnit, days, hours, minutes);
 
         LocalDateTime startDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
 
-        return aggregateOnInterval(aggregationIntervalMinutes, startDate, LocalDateTime.now());
+        return aggregateOnInterval(amount, temporalUnit, startDate, LocalDateTime.now());
     }
 
-    public void aggregateOnInterval(Integer intervalMinutes, AggregationPeriod aggregationPeriod) {
+    public void aggregateOnInterval(Integer amount, TemporalUnit temporalUnit) {
 
         LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
-        LocalDateTime startDate = endDate.minusMinutes(intervalMinutes);
+        LocalDateTime startDate = endDate.minus(amount, temporalUnit);
 
-        List<Indication> indications = aggregateOnInterval(intervalMinutes, startDate, endDate);
+        List<Indication> indications = aggregateOnInterval(amount, temporalUnit, startDate, endDate);
 
         indications.forEach(ind -> {
             ind.setIssued(endDate);
-            ind.setAggregationPeriod(aggregationPeriod);
+            ind.setAggregationPeriod(AggregationPeriod.of(temporalUnit));
         });
 
-        List<Indication> savedIndications = indicationRepository.saveAll(indications);
+        List<Indication> savedIndications = saveAll(indications);
         LOGGER.info("Saved aggregated measurements for the following intervalMinutes: {} - {}. Aggregation period: {} {}.\n{}",
-                startDate, endDate, intervalMinutes, aggregationPeriod, savedIndications);
+                startDate, endDate, amount, temporalUnit, savedIndications);
     }
 
     public List<Indication> aggregateOnInterval(
-            Integer aggregationIntervalMinutes, LocalDateTime startDate, LocalDateTime endDate
+            Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate
     ) {
 
         long startMillis = System.currentTimeMillis();
         List<Indication> fetchedHouseStates = indicationRepository.findBetween(startDate, endDate);
 
-        if (aggregationIntervalMinutes != null && 0 != aggregationIntervalMinutes) {
+        if (amount != null && 0 != amount) {
             long aggregationStart = System.currentTimeMillis();
             List<Indication> indications = fetchedHouseStates.stream().collect(
                     Collectors.groupingBy(ind -> ind.getIndicationPlace() + "&" + ind.getInOut())
                     ).entrySet().stream().flatMap(
                             entry -> aggregateByInterval(
-                                    aggregationIntervalMinutes,
-                                    entry.getValue(),
-                                    entry.getKey().split("&")[0],
+                                    amount, temporalUnit, entry.getValue(), entry.getKey().split("&")[0],
                                     InOut.valueOf(entry.getKey().split("&")[1])
                             ).stream()).sorted().collect(Collectors.toList());
 
@@ -129,12 +129,12 @@ public class IndicationService {
         }
     }
 
-    private List<Indication> aggregateByInterval(Integer aggregationIntervalMinutes, List<Indication> fetchedHouseStates,
+    private List<Indication> aggregateByInterval(Integer amount, TemporalUnit temporalUnit, List<Indication> fetchedHouseStates,
                                                  String indicationPlace, InOut inOut) {
         LOGGER.info("Aggregating {} measurements for {} {} indication place", fetchedHouseStates.size(), indicationPlace, inOut);
         return fetchedHouseStates.stream().collect(
                         Collectors.groupingBy(
-                                houseState -> dateUtils.roundDateTime(houseState.getReceived(), aggregationIntervalMinutes),
+                                houseState -> dateUtils.roundDateTime(houseState.getReceived(), amount, temporalUnit),
                                 TreeMap::new,
                                 Collectors.collectingAndThen(toList(), indications -> averageList(indications, indicationPlace, inOut))
                         )
@@ -190,22 +190,34 @@ public class IndicationService {
 
     }
 
-    public void save(Indication indicationToSave) {
+    public List<Indication> saveAll(List<Indication> indicationsToSave) {
+        if (msgSavingEnabled) {
+            return indicationRepository.saveAll(indicationsToSave);
+        } else {
+            LOGGER.debug("Skipping of saving indications");
+            return Collections.emptyList();
+        }
+    }
 
-        indicationToSave.setAggregationPeriod(AggregationPeriod.INSTANT);
-        normalizeTempAndHumidValues(indicationToSave);
-        calculateAbsoluteHumidity(indicationToSave);
-        setInOut(indicationToSave);
-        setRecievedDateTime(indicationToSave);
-        resetTempAndHumidForPlace("TERRACE", indicationToSave);
-        setEmptyMeasurementsToNull(indicationToSave);
-        convertPressureToMmHg(indicationToSave);
+    public Indication save(Indication indicationToSave, boolean normalize, AggregationPeriod aggregationPeriod) {
 
         if (msgSavingEnabled) {
+            if (normalize) {
+                indicationToSave.setAggregationPeriod(aggregationPeriod);
+                normalizeTempAndHumidValues(indicationToSave);
+                calculateAbsoluteHumidity(indicationToSave);
+                setInOut(indicationToSave);
+                setRecievedDateTime(indicationToSave);
+                resetTempAndHumidForPlace("TERRACE", indicationToSave);
+                setEmptyMeasurementsToNull(indicationToSave);
+                convertPressureToMmHg(indicationToSave);
+            }
             Indication savedIndication = indicationRepository.saveAndFlush(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
+            return savedIndication;
         } else {
             LOGGER.debug("Skipping of saving indication {}", indicationToSave);
+            return null;
         }
     }
 

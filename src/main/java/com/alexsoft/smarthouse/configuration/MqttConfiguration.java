@@ -3,6 +3,7 @@ package com.alexsoft.smarthouse.configuration;
 import java.util.UUID;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,7 +66,7 @@ public class MqttConfiguration {
             LOGGER.debug("Received a message {}", message);
             try {
                 Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
-                indicationService.save(indication);
+                indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Error reading an MQTT message", e);
             } catch (Exception e) {

@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,12 +28,19 @@ public class DateUtils {
     @Value("#{T(java.time.format.DateTimeFormatter).ofPattern('${time.chart-date-time-pattern}')}")
     private final DateTimeFormatter chartDateTimePattern;
 
-    public LocalDateTime roundDateTime(LocalDateTime localDateTime, int roundMinutes) {
-        if (roundMinutes == 0) {
+    public LocalDateTime roundDateTime(LocalDateTime localDateTime, int round, TemporalUnit temporalUnit) {
+        if (round == 0) {
             return localDateTime;
         }
-        return localDateTime.withSecond(0).withNano(0)
-                .withMinute(localDateTime.getMinute() / roundMinutes * roundMinutes);
+        LocalDateTime roundedLocalDateTime = localDateTime.withSecond(0).withNano(0);
+        if (temporalUnit.equals(ChronoUnit.MINUTES)) {
+            return roundedLocalDateTime.withMinute(localDateTime.getMinute() / round * round);
+        } else if(temporalUnit.equals(ChronoUnit.HOURS)) {
+            return roundedLocalDateTime.withHour(localDateTime.getHour() / round * round).withMinute(0);
+        } else if(temporalUnit.equals(ChronoUnit.DAYS)) {
+            return roundedLocalDateTime.withHour(localDateTime.getDayOfMonth() / round * round).withHour(0).withMinute(0);
+        }
+        return roundedLocalDateTime;
     }
 
     public LocalDateTime getInterval(Integer minutes, Integer hours, Integer days, boolean utc) {

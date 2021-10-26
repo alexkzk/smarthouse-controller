@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -24,7 +25,7 @@ public class IndicationsRestController {
     public ResponseEntity<List<Indication>> findWithinInterval(
             @RequestParam Integer interval, @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
     ) {
-        return ResponseEntity.ok(indicationService.aggregateOnInterval(interval, minutes, hours, days));
+        return ResponseEntity.ok(indicationService.aggregateOnInterval(interval, ChronoUnit.MINUTES, minutes, hours, days));
     }
 
     @GetMapping("/average/short")
