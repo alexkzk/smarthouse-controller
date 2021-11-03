@@ -63,12 +63,12 @@ public class MqttConfiguration {
             )
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
-            LOGGER.debug("Received a message {}", message);
+            LOGGER.debug("Received an MQTT message {}", message);
             try {
                 Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } catch (JsonProcessingException e) {
-                LOGGER.error("Error reading an MQTT message", e);
+                LOGGER.error("Error during reading an MQTT message", e);
             } catch (Exception e) {
                 LOGGER.error("Error during saving an MQTT message", e);
             }

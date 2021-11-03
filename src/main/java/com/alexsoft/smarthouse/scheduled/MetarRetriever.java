@@ -59,17 +59,20 @@ public class MetarRetriever {
 
     @Scheduled(cron = "0 0 */1 * * *")
     public void aggregateHourly(){
-        indicationService.createAverageMeasurment(1, ChronoUnit.HOURS);
+        LOGGER.info("Hourly aggregating");
+        indicationService.createAverageMeasurement(1, ChronoUnit.HOURS);
     }
 
     @Scheduled(cron = "0 */5 * * * *")
     public void aggregateMinutely(){
-        indicationService.createAverageMeasurment(5, ChronoUnit.MINUTES);
+        LOGGER.info("Minutely aggregating");
+        indicationService.createAverageMeasurement(5, ChronoUnit.MINUTES);
     }
 
     @Scheduled(cron = "0 0 22 * * *")
     public void aggregateDaily(){
-        indicationService.createAverageMeasurment(1, ChronoUnit.DAYS);
+        LOGGER.info("Daily aggregating");
+        indicationService.createAverageMeasurement(1, ChronoUnit.DAYS);
     }
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")

@@ -86,21 +86,16 @@ public class IndicationService {
         return aggregateOnInterval(amount, temporalUnit, startDate, LocalDateTime.now());
     }
 
-    public void createAverageMeasurment(Integer amount, TemporalUnit temporalUnit) {
-
+    public void createAverageMeasurement(Integer amount, TemporalUnit temporalUnit) {
         LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
         LocalDateTime startDate = endDate.minus(amount, temporalUnit);
-
+        LOGGER.info("Start date: {}, end date: {}", startDate, endDate);
         List<Indication> indications = aggregateOnInterval(amount, temporalUnit, startDate, endDate);
-
-        indications.forEach(ind -> {
-            ind.setIssued(endDate);
-            ind.setAggregationPeriod(AggregationPeriod.of(temporalUnit));
-        });
-
+        indications.forEach(indication -> indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit)));
         List<Indication> savedIndications = saveAll(indications);
-        LOGGER.info("Saved aggregated measurements for the following intervalMinutes: {} - {}. Aggregation period: {} {}.\n{}",
-                startDate, endDate, amount, temporalUnit, savedIndications);
+        LOGGER.info("Saved {} aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.",
+                savedIndications.size(), startDate, endDate, amount, temporalUnit);
+        LOGGER.debug(savedIndications.toString());
     }
 
     public List<Indication> aggregateOnInterval(
