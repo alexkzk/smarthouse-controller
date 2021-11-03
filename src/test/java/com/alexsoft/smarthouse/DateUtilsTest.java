@@ -20,7 +20,7 @@ public class DateUtilsTest {
 
     private final ZoneId userTimezone = ZoneId.of("Europe/Kiev");
     private final DateTimeFormatter chartDateTimePattern = DateTimeFormatter.ofPattern("E d, HH:mm");
-    private final DateUtils dateUtils = new DateUtils(userTimezone, chartDateTimePattern);
+    private final DateUtils dateUtils = new DateUtils(userTimezone, chartDateTimePattern, 2);
 
     @ParameterizedTest
     @MethodSource
@@ -60,7 +60,9 @@ public class DateUtilsTest {
                 arguments(3, ChronoUnit.HOURS, "2021-10-26T17:00:00.000000", "2021-10-26T15:00"),
                 arguments(3, ChronoUnit.HOURS, "2021-10-26T17:26:59.307543", "2021-10-26T15:00"),
                 arguments(3, ChronoUnit.HOURS, "2021-10-26T17:59:59.999999", "2021-10-26T15:00"),
-                arguments(3, ChronoUnit.HOURS, "2021-10-26T18:00:00.000000", "2021-10-26T18:00")
+                arguments(3, ChronoUnit.HOURS, "2021-10-26T18:00:00.000000", "2021-10-26T18:00"),
+
+                arguments(1, ChronoUnit.DAYS, "2021-10-26T18:00:00.000000", "2021-10-26T00:00")
 
         );
     }

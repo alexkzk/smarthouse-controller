@@ -53,6 +53,7 @@ avwx:
 
 time:
   local-time-zone: Europe/Kiev
+  local-time-offset: 2
   chart-date-time-pattern: E d, HH:mm
 
 smarthouse:

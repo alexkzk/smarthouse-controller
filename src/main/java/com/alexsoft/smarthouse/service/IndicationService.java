@@ -86,7 +86,7 @@ public class IndicationService {
         return aggregateOnInterval(amount, temporalUnit, startDate, LocalDateTime.now());
     }
 
-    public void aggregateOnInterval(Integer amount, TemporalUnit temporalUnit) {
+    public void createAverageMeasurment(Integer amount, TemporalUnit temporalUnit) {
 
         LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
         LocalDateTime startDate = endDate.minus(amount, temporalUnit);
