@@ -51,17 +51,8 @@ public class IndicationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IndicationService.class);
 
-    public static final String IN_PREFIX = "IN-";
-    public static final String OUT_PREFIX = "OUT-";
-    public static final String DATE = "Date";
     public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
-    public static final String PM_10 = "PM10 ";
-    public static final String PM_2_5 = "PM2.5 ";
-    public static final String IAQ = "IAQ ";
-    public static final String SIAQ = "SIAQ ";
-    public static final String GR = "GR ";
-    public static final String OUTSIDE_STATUS_PATTERN = "C[%s]SM %s/%s/%s[°C] %s/%s/%s[AH]";
-    public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
+
 
     private final SmarthouseConfiguration smarthouseConfiguration;
     private final IndicationRepository indicationRepository;
