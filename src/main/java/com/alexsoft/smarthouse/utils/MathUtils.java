@@ -28,6 +28,10 @@ public class MathUtils {
         }
     }
 
+    public static String getNumberOrDash(Number number) {
+        return number == null ? "-" : String.valueOf(number);
+    }
+
     public static String measureToString(Long measure) {
         if (measure == null) {
             return STATUS_STRING_NULL_MEASURE;

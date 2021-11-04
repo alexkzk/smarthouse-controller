@@ -60,8 +60,7 @@ public class IndicationService {
     public static final String IAQ = "IAQ ";
     public static final String SIAQ = "SIAQ ";
     public static final String GR = "GR ";
-    public static final String OUTSIDE_STATUS_PATTERN = "%s - %s";
-    public static final String OUTSIDE_STATUS_PATTERN2 = "C[%s]SM %d/%d/%d[°C] %d/%d/%d[AH]";
+    public static final String OUTSIDE_STATUS_PATTERN = "C[%s]SM %s/%s/%s[°C] %s/%s/%s[AH]";
     public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
 
     private final SmarthouseConfiguration smarthouseConfiguration;
@@ -234,7 +233,6 @@ public class IndicationService {
         List<Indication> southMeasurements = filterByPlace(hourlyAverage, SOUTH_MEASURE_PLACE);
         List<Indication> seattleMeasurements = filterByPlace(hourlyAverage, SEATTLE_MEASURE_PLACE);
         List<Indication> miamiMeasurements = filterByPlace(hourlyAverage, MIAMI_MEASURE_PLACE);
-        List<Indication> uklnMeasurements = filterByPlace(hourlyAverage, UKLN_MEASURE_PLACE);
 
         Long southTemp = calculateAverageTemperature(southMeasurements);
         Long northTemp = calculateAverageTemperature(northMeasurements);
@@ -255,17 +253,17 @@ public class IndicationService {
             miamiAh = calculateAverageAh(miamiMeasurements);
         }
 
-        boolean actualMeasuresNorth = southTemp == null || (southTemp == null && northTemp == null) || northTemp < southTemp;
+        boolean actualMeasuresNorth = southTemp == null || northTemp < southTemp;
 
-        return String.format(OUTSIDE_STATUS_PATTERN2,
+        return String.format(OUTSIDE_STATUS_PATTERN,
                 actualMeasuresNorth ? "N" : "S",
-                actualMeasuresNorth ? northTemp : southTemp,
-                seattleTemp,
-                miamiTemp,
-                actualMeasuresNorth ? northAh : southAh,
-                seattleAh,
-                miamiAh
-                );
+                actualMeasuresNorth ? getNumberOrDash(northTemp) : getNumberOrDash(southTemp),
+                getNumberOrDash(seattleTemp),
+                getNumberOrDash(miamiTemp),
+                actualMeasuresNorth ? getNumberOrDash(northAh) : getNumberOrDash(southAh),
+                getNumberOrDash(seattleAh),
+                getNumberOrDash(miamiAh)
+        );
     }
 
     private List<Indication> filterByPlace(List<Indication> hourlyAverage, String measurePlace) {
