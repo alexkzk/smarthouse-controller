@@ -17,7 +17,7 @@
       var outdoorColors = /*[[${chartDto.getOutdoorColors()}]]*/'noValue';
 
       var inTempOptions = {
-        title: 'INDOOR TEMP °C',
+        title: 'INDOOR TEMP',
         curveType: 'function',
         legend: { position: 'bottom' },
         colors: /*[[${chartDto.getIndoorColors()}]]*/'noValue',
@@ -26,12 +26,12 @@
         },
         vAxes: {
           // Adds titles to each axis.
-          1: {title: 'Indoor'}
+          0: {title: '°C'}
         }
       };
 
       var outTempOptions = {
-        title: 'OUTDOOR TEMP °C',
+        title: 'OUTDOOR TEMP',
         curveType: 'function',
         legend: { position: 'bottom' },
         colors: outdoorColors,
@@ -40,22 +40,30 @@
         },
         vAxes: {
           // Adds titles to each axis.
-          1: {title: 'Outdoor'}
+          0: {title: '°C'}
         }
       };
 
       var humidOptions = {
-        title: 'RELATIVE HUMIDITY %',
+        title: 'RELATIVE HUMIDITY',
         curveType: 'function',
         colors: /*[[${chartDto.getRhsColors()}]]*/'noValue',
-        legend: { position: 'bottom' }
+        legend: { position: 'bottom' },
+        vAxes: {
+          // Adds titles to each axis.
+          0: {title: '%'}
+        }
       };
 
       var ahHumidOptions = {
-        title: 'ABSOLUTE HUMIDITY g/m3',
+        title: 'ABSOLUTE HUMIDITY',
         curveType: 'function',
         colors: /*[[${chartDto.getAhsColors()}]]*/'noValue',
-        legend: { position: 'bottom' }
+        legend: { position: 'bottom' },
+        vAxes: {
+          // Adds titles to each axis.
+          0: {title: 'g/m³'}
+        }
       };
 
       var aqiOptions = {
@@ -72,8 +80,7 @@
         },
         vAxes: {
           // Adds titles to each axis.
-          0: {title: 'PM'},
-          1: {title: 'IAQ'}
+          0: {title: 'μg/m³'}
         }
       };
 

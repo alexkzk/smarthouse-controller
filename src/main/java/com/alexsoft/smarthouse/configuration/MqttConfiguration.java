@@ -1,5 +1,7 @@
 package com.alexsoft.smarthouse.configuration;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
@@ -66,6 +68,7 @@ public class MqttConfiguration {
             LOGGER.debug("Received an MQTT message {}", message);
             try {
                 Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
+                indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Error during reading an MQTT message", e);

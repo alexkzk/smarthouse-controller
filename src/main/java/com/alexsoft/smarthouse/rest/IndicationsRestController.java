@@ -39,8 +39,10 @@ public class IndicationsRestController {
     }
 
     @GetMapping(params = "startDate")
-    public ResponseEntity<List<Indication>> findAfter(@RequestParam String startDate, @RequestParam AggregationPeriod period) {
-        return ResponseEntity.ok(indicationService.findAfter(startDate, period));
+    public ResponseEntity<List<Indication>> findAfter(@RequestParam String startDate,
+                                                      @RequestParam(required = false) AggregationPeriod period,
+                                                      @RequestParam(required = false) String place) {
+        return ResponseEntity.ok(indicationService.findAfter(startDate, period, place));
     }
 
     @GetMapping("/aggregate")

@@ -53,7 +53,6 @@ public class IndicationService {
 
     public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
 
-
     private final SmarthouseConfiguration smarthouseConfiguration;
     private final IndicationRepository indicationRepository;
     private final TempUtils tempUtils = new TempUtils();
@@ -192,7 +191,6 @@ public class IndicationService {
                 normalizeTempAndHumidValues(indicationToSave);
                 calculateAbsoluteHumidity(indicationToSave);
                 setInOut(indicationToSave);
-                setRecievedDateTime(indicationToSave);
                 resetTempAndHumidForPlace("TERRACE", indicationToSave);
                 setEmptyMeasurementsToNull(indicationToSave);
                 convertPressureToMmHg(indicationToSave);
@@ -546,10 +544,6 @@ public class IndicationService {
         }
     }
 
-    private void setRecievedDateTime(Indication indication) {
-        indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-    }
-
     private void setInOut(Indication indication) {
         //  todo temporary, remove after changing the msg format on publishers
         if (indication.getIndicationPlace().startsWith(IN_PREFIX)) {
@@ -602,9 +596,9 @@ public class IndicationService {
         return String.format(TEMP_AND_AH_PATTERN, iata, measureToString(temp), measureToString(ah));
     }
 
-    public List<Indication> findAfter(String date, AggregationPeriod period) {
+    public List<Indication> findAfter(String date, AggregationPeriod period, String place) {
         LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm"));
         LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev")).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
-        return indicationRepository.findAfter(utcLocalDateTime, period);
+        return indicationRepository.findAfterAndPeriodAndPlace(utcLocalDateTime, period, place);
     }
 }

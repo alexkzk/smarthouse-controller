@@ -15,7 +15,7 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
             " left join fetch air.wind where hs.received > :startDate AND hs.received < :endDate AND hs.aggregationPeriod = 'INSTANT'")
-    List<Indication> findBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    List<Indication> findBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
@@ -110,6 +110,6 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
-            " left join fetch air.wind where hs.received > :startDate AND hs.aggregationPeriod = :period order by hs.received DESC")
-    List<Indication> findAfter(@Param("startDate") LocalDateTime startDate, @Param("period") AggregationPeriod period);
+            " left join fetch air.wind where hs.received > :startDate AND hs.aggregationPeriod = :period AND hs.indicationPlace = :place ORDER BY hs.received DESC")
+    List<Indication> findAfterAndPeriodAndPlace(LocalDateTime startDate, AggregationPeriod period, String place);
 }
