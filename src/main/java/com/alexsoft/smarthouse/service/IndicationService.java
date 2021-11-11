@@ -242,7 +242,15 @@ public class IndicationService {
             miamiAh = calculateAverageAh(miamiMeasurements);
         }
 
-        boolean actualMeasuresNorth = southTemp == null || northTemp < southTemp;
+        boolean actualMeasuresNorth;
+
+        if (southTemp == null) {
+            actualMeasuresNorth = true;
+        } else if (northTemp == null) {
+            actualMeasuresNorth = false;
+        } else {
+            actualMeasuresNorth = northTemp < southTemp;
+        }
 
         return String.format(OUTSIDE_STATUS_PATTERN,
                 actualMeasuresNorth ? "N" : "S",
