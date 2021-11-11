@@ -402,7 +402,6 @@ public class IndicationService {
         List<Map<String, Object>> ahs = aggregates.stream().filter(map -> map.get("ah") != null)
                 .collect(toList());
         List<Object> ahsHeader = new ArrayList<>();
-        ahsHeader.add(DATE);
         for (Map<String, Object> map : ahs) {
             String place = (String) map.get("indication_place");
             if (!ahsHeader.contains(place)) {
@@ -410,6 +409,7 @@ public class IndicationService {
             }
         }
         ahsHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        ahsHeader.add(0, DATE);
         for (Map<String, Object> map : ahs) {
             Object dbAh = map.get("ah");
             String place = (String) map.get("indication_place");
@@ -432,7 +432,6 @@ public class IndicationService {
         List<Map<String, Object>> rhs = aggregates.stream().filter(map -> map.get("rh") != null)
                 .collect(toList());
         List<Object> rhsHeader = new ArrayList<>();
-        rhsHeader.add(DATE);
         for (Map<String, Object> map : rhs) {
             String place = (String) map.get("indication_place");
             if (!rhsHeader.contains(place)) {
@@ -440,6 +439,7 @@ public class IndicationService {
             }
         }
         rhsHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        rhsHeader.add(0, DATE);
         for (Map<String, Object> map : rhs) {
             Object dbRh = map.get("rh");
             String place = (String) map.get("indication_place");
@@ -491,7 +491,6 @@ public class IndicationService {
         List<Map<String, Object>> outTemp = aggregates.stream().filter(map -> (map.get("in_out") != null && map.get("in_out").equals("OUT")) && map.get("temp") != null)
                 .collect(toList());
         List<Object> outTempHeader = new ArrayList<>();
-        outTempHeader.add(DATE);
         for (Map<String, Object> map : outTemp) {
             String place = (String) map.get("indication_place");
             if (!outTempHeader.contains(place)) {
@@ -499,6 +498,7 @@ public class IndicationService {
             }
         }
         outTempHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        outTempHeader.add(0, DATE);
         for (Map<String, Object> map : outTemp) {
             Object dbTemp = map.get("temp");
             String place = (String) map.get("indication_place");
