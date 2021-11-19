@@ -463,7 +463,6 @@ public class IndicationService {
                 .filter(map -> (map.get("in_out") != null && map.get("in_out").equals("IN")) && map.get("temp") != null)
             .collect(toList());
         List<Object> inTempHeader = new ArrayList<>();
-        inTempHeader.add(DATE);
         for (Map<String, Object> map : inTemp) {
             String place = (String) map.get("indication_place");
             if (!inTempHeader.contains(place)) {
@@ -471,6 +470,7 @@ public class IndicationService {
             }
         }
         inTempHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        inTempHeader.add(0, DATE);
         for (Map<String, Object> map : inTemp) {
             Object dbTemp = map.get("temp");
             String place = (String) map.get("indication_place");
