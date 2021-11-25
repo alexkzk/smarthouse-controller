@@ -263,6 +263,30 @@ public class IndicationService {
         );
     }
 
+    public Integer getAverageChornomorskTemp() {
+
+        List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(toList());
+
+        List<Indication> northMeasurements = filterByPlace(hourlyAverage, NORTH_MEASURE_PLACE);
+        List<Indication> southMeasurements = filterByPlace(hourlyAverage, SOUTH_MEASURE_PLACE);
+
+        Long southTemp = calculateAverageTemperature(southMeasurements);
+        Long northTemp = calculateAverageTemperature(northMeasurements);
+
+        boolean actualMeasuresNorth;
+
+        if (southTemp == null) {
+            actualMeasuresNorth = true;
+        } else if (northTemp == null) {
+            actualMeasuresNorth = false;
+        } else {
+            actualMeasuresNorth = northTemp < southTemp;
+        }
+
+        return actualMeasuresNorth ? northTemp.intValue() : southTemp.intValue();
+
+    }
+
     private List<Indication> filterByPlace(List<Indication> hourlyAverage, String measurePlace) {
         return hourlyAverage.stream().filter(hst -> hst.getIndicationPlace().equalsIgnoreCase(measurePlace)).collect(toList());
     }

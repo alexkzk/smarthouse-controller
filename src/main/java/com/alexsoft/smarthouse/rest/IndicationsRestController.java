@@ -33,6 +33,11 @@ public class IndicationsRestController {
         return ResponseEntity.ok(indicationService.getHourlyAveragedShortStatus());
     }
 
+    @GetMapping("/average/outTemp")
+    public ResponseEntity<Integer> getAverageChornomorskTemp() {
+        return ResponseEntity.ok(indicationService.getAverageChornomorskTemp());
+    }
+
     @GetMapping
     public ResponseEntity<List<Indication>> findAll() {
         return ResponseEntity.ok(indicationService.findAll());
