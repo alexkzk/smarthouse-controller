@@ -34,8 +34,8 @@ public class IndicationsRestController {
     }
 
     @GetMapping("/average/outTemp")
-    public ResponseEntity<Integer> getAverageChornomorskTemp() {
-        return ResponseEntity.ok(indicationService.getAverageChornomorskTemp());
+    public ResponseEntity<String> getAverageChornomorskTemp() {
+        return ResponseEntity.ok("{temp: " + indicationService.getAverageChornomorskTemp() + "}");
     }
 
     @GetMapping

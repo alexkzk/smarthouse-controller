@@ -275,7 +275,9 @@ public class IndicationService {
 
         boolean actualMeasuresNorth;
 
-        if (southTemp == null) {
+        if (southTemp == null && northTemp == null) {
+            return null;
+        } else if (southTemp == null) {
             actualMeasuresNorth = true;
         } else if (northTemp == null) {
             actualMeasuresNorth = false;
