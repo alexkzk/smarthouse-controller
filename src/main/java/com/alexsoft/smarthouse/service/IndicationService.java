@@ -61,6 +61,9 @@ public class IndicationService {
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
 
+    @Value("${smarthouse.short-status-null-string}")
+    private String shortStatusNullString;
+
     public List<Indication> aggregateOnInterval(
             Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days
     ) {
@@ -254,12 +257,12 @@ public class IndicationService {
 
         return String.format(OUTSIDE_STATUS_PATTERN,
                 actualMeasuresNorth ? "N" : "S",
-                actualMeasuresNorth ? getNumberOrDash(northTemp) : getNumberOrDash(southTemp),
-                getNumberOrDash(seattleTemp),
-                getNumberOrDash(miamiTemp),
-                actualMeasuresNorth ? getNumberOrDash(northAh) : getNumberOrDash(southAh),
-                getNumberOrDash(seattleAh),
-                getNumberOrDash(miamiAh)
+                actualMeasuresNorth ? getNumberOrString(northTemp, shortStatusNullString) : getNumberOrString(southTemp, shortStatusNullString),
+                getNumberOrString(seattleTemp, shortStatusNullString),    //todo refactor getNumberOrString so MathUtils be a Spring component and inject shortStatusNullString by itself
+                getNumberOrString(miamiTemp, shortStatusNullString),
+                actualMeasuresNorth ? getNumberOrString(northAh, shortStatusNullString) : getNumberOrString(southAh, shortStatusNullString),
+                getNumberOrString(seattleAh, shortStatusNullString),
+                getNumberOrString(miamiAh, shortStatusNullString)
         );
     }
 

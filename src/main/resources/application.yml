@@ -66,3 +66,4 @@ smarthouse:
     NORTH2: grey
     LIVING-ROOM: '#dc3912'
     TERRACE: '#ff5959'
+  short-status-null-string: N

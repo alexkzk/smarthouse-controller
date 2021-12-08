@@ -28,8 +28,8 @@ public class MathUtils {
         }
     }
 
-    public static String getNumberOrDash(Number number) {
-        return number == null ? "-" : String.valueOf(number);
+    public static String getNumberOrString(Number number, String string) {
+        return number == null ? string : String.valueOf(number);
     }
 
     public static String measureToString(Long measure) {
