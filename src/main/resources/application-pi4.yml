@@ -1,5 +1,7 @@
 mqtt:
-  msgSavingEnabled: false
+  server: 134.249.167.33
+  port: 1883
+
 spring:
   jpa:
     properties:
@@ -8,13 +10,14 @@ spring:
     hibernate:
       ddl-auto: validate
   datasource:
+    url: jdbc:postgresql://134.249.167.33:5432/smarthouse
     password: Vlena<H13
 logging:
   level:
     org:
       hibernate:
         SQL: debug
-#    com.alexsoft.smarthouse: trace
+
 #server:
 #  ssl:
 #    enabled: true

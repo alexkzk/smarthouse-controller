@@ -40,7 +40,7 @@ mqtt:
   subscriber: smarthouse-controller
   user: alexkzk
   password: Vlena<G13
-  msgSavingEnabled: true
+  msgSavingEnabled: false
 
 avwx:
   baseUri: https://avwx.rest/api
