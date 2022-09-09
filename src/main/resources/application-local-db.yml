@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/smarthouse
+    url: jdbc:postgresql://localhost:15783/smarthouse
     username: smarthouse
-    password: 571564
+    password: smarthouse
   jpa:
     properties:
       hibernate:
@@ -10,8 +10,16 @@ spring:
     hibernate:
       ddl-auto: validate
 logging:
+  filepath: ./log
   level:
     org:
       hibernate:
         SQL: debug
 #    com.alexsoft.smarthouse: trace
+server:
+  port: 24867
+
+mqtt:
+  server: 134.249.167.33
+  port: 1883
+  msgSavingEnabled: true
