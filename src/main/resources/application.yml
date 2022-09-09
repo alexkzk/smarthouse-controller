@@ -1,8 +1,9 @@
 server:
   servlet:
     context-path: /smarthouse
-
 spring:
+  jackson:
+    default-property-inclusion: non_null
   application:
     name: smarthouse
 #    liquibase: # todo temporary disabled until the database schema is finalized
@@ -32,9 +33,6 @@ logging:
     root: info
     com.alexsoft.smarthouse: debug
 
-sensor:
-  bme680-temp-adjustment: 0
-
 mqtt:
   server: 192.168.1.100
   port: 1883
@@ -42,7 +40,7 @@ mqtt:
   subscriber: smarthouse-controller
   user: alexkzk
   password: Vlena<G13
-  msgSavingEnabled: true
+  msgSavingEnabled: false
 
 avwx:
   baseUri: https://avwx.rest/api
@@ -55,6 +53,7 @@ avwx:
 
 time:
   local-time-zone: Europe/Kiev
+  local-time-offset: 2
   chart-date-time-pattern: E d, HH:mm
 
 smarthouse:
@@ -67,3 +66,4 @@ smarthouse:
     NORTH2: grey
     LIVING-ROOM: '#dc3912'
     TERRACE: '#ff5959'
+  short-status-null-string: N

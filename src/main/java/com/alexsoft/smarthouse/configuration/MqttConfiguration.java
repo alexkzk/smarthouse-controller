@@ -1,8 +1,14 @@
 package com.alexsoft.smarthouse.configuration;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
-import com.alexsoft.smarthouse.service.HouseStateService;
+import com.alexsoft.smarthouse.db.entity.Indication;
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
+import com.alexsoft.smarthouse.service.IndicationService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
@@ -21,8 +27,9 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final HouseStateService houseStateService;
+    private final IndicationService indicationService;
 
     @Value("tcp://${mqtt.server}:${mqtt.port}")
     private String mqttUrl;
@@ -58,9 +65,13 @@ public class MqttConfiguration {
             )
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
-            LOGGER.debug("Received a message {}", message);
+            LOGGER.debug("Received an MQTT message {}", message);
             try {
-                houseStateService.save(message);
+                Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
+                indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+                indicationService.save(indication, true, AggregationPeriod.INSTANT);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error during reading an MQTT message", e);
             } catch (Exception e) {
                 LOGGER.error("Error during saving an MQTT message", e);
             }

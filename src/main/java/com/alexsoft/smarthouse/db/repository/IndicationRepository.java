@@ -5,16 +5,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface HouseStateRepository extends JpaRepository<Indication, Integer> {
+public interface IndicationRepository extends JpaRepository<Indication, Integer> {
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
-            " left join fetch air.wind where hs.received > :startDate AND hs.received < :endDate")
-    List<Indication> findAfter(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+            " left join fetch air.wind where hs.received > :startDate AND hs.received < :endDate AND hs.aggregationPeriod = 'INSTANT'")
+    List<Indication> findBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
@@ -47,7 +48,8 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
             "          left join main.air_quality_indication aq on a.quality_id = aq.id\n" +
             "          left join main.bme_680_meta b680m on b680m.id = aq.bme680meta_id\n" +
             "          left join main.air_wind_indication w on w.id = a.wind_id\n" +
-            " where date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')\n" +
+            " where aggregation_period = 'INSTANT'\n" +
+            "   AND date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')\n" +
             "   AND date_trunc('month', received) = date_trunc('month', now() at time zone 'utc')\n" +
             "   AND date_trunc('year', received) = date_trunc('year', now() at time zone 'utc')\n" +
             "   AND DATE_PART('hour', now() at time zone 'utc') - DATE_PART('hour', received) <= 1\n" +
@@ -80,7 +82,8 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
             "          left join main.air_quality_indication aq on a.quality_id = aq.id\n" +
             "          left join main.bme_680_meta b680m on b680m.id = aq.bme680meta_id\n" +
             "          left join main.air_wind_indication w on w.id = a.wind_id\n" +
-            " where received <\n" +
+            " where  aggregation_period = 'INSTANT'\n" +
+            "   AND received <\n" +
             "       (select min(msg_received)\n" +
             "        from (select date_trunc('hour', received) +\n" +
             "                     cast((FLOOR(DATE_PART('minute', received) / 5) * 5 || 'minutes') as interval) as msg_received\n" +
@@ -105,5 +108,8 @@ public interface HouseStateRepository extends JpaRepository<Indication, Integer>
             ") order by msg_received DESC, indication_place", nativeQuery = true)
     List<Map<String, Object>> aggregate();
 
-
+    @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
+            " air.pressure left join fetch air.quality left join fetch air.temp" +
+            " left join fetch air.wind where hs.received > :startDate AND hs.aggregationPeriod = :period AND hs.indicationPlace = :place ORDER BY hs.received DESC")
+    List<Indication> findAfterAndPeriodAndPlace(LocalDateTime startDate, AggregationPeriod period, String place);
 }

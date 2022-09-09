@@ -1,19 +1,26 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import java.util.Objects;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import static com.alexsoft.smarthouse.utils.MathUtils.isNullOrNan;
 
-@Data
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -33,8 +40,9 @@ public class Temp {
 
     private Double ah;
 
+    @JsonIgnore
     public boolean isEmpty() {
-        return getCelsius() == null && getRh() == null && getAh() == null;
+        return isNullOrNan(getCelsius()) && getRh() == null && isNullOrNan(getAh());
     }
 
     public boolean normalize() {
@@ -66,5 +74,16 @@ public class Temp {
         return normalized;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Temp temp = (Temp) o;
+        return Objects.equals(id, temp.id) && Objects.equals(celsius, temp.celsius) && Objects.equals(rh, temp.rh) && Objects.equals(ah, temp.ah);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, celsius, rh, ah);
+    }
 }

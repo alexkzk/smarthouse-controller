@@ -1,5 +1,6 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,8 +10,9 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.CascadeType;
@@ -24,10 +26,13 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 
-@Data
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -62,6 +67,9 @@ public class Indication implements Comparable<Indication> {
     @Enumerated(EnumType.STRING)
     private InOut inOut;
 
+    @Enumerated(EnumType.STRING)
+    private AggregationPeriod aggregationPeriod;
+
     @OneToOne(cascade = CascadeType.ALL)
     private Air air;
 
@@ -74,5 +82,18 @@ public class Indication implements Comparable<Indication> {
         } else {
             return o.getReceived().compareTo(received);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Indication that = (Indication) o;
+        return Objects.equals(id, that.id) && Objects.equals(issued, that.issued) && Objects.equals(received, that.received) && Objects.equals(publisherId, that.publisherId) && Objects.equals(indicationPlace, that.indicationPlace) && inOut == that.inOut && aggregationPeriod == that.aggregationPeriod && Objects.equals(air, that.air);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, issued, received, publisherId, indicationPlace, inOut, aggregationPeriod, air);
     }
 }

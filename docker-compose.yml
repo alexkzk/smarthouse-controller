@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:14.5
+    container_name: smarthouse
+    environment:
+      - POSTGRES_USER=smarthouse
+      - POSTGRES_PASSWORD=smarthouse
+    ports:
+      - '15783:5432'
+    volumes:
+      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql
+volumes:
+  db:
+    driver: local

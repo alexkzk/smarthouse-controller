@@ -16,5 +16,6 @@ public class Constants {
     public static final String IAQ = "IAQ ";
     public static final String SIAQ = "SIAQ ";
     public static final String GR = "GR ";
-    public static final String OUTSIDE_STATUS_PATTERN2 = "C[%s]SM %d/%d/%d[°C] %d/%d/%d[AH]";
+    public static final String OUTSIDE_STATUS_PATTERN = "C[%s]SM %s/%s/%s[°C] %s/%s/%s[AH]";
+    public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
 }

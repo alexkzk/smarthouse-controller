@@ -6,13 +6,13 @@ import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.Pressure;
 import com.alexsoft.smarthouse.db.entity.Quality;
 import com.alexsoft.smarthouse.db.entity.Temp;
-import com.alexsoft.smarthouse.db.repository.HouseStateRepository;
+import com.alexsoft.smarthouse.db.entity.Wind;
+import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
+import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -26,9 +26,12 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,75 +42,110 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static com.alexsoft.smarthouse.utils.Constants.*;
-import static com.alexsoft.smarthouse.utils.DateUtils.MQTT_PRODUCER_TIMEZONE_ID;
-import static com.alexsoft.smarthouse.utils.MathUtils.round;
+import static com.alexsoft.smarthouse.utils.MathUtils.*;
 import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
-public class HouseStateService {
+public class IndicationService {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Logger LOGGER = LoggerFactory.getLogger(HouseStateService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IndicationService.class);
 
     public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
 
     private final SmarthouseConfiguration smarthouseConfiguration;
-    private final HouseStateRepository houseStateRepository;
+    private final IndicationRepository indicationRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
 
-    @Value("${sensor.bme680-temp-adjustment}")
-    private final Double bme680TempAdjustment;
+    @Value("${smarthouse.short-status-null-string}")
+    private String shortStatusNullString;
 
     public List<Indication> aggregateOnInterval(
-            Integer aggregationIntervalMinutes, Integer minutes, Integer hours, Integer days
+            Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days
     ) {
+        LOGGER.debug("Aggregating houseStates on {} min startDate, requested period: {} days, {} hours, {} minutes",
+                amount, temporalUnit, days, hours, minutes);
 
-        LOGGER.debug("Aggregating houseStates on {} min interval, requested period: {} days, {} hours, {} minutes",
-                aggregationIntervalMinutes, days, hours, minutes);
-        long startMillis = System.currentTimeMillis();
-
-        LocalDateTime interval = ZonedDateTime.now(MQTT_PRODUCER_TIMEZONE_ID).toLocalDateTime()
+        LocalDateTime startDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
                 .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
 
-        List<Indication> fetchedHouseStates = houseStateRepository.findAfter(interval, LocalDateTime.now());
-        if (aggregationIntervalMinutes != 0) {
+        return aggregateOnInterval(amount, temporalUnit, startDate, LocalDateTime.now());
+    }
 
+    public void createAverageMeasurement(Integer amount, TemporalUnit temporalUnit) {
+        LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
+        LocalDateTime startDate = endDate.minus(amount, temporalUnit);
+        LOGGER.info("Start date: {}, end date: {}", startDate, endDate);
+        List<Indication> indications = aggregateOnInterval(amount, temporalUnit, startDate, endDate);
+        indications.forEach(indication -> indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit)));
+        List<Indication> savedIndications = saveAll(indications);
+        LOGGER.info("Saved {} aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.",
+                savedIndications.size(), startDate, endDate, amount, temporalUnit);
+        LOGGER.debug(savedIndications.toString());
+    }
+
+    public List<Indication> aggregateOnInterval(
+            Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate
+    ) {
+
+        long startMillis = System.currentTimeMillis();
+        List<Indication> fetchedHouseStates = indicationRepository.findBetween(startDate, endDate);
+
+        if (amount != null && 0 != amount) {
             long aggregationStart = System.currentTimeMillis();
-
-            List<Indication> houseStateDtos = fetchedHouseStates.stream().collect(
-                            Collectors.groupingBy(
-                                    houseState -> dateUtils.roundDateTime(houseState.getReceived(), aggregationIntervalMinutes),
-                                    TreeMap::new,
-                                    Collectors.collectingAndThen(toList(), this::averageList)
-                            )
-                    ).entrySet().stream().peek(el -> el.getValue().setReceived(el.getKey()))
-                    .map(Map.Entry::getValue).sorted().collect(toList());
+            List<Indication> indications = fetchedHouseStates.stream().collect(
+                    Collectors.groupingBy(ind -> ind.getIndicationPlace() + "&" + ind.getInOut())
+                    ).entrySet().stream().flatMap(
+                            entry -> aggregateByInterval(
+                                    amount, temporalUnit, entry.getValue(), entry.getKey().split("&")[0],
+                                    InOut.valueOf(entry.getKey().split("&")[1])
+                            ).stream()).sorted().collect(Collectors.toList());
 
             LOGGER.debug("Aggregating completed, aggregation time: {} ms, total: {} ms", System.currentTimeMillis() - aggregationStart,
                     System.currentTimeMillis() - startMillis);
 
-            return houseStateDtos;
-
+            return indications;
+        } else {
+            return fetchedHouseStates.stream().sorted().collect(toList());
         }
-        return fetchedHouseStates.stream().sorted().collect(toList());
     }
 
-    private Indication averageList(List<Indication> indications) {
+    private List<Indication> aggregateByInterval(Integer amount, TemporalUnit temporalUnit, List<Indication> fetchedHouseStates,
+                                                 String indicationPlace, InOut inOut) {
+        LOGGER.info("Aggregating {} measurements for {} {} indication place", fetchedHouseStates.size(), indicationPlace, inOut);
+        return fetchedHouseStates.stream().collect(
+                        Collectors.groupingBy(
+                                houseState -> dateUtils.roundDateTime(houseState.getReceived(), amount, temporalUnit),
+                                TreeMap::new,
+                                Collectors.collectingAndThen(toList(), indications -> averageList(indications, indicationPlace, inOut))
+                        )
+                ).entrySet().stream().peek(el -> el.getValue().setReceived(el.getKey()))
+                .map(Map.Entry::getValue).sorted().collect(toList());
+    }
+
+    private Indication averageList(List<Indication> indications, String indicationPlace, InOut inOut) {
 
         Indication averagedIndication = new Indication();
+        Set<String> places = indications.stream().map(Indication::getIndicationPlace).collect(Collectors.toSet());
+        Set<String> publisherIds = indications.stream().map(Indication::getPublisherId).collect(Collectors.toSet());
+        if (places.size() != 1 || publisherIds.size() != 1) {
+            throw new RuntimeException();
+        }
+        averagedIndication.setIndicationPlace(indicationPlace);
+        averagedIndication.setPublisherId(new ArrayList<>(publisherIds).get(0));
+        averagedIndication.setInOut(inOut);
 
         List<Quality> aqis = indications.stream().map(indication -> indication.getAir().getQuality()).filter(Objects::nonNull).collect(Collectors.toList());
         Quality quality = Quality.builder()
                 .pm25(aqis.stream().map(Quality::getPm25).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
                 .pm10(aqis.stream().map(Quality::getPm10).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN))
-                .iaq((int) Math.round(aqis.stream().map(Quality::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN)))
+                .iaq(doubleToInt(aqis.stream().map(Quality::getIaq).filter(Objects::nonNull).mapToDouble(Double::valueOf).average().orElse(Double.NaN)))
                 .build();
 
         List<Temp> temps = indications.stream().map(indication -> indication.getAir().getTemp()).filter(Objects::nonNull).collect(Collectors.toList());
@@ -115,86 +153,57 @@ public class HouseStateService {
         Temp avgTemp = Temp.builder()
                 .celsius(temps.stream().filter(temp -> temp.getCelsius() != null).mapToDouble(Temp::getCelsius).average().orElse(Double.NaN))
                 .ah(temps.stream().filter(temp -> temp.getAh() != null).mapToDouble(Temp::getAh).average().orElse(Double.NaN))
-                .rh(Double.isNaN(averageRh) ? null : (int) Math.round(averageRh))
+                .rh(doubleToInt(averageRh))
                 .build();
 
         List<Pressure> pressures = indications.stream().map(indication -> indication.getAir().getPressure()).filter(Objects::nonNull).collect(Collectors.toList());
         Pressure avgPressure = Pressure.builder()
                 .mmHg(pressures.stream().filter(pr -> pr.getMmHg() != null).mapToDouble(Pressure::getMmHg).average().orElse(Double.NaN)).build();
-        averagedIndication.setAir(Air.builder().quality(quality).temp(avgTemp).pressure(avgPressure).build());
+
+        List<Wind> winds = indications.stream().map(houseState -> houseState.getAir().getWind()).filter(Objects::nonNull).collect(Collectors.toList());
+        Wind averagedWind = Wind.builder()
+                .direction(doubleToInt(winds.stream().filter(wind -> wind.getDirection() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
+                .speedMs(doubleToInt(winds.stream().filter(winf -> winf.getSpeedMs() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
+                .build();
+
+        averagedIndication.setAir(Air.builder()
+                .quality(quality.isEmpty() ? null : quality)
+                .temp(avgTemp.isEmpty() ? null : avgTemp)
+                .pressure(avgPressure.isEmpty() ? null : avgPressure)
+                .wind(averagedWind.isEmpty() ? null : averagedWind)
+                .build());
 
         return averagedIndication;
 
     }
 
-    public void save(String msg) {
-        Indication indication;
-        try {
-            indication = OBJECT_MAPPER.readValue(msg, Indication.class);
-
-            //  Normalize temp and humid values for fault measurements
-            if (indication.getAir() != null && indication.getAir().getTemp() != null) {
-                if (indication.getAir().getTemp().normalize()) {
-                    LOGGER.warn("Out of range temp measurements observed");
-                }
-            }
-
-            //  Calculate Absolute Humidity if needed
-            if (hasNoAhCalculated(indication)) {
-                Float aH = tempUtils.calculateAbsoluteHumidity(
-                        indication.getAir().getTemp().getCelsius().floatValue(),
-                        indication.getAir().getTemp().getRh()
-                );
-                indication.getAir().getTemp().setAh(aH.doubleValue());
-                if (indication.getIndicationPlace().equals("OUT-NORTH")) {
-                    indication.getAir().getTemp().setCelsius(indication.getAir().getTemp().getCelsius() + bme680TempAdjustment);
-                }
-            }
-            if (indication.getIndicationPlace().startsWith(IN_PREFIX)) { //  todo temporary, remove after changing the msg format on publishers
-                indication.setInOut(InOut.IN);
-                indication.setIndicationPlace(indication.getIndicationPlace().replace(IN_PREFIX, ""));
-            } else if (indication.getIndicationPlace().startsWith(OUT_PREFIX)) {
-                indication.setInOut(InOut.OUT);
-                indication.setIndicationPlace(indication.getIndicationPlace().replace(OUT_PREFIX, ""));
-            }
-            indication.setReceived(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            if (indication.getIndicationPlace().equals("TERRACE") && indication.getInOut() == InOut.OUT) {
-                // TODO temporary disabled due to sensor malfunction
-                indication.getAir().getTemp().setAh(null);
-                indication.getAir().getTemp().setRh(null);
-            }
-
-            if (indication.getAir().getTemp() != null && indication.getAir().getTemp().isEmpty()) {
-                LOGGER.debug("Indication's Temp is empty, setting it as NULL\n{}", indication);
-                indication.getAir().setTemp(null);
-            }
-
-            if (indication.getAir().getQuality() != null && indication.getAir().getQuality().isEmpty()) {
-                LOGGER.debug("Indication's Quality is empty, setting it as NULL\n{}", indication);
-                indication.getAir().setQuality(null);
-            }
-
-            if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty()) {
-                LOGGER.debug("Indication's Pressure is empty, setting it as NULL\n{}", indication);
-                indication.getAir().setPressure(null);
-            } else if (indication.getAir().getPressure() != null){
-                // Convert to mm Rh
-                indication.getAir().getPressure().setMmHg(indication.getAir().getPressure().getMmHg() * 0.00750062);
-            }
-
-            save(indication);
-
-        } catch (JsonProcessingException e) {
-            LOGGER.error(e.getMessage(), e);
+    public List<Indication> saveAll(List<Indication> indicationsToSave) {
+        if (msgSavingEnabled) {
+            return indicationRepository.saveAll(indicationsToSave);
+        } else {
+            LOGGER.debug("Skipping of saving indications");
+            return Collections.emptyList();
         }
     }
 
-    public void save(Indication indication) {
+    public Indication save(Indication indicationToSave, boolean normalize, AggregationPeriod aggregationPeriod) {
+
         if (msgSavingEnabled) {
-            Indication savedIndication = houseStateRepository.saveAndFlush(indication);
+            if (normalize) {
+                indicationToSave.setAggregationPeriod(aggregationPeriod);
+                normalizeTempAndHumidValues(indicationToSave);
+                calculateAbsoluteHumidity(indicationToSave);
+                setInOut(indicationToSave);
+                resetTempAndHumidForPlace("TERRACE", indicationToSave);
+                setEmptyMeasurementsToNull(indicationToSave);
+                convertPressureToMmHg(indicationToSave);
+            }
+            Indication savedIndication = indicationRepository.saveAndFlush(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
+            return savedIndication;
         } else {
-            LOGGER.debug("Skipping of saving indication {}", indication);
+            LOGGER.debug("Skipping of saving indication {}", indicationToSave);
+            return null;
         }
     }
 
@@ -205,11 +214,7 @@ public class HouseStateService {
     }
 
     public List<Indication> findHourly() {
-        return houseStateRepository.findAfter(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
-    }
-
-    public List<Indication> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
-        return houseStateRepository.findAfter(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
+        return indicationRepository.findBetween(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
     }
 
     public String getHourlyAveragedShortStatus() {
@@ -240,16 +245,51 @@ public class HouseStateService {
             miamiAh = calculateAverageAh(miamiMeasurements);
         }
 
-        boolean actualMeasuresNorth = southTemp == null || northTemp < southTemp;
-        return String.format(OUTSIDE_STATUS_PATTERN2,
+        boolean actualMeasuresNorth;
+
+        if (southTemp == null) {
+            actualMeasuresNorth = true;
+        } else if (northTemp == null) {
+            actualMeasuresNorth = false;
+        } else {
+            actualMeasuresNorth = northTemp < southTemp;
+        }
+
+        return String.format(OUTSIDE_STATUS_PATTERN,
                 actualMeasuresNorth ? "N" : "S",
-                actualMeasuresNorth ? northTemp : southTemp,
-                seattleTemp,
-                miamiTemp,
-                actualMeasuresNorth ? northAh : southAh,
-                seattleAh,
-                miamiAh
-                );
+                actualMeasuresNorth ? getNumberOrString(northTemp, shortStatusNullString) : getNumberOrString(southTemp, shortStatusNullString),
+                getNumberOrString(seattleTemp, shortStatusNullString),    //todo refactor getNumberOrString so MathUtils be a Spring component and inject shortStatusNullString by itself
+                getNumberOrString(miamiTemp, shortStatusNullString),
+                actualMeasuresNorth ? getNumberOrString(northAh, shortStatusNullString) : getNumberOrString(southAh, shortStatusNullString),
+                getNumberOrString(seattleAh, shortStatusNullString),
+                getNumberOrString(miamiAh, shortStatusNullString)
+        );
+    }
+
+    public Integer getAverageChornomorskTemp() {
+
+        List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(toList());
+
+        List<Indication> northMeasurements = filterByPlace(hourlyAverage, NORTH_MEASURE_PLACE);
+        List<Indication> southMeasurements = filterByPlace(hourlyAverage, SOUTH_MEASURE_PLACE);
+
+        Long southTemp = calculateAverageTemperature(southMeasurements);
+        Long northTemp = calculateAverageTemperature(northMeasurements);
+
+        boolean actualMeasuresNorth;
+
+        if (southTemp == null && northTemp == null) {
+            return null;
+        } else if (southTemp == null) {
+            actualMeasuresNorth = true;
+        } else if (northTemp == null) {
+            actualMeasuresNorth = false;
+        } else {
+            actualMeasuresNorth = northTemp < southTemp;
+        }
+
+        return actualMeasuresNorth ? northTemp.intValue() : southTemp.intValue();
+
     }
 
     private List<Indication> filterByPlace(List<Indication> hourlyAverage, String measurePlace) {
@@ -265,12 +305,11 @@ public class HouseStateService {
     }
 
     public List<Indication> findAll() {
-        return houseStateRepository.findAll();
+        return indicationRepository.findAll();
     }
 
     public ChartDto getAggregatedData() {
-
-        List<Map<String, Object>> aggregates = houseStateRepository.aggregate();
+        List<Map<String, Object>> aggregates = indicationRepository.aggregate();
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
@@ -380,7 +419,7 @@ public class HouseStateService {
         ).collect(toList());
         List<Object[]> aqiList = new ArrayList<>(aqisFinal.size()+1);
         placesAddedList.add(0, DATE);
-        if (CollectionUtils.isNotEmpty(aqisFinal)) {
+        if(CollectionUtils.isNotEmpty(aqisFinal)) {
             aqiList.add(placesAddedList.toArray());
         }
         aqiList.addAll(aqisFinal);
@@ -392,7 +431,6 @@ public class HouseStateService {
         List<Map<String, Object>> ahs = aggregates.stream().filter(map -> map.get("ah") != null)
                 .collect(toList());
         List<Object> ahsHeader = new ArrayList<>();
-        ahsHeader.add(DATE);
         for (Map<String, Object> map : ahs) {
             String place = (String) map.get("indication_place");
             if (!ahsHeader.contains(place)) {
@@ -400,6 +438,7 @@ public class HouseStateService {
             }
         }
         ahsHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        ahsHeader.add(0, DATE);
         for (Map<String, Object> map : ahs) {
             Object dbAh = map.get("ah");
             String place = (String) map.get("indication_place");
@@ -422,7 +461,6 @@ public class HouseStateService {
         List<Map<String, Object>> rhs = aggregates.stream().filter(map -> map.get("rh") != null)
                 .collect(toList());
         List<Object> rhsHeader = new ArrayList<>();
-        rhsHeader.add(DATE);
         for (Map<String, Object> map : rhs) {
             String place = (String) map.get("indication_place");
             if (!rhsHeader.contains(place)) {
@@ -430,6 +468,7 @@ public class HouseStateService {
             }
         }
         rhsHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        rhsHeader.add(0, DATE);
         for (Map<String, Object> map : rhs) {
             Object dbRh = map.get("rh");
             String place = (String) map.get("indication_place");
@@ -449,10 +488,10 @@ public class HouseStateService {
 
     private void setTemps(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
         Map<Timestamp, Object[]> inTempsMap = new TreeMap<>();
-        List<Map<String, Object>> inTemp = aggregates.stream().filter(map -> map.get("in_out").equals("IN") && map.get("temp") != null)
+        List<Map<String, Object>> inTemp = aggregates.stream()
+                .filter(map -> (map.get("in_out") != null && map.get("in_out").equals("IN")) && map.get("temp") != null)
             .collect(toList());
         List<Object> inTempHeader = new ArrayList<>();
-        inTempHeader.add(DATE);
         for (Map<String, Object> map : inTemp) {
             String place = (String) map.get("indication_place");
             if (!inTempHeader.contains(place)) {
@@ -460,6 +499,7 @@ public class HouseStateService {
             }
         }
         inTempHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        inTempHeader.add(0, DATE);
         for (Map<String, Object> map : inTemp) {
             Object dbTemp = map.get("temp");
             String place = (String) map.get("indication_place");
@@ -477,10 +517,9 @@ public class HouseStateService {
         chartDto.setIndoorTemps(!inTempsList.isEmpty() ? inTempsList.toArray() : getEmptyDataArray());
 
         Map<Timestamp, Object[]> outTempsMap = new TreeMap<>();
-        List<Map<String, Object>> outTemp = aggregates.stream().filter(map -> map.get("in_out").equals("OUT") && map.get("temp") != null)
+        List<Map<String, Object>> outTemp = aggregates.stream().filter(map -> (map.get("in_out") != null && map.get("in_out").equals("OUT")) && map.get("temp") != null)
                 .collect(toList());
         List<Object> outTempHeader = new ArrayList<>();
-        outTempHeader.add(DATE);
         for (Map<String, Object> map : outTemp) {
             String place = (String) map.get("indication_place");
             if (!outTempHeader.contains(place)) {
@@ -488,6 +527,7 @@ public class HouseStateService {
             }
         }
         outTempHeader.sort(OBJECT_TO_STRING_COMPARATOR);
+        outTempHeader.add(0, DATE);
         for (Map<String, Object> map : outTemp) {
             Object dbTemp = map.get("temp");
             String place = (String) map.get("indication_place");
@@ -507,5 +547,95 @@ public class HouseStateService {
 
     private Object[][] getEmptyDataArray() {
         return new Object[][] {{DATE, "NO DATA"}, {dateUtils.localDateTimeToString(LocalDateTime.now()), 0D}};
+    }
+
+    private void convertPressureToMmHg(Indication indication) {
+        if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty() && indication.getAir().getPressure() != null) {
+            // Convert to mm Rh
+            indication.getAir().getPressure().setMmHg(indication.getAir().getPressure().getMmHg() * 0.00750062);
+        }
+    }
+
+    private void setEmptyMeasurementsToNull(Indication indication) {
+        if (indication.getAir().getTemp() != null && indication.getAir().getTemp().isEmpty()) {
+            LOGGER.debug("Indication's Temp is empty, setting it as NULL\n{}", indication);
+            indication.getAir().setTemp(null);
+        }
+
+        if (indication.getAir().getQuality() != null && indication.getAir().getQuality().isEmpty()) {
+            LOGGER.debug("Indication's Quality is empty, setting it as NULL\n{}", indication);
+            indication.getAir().setQuality(null);
+        }
+
+        if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty()) {
+            LOGGER.debug("Indication's Pressure is empty, setting it as NULL\n{}", indication);
+            indication.getAir().setPressure(null);
+        }
+    }
+
+    private void resetTempAndHumidForPlace(String place, Indication indication) {
+        if (indication.getIndicationPlace().equals(place) && indication.getInOut() == InOut.OUT) {
+            // TODO temporary disabled due to sensor malfunction
+            indication.getAir().getTemp().setAh(null);
+            indication.getAir().getTemp().setRh(null);
+        }
+    }
+
+    private void setInOut(Indication indication) {
+        //  todo temporary, remove after changing the msg format on publishers
+        if (indication.getIndicationPlace().startsWith(IN_PREFIX)) {
+            indication.setInOut(InOut.IN);
+            indication.setIndicationPlace(indication.getIndicationPlace().replace(IN_PREFIX, ""));
+        } else if (indication.getIndicationPlace().startsWith(OUT_PREFIX)) {
+            indication.setInOut(InOut.OUT);
+            indication.setIndicationPlace(indication.getIndicationPlace().replace(OUT_PREFIX, ""));
+        }
+    }
+
+    private void calculateAbsoluteHumidity(Indication indication) {
+        if (hasNoAhCalculated(indication)) {
+            Float aH = tempUtils.calculateAbsoluteHumidity(
+                    indication.getAir().getTemp().getCelsius().floatValue(),
+                    indication.getAir().getTemp().getRh()
+            );
+            indication.getAir().getTemp().setAh(aH.doubleValue());
+        }
+    }
+
+    private void normalizeTempAndHumidValues(Indication indication) {
+        if (indication.getAir() != null && indication.getAir().getTemp() != null) {
+            if (indication.getAir().getTemp().normalize()) {
+                LOGGER.warn("Out of range temp measurements observed");
+            }
+        }
+    }
+
+    public List<Indication> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
+        return indicationRepository.findBetween(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
+    }
+
+    private Long calculateAveragePm25(List<Indication> indications) {
+        return round(indications.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getPm25() != null).mapToDouble(hst -> hst.getAir().getQuality().getPm25()).average().orElse(Double.NaN));
+    }
+
+    public Long calculateAverageIaq(List<Indication> indications) {
+        return round(indications.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getIaq() != null).mapToInt(hst -> hst.getAir().getQuality().getIaq()).average().orElse(Double.NaN));
+    }
+
+    private String toAirQualityString(Long avgIaq, Long avgPm25) {
+        return String.format("IAQ %s/%s", measureToString(avgIaq), measureToString(avgPm25));
+    }
+
+    private String toTempAndAhString(Long temp, Long ah, String iata) {
+        if(temp == null && ah == null) {
+            return null;
+        }
+        return String.format(TEMP_AND_AH_PATTERN, iata, measureToString(temp), measureToString(ah));
+    }
+
+    public List<Indication> findAfter(String date, AggregationPeriod period, String place) {
+        LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm"));
+        LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev")).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+        return indicationRepository.findAfterAndPeriodAndPlace(utcLocalDateTime, period, place);
     }
 }
