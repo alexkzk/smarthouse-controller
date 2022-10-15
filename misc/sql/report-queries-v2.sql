@@ -1,3 +1,4 @@
+-- AGGREGATE MINUTELY/HOURLY CALCULATING AVERAGE BY DATABASE
 (select date_trunc('hour', received) +
         cast((FLOOR(DATE_PART('minute', received) / 5) * 5 || 'minutes') as interval) as msg_received,
         in_out,
@@ -80,6 +81,50 @@
    AND DATE_PART('year', AGE(now() at time zone 'utc', received)) = 0
  group by msg_received, in_out, indication_place
 ) order by msg_received DESC, indication_place;
+
+
+-- AGGREGATE MINUTELY/HOURLY CALCULATING SELECTING AVERAGE FROM DATABASE
+select received as msg_received,
+       in_out,
+       indication_place,
+       aggregation_period as period,
+       round(CAST(float8(celsius) as numeric), 1)                  as temp,
+       round(CAST(float8(rh) as numeric), 0)                       as rh,
+       round(CAST(float8(ah) as numeric), 1)                       as ah,
+       round(CAST(float8(mm_hg) as numeric), 0)                    as mm_hg,
+       round(CAST(float8(direction) as numeric), 0) as direction,
+       round(CAST(float8(speed_ms) as numeric), 0)  as speed_ms
+from main.indication
+         left join main.air a on a.id = indication.air_id
+         left join main.air_temp_indication t on t.id = a.temp_id
+         left join main.air_pressure_indication ap on ap.id = a.pressure_id
+         left join main.air_wind_indication w on w.id = a.wind_id
+where  date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')
+  AND date_trunc('month', received) = date_trunc('month', now() at time zone 'utc')
+  AND date_trunc('year', received) = date_trunc('year', now() at time zone 'utc')
+  AND DATE_PART('hour', now() at time zone 'utc') - DATE_PART('hour', received) <= 1
+  AND aggregation_period = 'MINUTELY'
+union all
+select received as msg_received,
+       in_out,
+       indication_place,
+       aggregation_period as period,
+       round(CAST(float8(celsius) as numeric), 1)                  as temp,
+       round(CAST(float8(rh) as numeric), 0)                       as rh,
+       round(CAST(float8(ah) as numeric), 1)                       as ah,
+       round(CAST(float8(mm_hg) as numeric), 0)                    as mm_hg,
+       round(CAST(float8(direction) as numeric), 0) as direction,
+       round(CAST(float8(speed_ms) as numeric), 0)  as speed_ms
+from main.indication
+         left join main.air a on a.id = indication.air_id
+         left join main.air_temp_indication t on t.id = a.temp_id
+         left join main.air_pressure_indication ap on ap.id = a.pressure_id
+         left join main.air_wind_indication w on w.id = a.wind_id
+where date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')
+  AND DATE_PART('day', AGE(now() at time zone 'utc', received)) <= 2
+  AND DATE_PART('month', AGE(now() at time zone 'utc', received)) = 0
+  AND DATE_PART('year', AGE(now() at time zone 'utc', received)) = 0
+  AND aggregation_period = 'HOURLY' order by msg_received desc;
 
 
 select date_trunc('hour', received) +
