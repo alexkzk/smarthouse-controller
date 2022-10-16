@@ -41,18 +41,28 @@ public class DateUtils {
 
     public LocalDateTime getInterval(Integer minutes, Integer hours, Integer days, boolean utc) {
         return ZonedDateTime.now(utc ? ZoneId.of("UTC") : userTimezone).toLocalDateTime()
-            .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
-            .minus(Duration.ofDays(days == null || days < 0 ? 0 : days))
-            .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
+                .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
+                .minus(Duration.ofDays(days == null || days < 0 ? 0 : days))
+                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours));
+    }
+
+    public LocalDateTime toLocalDateTime(LocalDateTime ts) {
+        return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(userTimezone).toLocalDateTime();
+    }
+
+    public LocalDateTime ttoLocalDateTimeAtZone(LocalDateTime ts, String timeZone) {
+        return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZone)).toLocalDateTime();
     }
 
     public LocalDateTime timestampToLocalDateTime(Timestamp ts) {
-        return ZonedDateTime.of(ts.toLocalDateTime(), ZoneId.of("UTC")).withZoneSameInstant(userTimezone).toLocalDateTime();
+        return ZonedDateTime.of(ts.toLocalDateTime(), ZoneId.of("UTC")).withZoneSameInstant(userTimezone)
+                .toLocalDateTime();
     }
 
     public String timestampToLocalDateTimeString(Timestamp ts) {
         return timestampToLocalDateTime(ts).format(chartDateTimePattern);
     }
+
 
     public String localDateTimeToString(LocalDateTime localDateTime) {
         return localDateTime.format(chartDateTimePattern);

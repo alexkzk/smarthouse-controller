@@ -20,7 +20,7 @@ public class DateUtilsTest {
 
     private final ZoneId userTimezone = ZoneId.of("Europe/Kiev");
     private final DateTimeFormatter chartDateTimePattern = DateTimeFormatter.ofPattern("E d, HH:mm");
-    private final DateUtils dateUtils = new DateUtils(userTimezone, chartDateTimePattern, 2);
+    private final DateUtils dateUtils = new DateUtils(userTimezone, chartDateTimePattern);
 
     @ParameterizedTest
     @MethodSource

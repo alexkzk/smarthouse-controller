@@ -59,6 +59,12 @@ public class Indication implements Comparable<Indication> {
     @JsonProperty("messageReceivedUtc")
     private LocalDateTime receivedUtc;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @JsonProperty("messageReceivedLocal")
+    private LocalDateTime receivedLocal;
+
     private String publisherId;
 
     @JsonProperty("measurePlace")

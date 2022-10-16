@@ -1,14 +1,15 @@
 package com.alexsoft.smarthouse.configuration;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.UUID;
-
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.service.IndicationService;
+import com.alexsoft.smarthouse.utils.DateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
@@ -46,6 +47,10 @@ public class MqttConfiguration {
     @Value("${mqtt.password}")
     private String mqttPassword;
 
+    private final DateUtils dateUtils;
+
+    private final Map<String, String> timezoneMap = Map.of("SOUTH", "Europe/Kiev", "SEATTLE", "America/Los_Angeles");
+
     @Bean
     public IntegrationFlow mqttInbound() {
 
@@ -69,6 +74,15 @@ public class MqttConfiguration {
             try {
                 Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
                 indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+                String indicationPlace = indication.getIndicationPlace();
+
+                if (indicationPlace != null && timezoneMap.get(indicationPlace) != null) {
+                    indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(),
+                            timezoneMap.get(indicationPlace)));
+                } else {
+                    indication.setReceivedLocal(dateUtils.toLocalDateTime(indication.getReceivedUtc()));
+                }
+
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Error during reading an MQTT message", e);
