@@ -33,7 +33,7 @@ logging:
 
 mqtt:
   server: localhost
-  port: 1883
+  port: 8883
   topic: ALEXKZK-SMARTHOUSE
   subscriber: smarthouse-controller
   user: alexkzk
