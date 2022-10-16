@@ -1,5 +1,7 @@
 package com.alexsoft.smarthouse.scheduled;
 
+import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
+import com.alexsoft.smarthouse.utils.DateUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -21,9 +23,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
-import static com.alexsoft.smarthouse.utils.Constants.MIAMI_MEASURE_PLACE;
-import static com.alexsoft.smarthouse.utils.Constants.SEATTLE_MEASURE_PLACE;
 
 @Service
 public class MetarRetriever {
@@ -48,13 +47,17 @@ public class MetarRetriever {
     @Value("${avwx.metarSubUri}")
     private String metarSubUri;
 
+    private final MetarLocationsConfig metarLocationsConfig;
     private final RestTemplate restTemplate;
     private final IndicationService indicationService;
     private final TempUtils tempUtils = new TempUtils();
+    private final DateUtils dateUtils;
 
-    public MetarRetriever(RestTemplateBuilder restTemplateBuilder, IndicationService indicationService) {
+    public MetarRetriever(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils) {
+        this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
+        this.dateUtils = dateUtils;
     }
 
     @Scheduled(cron = "0 0 */1 * * *")
@@ -76,53 +79,31 @@ public class MetarRetriever {
     }
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
-    public void getChernivtsiMetar() {
-        Metar metar = getMetar(chernivtsiIcao);
-        if (metarIsNotExpired(metar)) {
-            Indication indication = houseStateFromMetar(metar);
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
-            // but we cannot afford to ping the remote server so often
-            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-        }
-    }
-
-    @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void getSeattleMetar() {
-        Metar metar = getMetar(seattleIcao);
-        if (metarIsNotExpired(metar)) {
-            Indication indication = houseStateFromMetar(metar);
-            indication.setIndicationPlace(SEATTLE_MEASURE_PLACE);
-            indication.setReceivedUtc(indication.getReceivedUtc()/*.plus(14, ChronoUnit.HOURS)*/);
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
-            // but we cannot afford to ping the remote server so often
-            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-        }
-    }
 
-    @Scheduled(cron = "${avwx.metar-receiving-cron}")
-    public void getMiamiMetar() {
-        Metar metar = getMetar(miamiIcao);
-        if (metarIsNotExpired(metar)) {
-            Indication indication = houseStateFromMetar(metar);
-            indication.setIndicationPlace(MIAMI_MEASURE_PLACE);
-            //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
-            indication.setReceivedUtc(indication.getReceivedUtc()/*.plus(17, ChronoUnit.HOURS)*/);
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
-            // but we cannot afford to ping the remote server so often
-            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
-        }
+        metarLocationsConfig.getLocationMapping().entrySet().forEach(entry -> {
+
+            Metar metar = getMetar(entry.getValue().keySet().stream().findFirst().get());
+
+            if (metarIsNotExpired(metar)) {
+
+                Indication indication = houseStateFromMetar(metar);
+                indication.setIndicationPlace(entry.getKey());
+                indication.setReceivedUtc(indication.getReceivedUtc());
+                indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(), entry.getValue().values().stream().findFirst().get()));
+                indicationService.save(indication, true, AggregationPeriod.INSTANT);
+
+                // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
+                // but we cannot afford to ping the remote server so often
+                indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
+                indication.setReceivedLocal(indication.getReceivedLocal().minus(3, ChronoUnit.MINUTES));
+                indicationService.save(indication, true, AggregationPeriod.INSTANT);
+
+                indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
+                indication.setReceivedLocal(indication.getReceivedLocal().minus(3, ChronoUnit.MINUTES));
+                indicationService.save(indication, true, AggregationPeriod.INSTANT);
+            }
+        });
     }
 
     private Indication houseStateFromMetar(Metar metar) {

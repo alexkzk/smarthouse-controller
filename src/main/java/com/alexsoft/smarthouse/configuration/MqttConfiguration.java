@@ -59,15 +59,16 @@ public class MqttConfiguration {
         options.setCleanSession(true);
         options.setConnectionTimeout(10);
         options.setUserName(mqttUser);
-        options.setPassword(mqttPassword.toCharArray());
+        options.setPassword((mqttPassword + "#").toCharArray());
 
         DefaultMqttPahoClientFactory defaultMqttPahoClientFactory = new DefaultMqttPahoClientFactory();
         defaultMqttPahoClientFactory.setConnectionOptions(options);
 
         return IntegrationFlows.from(
-            new MqttPahoMessageDrivenChannelAdapter(
-                mqttUrl, mqttSubscriber + "-" + UUID.randomUUID(), defaultMqttPahoClientFactory, mqttTopic
-            )
+                new MqttPahoMessageDrivenChannelAdapter(
+                        mqttUrl, mqttSubscriber + "-" + UUID.randomUUID(), defaultMqttPahoClientFactory,
+                        mqttTopic
+                )
         ).handle(m -> {
             String message = String.valueOf(m.getPayload());
             LOGGER.debug("Received an MQTT message {}", message);

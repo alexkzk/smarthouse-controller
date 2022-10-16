@@ -1,0 +1,18 @@
+server:
+  port: 24867
+
+spring:
+  datasource:
+    url: jdbc:postgresql://INTERNAL_GATEWAY28:5432/smarthouse
+
+logging:
+  filepath: ./log
+  level:
+    org:
+      hibernate:
+        SQL: debug
+
+mqtt:
+  server: INTERNAL_GATEWAY28
+  port: 8883
+  msgSavingEnabled: false

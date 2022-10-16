@@ -6,17 +6,15 @@ spring:
     default-property-inclusion: non_null
   application:
     name: smarthouse
-#    liquibase: # todo temporary disabled until the database schema is finalized
-#      liquibase-schema: liquibase
-#      change-log: classpath:db/changelog.xml
   jpa:
     hibernate:
       ddl-auto: validate
     database: postgresql
   datasource:
-    url: jdbc:postgresql://192.168.1.100:5432/smarthouse
+    url: jdbc:postgresql://localhost:5432/smarthouse
     driver-class-name: org.postgresql.Driver
     username: smarthouse
+    password: ${SMARTHOUSE_POSTGRES_PASSWORD}
 
 logging:
   filepath: /var/log/smarthouse
@@ -39,7 +37,7 @@ mqtt:
   topic: ALEXKZK-SMARTHOUSE
   subscriber: smarthouse-controller
   user: alexkzk
-  password: ${SMARTHOUSE_POSTGRES_PASSWORD}
+  password: ${MOSQUITTO_PASSWORD}
   msgSavingEnabled: false
 
 avwx:
@@ -66,3 +64,12 @@ smarthouse:
     LIVING-ROOM: '#dc3912'
     TERRACE: '#ff5959'
   short-status-null-string: N
+
+metar-locations:
+  location-mapping:
+    SEATTLE:
+      KSEA: America/Los_Angeles
+    MIAMI:
+      KMIA: America/New_York
+    SUCEAVA:
+      LRSV: Europe/Bucharest
