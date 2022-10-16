@@ -34,12 +34,12 @@ logging:
     com.alexsoft.smarthouse: debug
 
 mqtt:
-  server: 192.168.1.100
+  server: localhost
   port: 1883
   topic: ALEXKZK-SMARTHOUSE
   subscriber: smarthouse-controller
   user: alexkzk
-  password: Vlena<G13
+  password: ${SMARTHOUSE_POSTGRES_PASSWORD}
   msgSavingEnabled: false
 
 avwx:

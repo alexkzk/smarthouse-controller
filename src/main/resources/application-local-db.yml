@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:15783/smarthouse
+    url: jdbc:postgresql://localhost:5432/smarthouse
     username: smarthouse
-    password: smarthouse
+    password: ${SMARTHOUSE_POSTGRES_PASSWORD}
   jpa:
     properties:
       hibernate:
@@ -20,6 +20,6 @@ server:
   port: 24867
 
 mqtt:
-  server: 134.249.167.33
+  server: 127.0.0.1
   port: 1883
   msgSavingEnabled: true
