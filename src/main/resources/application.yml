@@ -52,8 +52,7 @@ avwx:
   metar-receiving-cron: 0 */10 * * * *
 
 time:
-  local-time-zone: Europe/Kiev
-  local-time-offset: 2
+  local-time-zone: America/New_York
   chart-date-time-pattern: E d, HH:mm
 
 smarthouse:

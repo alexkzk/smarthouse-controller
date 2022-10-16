@@ -121,11 +121,11 @@ public class IndicationService {
         LOGGER.info("Aggregating {} measurements for {} {} indication place", fetchedHouseStates.size(), indicationPlace, inOut);
         return fetchedHouseStates.stream().collect(
                         Collectors.groupingBy(
-                                houseState -> dateUtils.roundDateTime(houseState.getReceived(), amount, temporalUnit),
+                                houseState -> dateUtils.roundDateTime(houseState.getReceivedUtc(), amount, temporalUnit),
                                 TreeMap::new,
                                 Collectors.collectingAndThen(toList(), indications -> averageList(indications, indicationPlace, inOut))
                         )
-                ).entrySet().stream().peek(el -> el.getValue().setReceived(el.getKey()))
+                ).entrySet().stream().peek(el -> el.getValue().setReceivedUtc(el.getKey()))
                 .map(Map.Entry::getValue).sorted().collect(toList());
     }
 
@@ -309,7 +309,19 @@ public class IndicationService {
     }
 
     public ChartDto getAggregatedData() {
-        List<Map<String, Object>> aggregates = indicationRepository.aggregate();
+        List<Map<String, Object>> aggregates = indicationRepository.getAggregatedSqlAveraged();
+        ChartDto chartDto = new ChartDto();
+        setTemps(aggregates, chartDto);
+        setRhs(aggregates, chartDto);
+        setAhs(aggregates, chartDto);
+        setAqis(aggregates, chartDto);
+        setColors(chartDto);
+
+        return chartDto;
+    }
+
+    public ChartDto getAggregatedDataV2() {
+        List<Map<String, Object>> aggregates = indicationRepository.getAggregated();
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);

@@ -56,8 +56,8 @@ public class Indication implements Comparable<Indication> {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = ISO_DATE_TIME_PATTERN)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonProperty("messageReceived")
-    private LocalDateTime received;
+    @JsonProperty("messageReceivedUtc")
+    private LocalDateTime receivedUtc;
 
     private String publisherId;
 
@@ -75,12 +75,12 @@ public class Indication implements Comparable<Indication> {
 
     @Override
     public int compareTo(Indication o) {
-        if (received == null) {
+        if (receivedUtc == null) {
             return -1;
-        } else if (o == null || o.getReceived() == null) {
+        } else if (o == null || o.getReceivedUtc() == null) {
             return  -1;
         } else {
-            return o.getReceived().compareTo(received);
+            return o.getReceivedUtc().compareTo(receivedUtc);
         }
     }
 
@@ -89,11 +89,12 @@ public class Indication implements Comparable<Indication> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Indication that = (Indication) o;
-        return Objects.equals(id, that.id) && Objects.equals(issued, that.issued) && Objects.equals(received, that.received) && Objects.equals(publisherId, that.publisherId) && Objects.equals(indicationPlace, that.indicationPlace) && inOut == that.inOut && aggregationPeriod == that.aggregationPeriod && Objects.equals(air, that.air);
+        return Objects.equals(id, that.id) && Objects.equals(issued, that.issued) && Objects.equals(
+                receivedUtc, that.receivedUtc) && Objects.equals(publisherId, that.publisherId) && Objects.equals(indicationPlace, that.indicationPlace) && inOut == that.inOut && aggregationPeriod == that.aggregationPeriod && Objects.equals(air, that.air);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, issued, received, publisherId, indicationPlace, inOut, aggregationPeriod, air);
+        return Objects.hash(id, issued, receivedUtc, publisherId, indicationPlace, inOut, aggregationPeriod, air);
     }
 }

@@ -21,4 +21,11 @@ public class HouseStatePresentationController {
         model.addAttribute(chartDto);
         return "status/summary";
     }
+
+    @GetMapping("/v2/summary")
+    public String aggregateV2(Model model) {
+        ChartDto chartDto = indicationService.getAggregatedDataV2();
+        model.addAttribute(chartDto);
+        return "status/summary";
+    }
 }

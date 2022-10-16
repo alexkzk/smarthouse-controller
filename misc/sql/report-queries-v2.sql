@@ -121,7 +121,7 @@ from main.indication
          left join main.air_pressure_indication ap on ap.id = a.pressure_id
          left join main.air_wind_indication w on w.id = a.wind_id
 where date_trunc('day', received) = date_trunc('day', now() at time zone 'utc')
-  AND DATE_PART('day', AGE(now() at time zone 'utc', received)) <= 2
+  AND DATE_PART('day', AGE(now() at time zone 'utc', received)) <= 5
   AND DATE_PART('month', AGE(now() at time zone 'utc', received)) = 0
   AND DATE_PART('year', AGE(now() at time zone 'utc', received)) = 0
   AND aggregation_period = 'HOURLY' order by msg_received desc;

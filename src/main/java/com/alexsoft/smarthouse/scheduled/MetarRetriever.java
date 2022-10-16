@@ -83,9 +83,9 @@ public class MetarRetriever {
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
             // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
             // but we cannot afford to ping the remote server so often
-            indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
+            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
+            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
         }
     }
@@ -96,14 +96,13 @@ public class MetarRetriever {
         if (metarIsNotExpired(metar)) {
             Indication indication = houseStateFromMetar(metar);
             indication.setIndicationPlace(SEATTLE_MEASURE_PLACE);
-            //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
-            indication.setReceived(indication.getReceived().plus(14, ChronoUnit.HOURS));
+            indication.setReceivedUtc(indication.getReceivedUtc()/*.plus(14, ChronoUnit.HOURS)*/);
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
             // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
             // but we cannot afford to ping the remote server so often
-            indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
+            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
+            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
         }
     }
@@ -115,13 +114,13 @@ public class MetarRetriever {
             Indication indication = houseStateFromMetar(metar);
             indication.setIndicationPlace(MIAMI_MEASURE_PLACE);
             //  To offset the time in order to compare the weather of the same hours (e.g 8PM in Ukraine and 8PM in the USA)
-            indication.setReceived(indication.getReceived().plus(17, ChronoUnit.HOURS));
+            indication.setReceivedUtc(indication.getReceivedUtc()/*.plus(17, ChronoUnit.HOURS)*/);
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
             // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
             // but we cannot afford to ping the remote server so often
-            indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
+            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
-            indication.setReceived(indication.getReceived().minus(3, ChronoUnit.MINUTES));
+            indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
         }
     }
@@ -135,7 +134,7 @@ public class MetarRetriever {
         indication.setIndicationPlace(metar.getStation());
         indication.setInOut(InOut.OUT);
         indication.setIssued(metar.getTime().getIssueDateTime().toLocalDateTime());
-        indication.setReceived(now);
+        indication.setReceivedUtc(now);
         indication.setPublisherId(metar.getStation());
         Air air = new Air();
         indication.setAir(air);

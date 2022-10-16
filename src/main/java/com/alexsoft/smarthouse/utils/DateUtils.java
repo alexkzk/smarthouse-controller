@@ -24,9 +24,6 @@ public class DateUtils {
     @Value("#{T(java.time.format.DateTimeFormatter).ofPattern('${time.chart-date-time-pattern}')}")
     private final DateTimeFormatter chartDateTimePattern;
 
-    @Value("${time.local-time-offset}")
-    private final Integer localTimeOffset;
-
     public LocalDateTime roundDateTime(LocalDateTime localDateTime, int round, TemporalUnit temporalUnit) {
         if (round == 0) {
             return localDateTime;
