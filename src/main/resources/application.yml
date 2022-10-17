@@ -1,6 +1,8 @@
 server:
+  port: 24867
   servlet:
     context-path: /smarthouse
+
 spring:
   jackson:
     default-property-inclusion: non_null
@@ -38,7 +40,7 @@ mqtt:
   subscriber: smarthouse-controller
   user: alexkzk
   password: ${MOSQUITTO_PASSWORD}
-  msgSavingEnabled: false
+  msgSavingEnabled: true
 
 avwx:
   baseUri: https://avwx.rest/api
@@ -47,7 +49,7 @@ avwx:
   chernivtsi-icao: UKLN
   seattle-icao: KSEA
   miami-icao: KMIA
-  metar-receiving-cron: 0 */10 * * * *
+  metar-receiving-cron: 0 */30 * * * *
 
 time:
   local-time-zone: America/New_York
@@ -63,13 +65,32 @@ smarthouse:
     NORTH2: grey
     LIVING-ROOM: '#dc3912'
     TERRACE: '#ff5959'
+
   short-status-null-string: N
 
 metar-locations:
   location-mapping:
     SEATTLE:
       KSEA: America/Los_Angeles
+    SAN-FRANCISCO:
+      KSFO: America/Los_Angeles
     MIAMI:
       KMIA: America/New_York
+    ATLANTA:
+      KATL: America/New_York
+    BOSTON:
+      KBOS: America/New_York
+    CHICAGO:
+      KORD: America/Chicago
+    LOS-ANGELES:
+      KLAX: America/Los_Angeles
     SUCEAVA:
       LRSV: Europe/Bucharest
+    TORONTO:
+      CYYZ: Canada/Eastern
+    AUSTIN:
+      KAUS: America/Chicago
+    BOLZANO:
+      LIPB: Europe/Rome
+    DENVER:
+      KDEN: America/Denver

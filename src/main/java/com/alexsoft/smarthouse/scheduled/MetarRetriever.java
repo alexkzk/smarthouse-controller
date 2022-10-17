@@ -90,18 +90,11 @@ public class MetarRetriever {
                 Indication indication = houseStateFromMetar(metar);
                 indication.setIndicationPlace(entry.getKey());
                 indication.setReceivedUtc(indication.getReceivedUtc());
-                indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(), entry.getValue().values().stream().findFirst().get()));
+                indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(),
+                        entry.getValue().values().stream().findFirst().get()));
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
-
-                // In order to smooth the 10 minute measurements chart we need to have measurements at least twice per 10 minutes
-                // but we cannot afford to ping the remote server so often
-                indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-                indication.setReceivedLocal(indication.getReceivedLocal().minus(3, ChronoUnit.MINUTES));
-                indicationService.save(indication, true, AggregationPeriod.INSTANT);
-
-                indication.setReceivedUtc(indication.getReceivedUtc().minus(3, ChronoUnit.MINUTES));
-                indication.setReceivedLocal(indication.getReceivedLocal().minus(3, ChronoUnit.MINUTES));
-                indicationService.save(indication, true, AggregationPeriod.INSTANT);
+            } else {
+                LOGGER.info("Metar is expired: {}", metar);
             }
         });
     }
