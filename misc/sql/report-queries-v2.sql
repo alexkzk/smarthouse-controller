@@ -159,7 +159,7 @@ group by msg_received, in_out, indication_place order by msg_received DESC;
 select ati.celsius from main.indication ind
                             inner join main.air a on ind.air_id = a.id
                             inner join main.air_temp_indication ati on ati.id = a.temp_id
-where indication_place = 'NORTH' and (received > '2021-07-03 00:00:00.000000' and received < '2021-07-03 23:59:00.000000');
+where indication_place = 'NORTH' and (received_utc > '2021-07-03 00:00:00.000000' and received_utc < '2021-07-03 23:59:00.000000');
 
 update main.air_temp_indication set celsius = null, ah = null, rh = null where id in(
     select temp_id from main.air_temp_indication temp inner join main.air air on air.temp_id = temp.id
@@ -194,3 +194,8 @@ from main.air_quality_indication where id in (select quality_id
 select temp_id from main.air_temp_indication temp inner join main.air air on air.temp_id = temp.id
                                                   inner join main.indication ind on air.id = ind.air_id
 where (celsius < -50 OR celsius > 50)
+
+select ind.received_utc, ati.celsius, ati.rh, ati.ah  from main.indication ind
+                            inner join main.air a on ind.air_id = a.id
+                            inner join main.air_temp_indication ati on ati.id = a.temp_id
+where indication_place = '1201S-OCEAN-DR' and aggregation_period = 'DAILY';
