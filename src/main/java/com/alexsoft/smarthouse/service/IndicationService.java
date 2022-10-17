@@ -15,6 +15,7 @@ import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -322,6 +323,18 @@ public class IndicationService {
 
     public ChartDto getAggregatedDataV2() {
         List<Map<String, Object>> aggregates = indicationRepository.getAggregated();
+        ChartDto chartDto = new ChartDto();
+        setTemps(aggregates, chartDto);
+        setRhs(aggregates, chartDto);
+        setAhs(aggregates, chartDto);
+        setAqis(aggregates, chartDto);
+        setColors(chartDto);
+
+        return chartDto;
+    }
+
+    public ChartDto getAggregatedDataDaily(String place) {
+        List<Map<String, Object>> aggregates = StringUtils.isBlank(place) ? indicationRepository.getAggregatedDaily() : indicationRepository.getAggregatedDaily(place);
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
