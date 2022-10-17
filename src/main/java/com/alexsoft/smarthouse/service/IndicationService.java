@@ -420,7 +420,7 @@ public class IndicationService {
     public static String intToARGB(int i){
         if (i == "LOS-ANGELES".hashCode()) {
             i = "LOS-ANGELES".toLowerCase().hashCode();
-        } else if (i == "1201-S.OCEAN-DR.HOLLYWOOD".hashCode()){
+        } else if (i == S_OCEAN_DR_HOLLYWOOD.hashCode()){
             i = "HOLLYWOOD-FL".hashCode();
         }
         String color = Integer.toHexString(((i >> 24) & 0xFF)) +
