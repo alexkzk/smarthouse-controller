@@ -339,35 +339,38 @@ public class IndicationService {
         Object[] outdoorTemp = (Object[]) chartDto.getOutdoorTemps()[0];
         List<Object> outdoorTempHeader = Arrays.stream(outdoorTemp).collect(toList());
         outdoorTempHeader = outdoorTempHeader.subList(1, outdoorTempHeader.size());
-        Object[] outdoorColors = outdoorTempHeader.stream().map(
-                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
-        ).toArray();
+        Object[] outdoorColors = outdoorTempHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
         chartDto.setOutdoorColors(outdoorColors);
 
         Object[] rhs = (Object[]) chartDto.getRhs()[0];
         List<Object> rhHeader = Arrays.stream(rhs).collect(toList());
         rhHeader = rhHeader.subList(1, rhHeader.size());
-        Object[] rhColors = rhHeader.stream().map(
-                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
-        ).toArray();
+        Object[] rhColors = rhHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
         chartDto.setRhsColors(rhColors);
 
         Object[] ahs = (Object[]) chartDto.getAhs()[0];
         List<Object> ahHeader = Arrays.stream(ahs).collect(toList());
         ahHeader = ahHeader.subList(1, ahHeader.size());
-        Object[] ahColors = ahHeader.stream().map(
-                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
-        ).toArray();
+        Object[] ahColors = ahHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
         chartDto.setAhsColors(ahColors);
 
         Object[] indoor = (Object[]) chartDto.getIndoorTemps()[0];
         List<Object> indoorHeader = Arrays.stream(indoor).collect(toList());
         indoorHeader = indoorHeader.subList(1, indoorHeader.size());
-        Object[] indoorColors = indoorHeader.stream().map(
-                s -> smarthouseConfiguration.getColors().get(s) == null ? "black" : smarthouseConfiguration.getColors().get(s)
-        ).toArray();
+        Object[] indoorColors = indoorHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
         chartDto.setIndoorColors(indoorColors);
 
+    }
+
+    public static String intToARGB(int i){
+        if (i == "LOS-ANGELES".hashCode()) {
+            i = "LOS-ANGELES".toLowerCase().hashCode();
+        }
+        String color = Integer.toHexString(((i >> 24) & 0xFF)) +
+                Integer.toHexString(((i >> 16) & 0xFF)) +
+                Integer.toHexString(((i >> 8) & 0xFF)) +
+                Integer.toHexString((i & 0xFF));
+        return "#" + color.substring(0, Math.min(color.length(), 6));
     }
 
     private void setAqis(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
