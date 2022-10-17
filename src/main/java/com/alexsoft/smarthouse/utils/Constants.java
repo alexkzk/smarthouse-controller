@@ -18,4 +18,5 @@ public class Constants {
     public static final String GR = "GR ";
     public static final String OUTSIDE_STATUS_PATTERN = "C[%s]SM %s/%s/%s[°C] %s/%s/%s[AH]";
     public static final String TEMP_AND_AH_PATTERN = "%s %s°C/%s";
+    public static final String S_OCEAN_DR_HOLLYWOOD = "1201S-OCEAN-DR";
 }

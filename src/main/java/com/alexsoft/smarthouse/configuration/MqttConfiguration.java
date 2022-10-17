@@ -1,5 +1,7 @@
 package com.alexsoft.smarthouse.configuration;
 
+import static com.alexsoft.smarthouse.utils.Constants.S_OCEAN_DR_HOLLYWOOD;
+
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.service.IndicationService;
@@ -74,6 +76,10 @@ public class MqttConfiguration {
             LOGGER.debug("Received an MQTT message {}", message);
             try {
                 Indication indication = OBJECT_MAPPER.readValue(message, Indication.class);
+                if ("HOLLYWOOD-FL".equals(indication.getIndicationPlace())) {
+                    indication.setIndicationPlace(S_OCEAN_DR_HOLLYWOOD);
+
+                }
                 indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
                 String indicationPlace = indication.getIndicationPlace();
 
