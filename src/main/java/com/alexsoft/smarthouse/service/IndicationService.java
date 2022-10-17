@@ -13,6 +13,9 @@ import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +67,8 @@ public class IndicationService {
 
     @Value("${smarthouse.short-status-null-string}")
     private String shortStatusNullString;
+
+    private final EntityManager em;
 
     public List<Indication> aggregateOnInterval(
             Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days
@@ -333,8 +338,11 @@ public class IndicationService {
         return chartDto;
     }
 
-    public ChartDto getAggregatedDataDaily(String place) {
-        List<Map<String, Object>> aggregates = StringUtils.isBlank(place) ? indicationRepository.getAggregatedDaily() : indicationRepository.getAggregatedDaily(place);
+    public ChartDto getAggregatedDataDaily(String place, String period) {
+        if("HOLLYWOOD".equalsIgnoreCase(place)) {
+            place = S_OCEAN_DR_HOLLYWOOD;
+        }
+        List<Map<String, Object>> aggregates = indicationRepository.getAggregatedDaily(StringUtils.isBlank(place) ? "%" : place, StringUtils.isBlank(period) ? "%" : period);
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
@@ -344,6 +352,40 @@ public class IndicationService {
 
         return chartDto;
     }
+
+    /*public ChartDto getAggregatedDataDailyV2(String place) {
+        Query q = em.createNativeQuery("select received_utc as msg_received,\n"
+                + "       in_out,\n"
+                + "       indication_place,\n"
+                + "       aggregation_period as period,\n"
+                + "       round(CAST(float8(celsius) as numeric), 1)                  as temp,\n"
+                + "       round(CAST(float8(rh) as numeric), 0)                       as rh,\n"
+                + "       round(CAST(float8(ah) as numeric), 1)                       as ah,\n"
+                + "       round(CAST(float8(mm_hg) as numeric), 0)                    as mm_hg,\n"
+                + "       round(CAST(float8(direction) as numeric), 0) as direction,\n"
+                + "       round(CAST(float8(speed_ms) as numeric), 0)  as speed_ms\n"
+                + "from main.indication\n"
+                + "         left join main.air a on a.id = indication.air_id\n"
+                + "         left join main.air_temp_indication t on t.id = a.temp_id\n"
+                + "         left join main.air_pressure_indication ap on ap.id = a.pressure_id\n"
+                + "         left join main.air_wind_indication w on w.id = a.wind_id\n"
+                + "where indication_place LIKE :place"
+                + "  AND DATE_PART('day', AGE(now() at time zone 'utc', received_utc)) <= 5\n"
+                + "  AND DATE_PART('month', AGE(now() at time zone 'utc', received_utc)) = 0\n"
+                + "  AND DATE_PART('year', AGE(now() at time zone 'utc', received_utc)) = 0\n"
+                + "  AND aggregation_period = 'DAILY' order by msg_received desc");
+        q.setParameter("place", StringUtils.isBlank(place) ? "%" : place);
+
+        List<Map<String, Object>> aggregates = q.getResultList();
+        ChartDto chartDto = new ChartDto();
+        setTemps(aggregates, chartDto);
+        setRhs(aggregates, chartDto);
+        setAhs(aggregates, chartDto);
+        setAqis(aggregates, chartDto);
+        setColors(chartDto);
+
+        return chartDto;
+    }*/
 
     private void setColors(ChartDto chartDto) {
         Object[] aqiColors = new Object[]{"#ff0000", "#791d00", "#e27f67", "#969eff", "#4254f5"};

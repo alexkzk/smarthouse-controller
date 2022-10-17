@@ -164,11 +164,15 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
             + "         left join main.air_temp_indication t on t.id = a.temp_id\n"
             + "         left join main.air_pressure_indication ap on ap.id = a.pressure_id\n"
             + "         left join main.air_wind_indication w on w.id = a.wind_id\n"
-            + "where DATE_PART('day', AGE(now() at time zone 'utc', received_utc)) <= 30\n"
-            + "  AND DATE_PART('month', AGE(now() at time zone 'utc', received_utc)) = 0\n"
-            + "  AND DATE_PART('year', AGE(now() at time zone 'utc', received_utc)) = 0\n"
-            + "  AND aggregation_period = 'DAILY' order by msg_received desc", nativeQuery = true)
-    List<Map<String, Object>> getAggregatedDaily();
+            + "where "
+            + "     indication_place LIKE :place AND "
+            + "     aggregation_period LIKE :period AND "
+            + "     DATE_PART('day', AGE(now() at time zone 'utc', received_utc)) <= 30\n  AND "
+            + "     DATE_PART('month', AGE(now() at time zone 'utc', received_utc)) = 0\n  AND "
+            + "     DATE_PART('year', AGE(now() at time zone 'utc', received_utc)) = 0\n  "
+            + "order by msg_received desc"
+            , nativeQuery = true)
+    List<Map<String, Object>> getAggregatedDaily(String place, String period);
 
     @Query(value = "select received_utc as msg_received,\n"
             + "       in_out,\n"
