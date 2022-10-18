@@ -76,6 +76,8 @@ metar-locations:
       KSFO: America/Los_Angeles
     MIAMI:
       KMIA: America/New_York
+    ORLANDO:
+      KMCO: America/New_York
     ATLANTA:
       KATL: America/New_York
     BOSTON:
@@ -94,3 +96,9 @@ metar-locations:
       LIPB: Europe/Rome
     DENVER:
       KDEN: America/Denver
+    NAPOLI:
+      LIRN: Europe/Rome
+    CLEAVELAND:
+      KCLE: America/New_York
+    HELENA:
+      KHLN: America/Denver
