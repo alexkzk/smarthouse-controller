@@ -1,0 +1,68 @@
+[
+  {
+    "id": 5728532,
+    "publisherId": "ESP8266-68:C6:3A:F4:D3:49",
+    "inOut": "IN",
+    "aggregationPeriod": "INSTANT",
+    "air": {
+      "id": 5728531,
+      "temp": {
+        "id": 5318844,
+        "celsius": 20,
+        "rh": 60,
+        "ah": 11
+      },
+      "quality": null,
+      "pressure": null,
+      "wind": null
+    },
+    "messageIssued": null,
+    "messageReceivedUtc": "2022-10-17T02:00:00",
+    "messageReceivedLocal": "2022-10-16T22:00:00",
+    "measurePlace": "1201S-OCEAN-DR"
+  },
+  {
+    "id": 5729011,
+    "publisherId": "ESP8266-68:C6:3A:F4:D3:49",
+    "inOut": "IN",
+    "aggregationPeriod": "INSTANT",
+    "air": {
+      "id": 5729010,
+      "temp": {
+        "id": 5319323,
+        "celsius": 8,
+        "rh": 30,
+        "ah": 5
+      },
+      "quality": null,
+      "pressure": null,
+      "wind": null
+    },
+    "messageIssued": null,
+    "messageReceivedUtc": "2022-10-17T22:00:00",
+    "messageReceivedLocal": "2022-10-17T18:00:00",
+    "measurePlace": "1201S-OCEAN-DR"
+  },
+  {
+    "id": 5729013,
+    "publisherId": "ESP8266-68:C6:3A:F4:D3:49",
+    "inOut": "IN",
+    "aggregationPeriod": "INSTANT",
+    "air": {
+      "id": 5729012,
+      "temp": {
+        "id": 5319325,
+        "celsius": 8,
+        "rh": 30,
+        "ah": 5
+      },
+      "quality": null,
+      "pressure": null,
+      "wind": null
+    },
+    "messageIssued": null,
+    "messageReceivedUtc": "2022-10-18T02:00:00",
+    "messageReceivedLocal": "2022-10-17T22:00:00",
+    "measurePlace": "1201S-OCEAN-DR"
+  }
+]

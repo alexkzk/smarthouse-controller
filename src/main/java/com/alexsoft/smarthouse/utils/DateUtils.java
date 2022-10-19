@@ -24,16 +24,16 @@ public class DateUtils {
     @Value("#{T(java.time.format.DateTimeFormatter).ofPattern('${time.chart-date-time-pattern}')}")
     private final DateTimeFormatter chartDateTimePattern;
 
-    public LocalDateTime roundDateTime(LocalDateTime localDateTime, int round, TemporalUnit temporalUnit) {
+    public static LocalDateTime roundDateTime(LocalDateTime localDateTime, int round, TemporalUnit temporalUnit) {  // TODO remove static, fix the tests
         if (round == 0) {
             return localDateTime;
         }
         LocalDateTime roundedLocalDateTime = localDateTime.withSecond(0).withNano(0);
         if (temporalUnit.equals(ChronoUnit.MINUTES)) {
             return roundedLocalDateTime.withMinute(localDateTime.getMinute() / round * round);
-        } else if(temporalUnit.equals(ChronoUnit.HOURS)) {
+        } else if (temporalUnit.equals(ChronoUnit.HOURS)) {
             return roundedLocalDateTime.withHour(localDateTime.getHour() / round * round).withMinute(0);
-        } else if(temporalUnit.equals(ChronoUnit.DAYS)) {
+        } else if (temporalUnit.equals(ChronoUnit.DAYS)) {
             return roundedLocalDateTime.withDayOfMonth(localDateTime.getDayOfMonth() / round * round).withHour(0).withMinute(0);
         }
         return roundedLocalDateTime;

@@ -1,29 +1,20 @@
 package com.alexsoft.smarthouse.service;
 
+import static com.alexsoft.smarthouse.utils.Constants.*;
+import static com.alexsoft.smarthouse.utils.MathUtils.doubleToInt;
+import static com.alexsoft.smarthouse.utils.MathUtils.getNumberOrString;
+import static com.alexsoft.smarthouse.utils.MathUtils.measureToString;
+import static com.alexsoft.smarthouse.utils.MathUtils.round;
+import static java.util.stream.Collectors.toList;
+
 import com.alexsoft.smarthouse.configuration.SmarthouseConfiguration;
-import com.alexsoft.smarthouse.db.entity.Air;
-import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.db.entity.Pressure;
-import com.alexsoft.smarthouse.db.entity.Quality;
-import com.alexsoft.smarthouse.db.entity.Temp;
-import com.alexsoft.smarthouse.db.entity.Wind;
+import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaBuilder;
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -31,23 +22,18 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import static com.alexsoft.smarthouse.utils.Constants.*;
-import static com.alexsoft.smarthouse.utils.MathUtils.*;
-import static java.util.stream.Collectors.toList;
+import javax.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +111,11 @@ public class IndicationService {
     private List<Indication> aggregateByInterval(Integer amount, TemporalUnit temporalUnit, List<Indication> fetchedHouseStates,
                                                  String indicationPlace, InOut inOut) {
         LOGGER.info("Aggregating {} measurements for {} {} indication place", fetchedHouseStates.size(), indicationPlace, inOut);
+        if (amount == 1 && temporalUnit == ChronoUnit.DAYS) {
+            // That's needed because of picking up different day when fetched within last 24 hours to avoid aggregating by two days e.g. 17 Jun 01:00 and 16 Jun 23:00
+            int minDay = fetchedHouseStates.stream().mapToInt(st -> st.getReceivedUtc().getDayOfMonth()).min().orElseThrow();
+            fetchedHouseStates.forEach(st -> st.setReceivedUtc(st.getReceivedUtc().withDayOfMonth(minDay)));
+        }
         return fetchedHouseStates.stream().collect(
                         Collectors.groupingBy(
                                 houseState -> dateUtils.roundDateTime(houseState.getReceivedUtc(), amount, temporalUnit),
