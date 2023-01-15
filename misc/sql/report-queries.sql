@@ -173,10 +173,18 @@ where id in (
              inner join main.indication ind on air.id = ind.air_id
     where indication_place = 'TERRACE'
       and received > '2021-10-19 00:00:00.000000'
-      AND (q.pm10 > 50 OR q.pm25 > 50)
-);
+      AND (q.pm10 > 50 OR q.pm25 > 50));
 
-select ind.received, ind.indication_place, ind.aggregation_period, ati.celsius, ati.rh from main.indication ind
-                            inner join main.air a on ind.air_id = a.id
-                            inner join main.air_temp_indication ati on ati.id = a.temp_id
-where indication_place = 'CHRNMRSK4A' order by aggregation_period, received DESC;
+select ind.received, ind.indication_place, ind.aggregation_period, ati.celsius, ati.rh
+from main.indication ind
+         inner join main.air a on ind.air_id = a.id
+         inner join main.air_temp_indication ati on ati.id = a.temp_id
+where indication_place = 'CHRNMRSK4A'
+order by aggregation_period, received DESC;
+
+
+-- CHECK AMOUNT OF INDICATIONS DURING EACH DAY
+select date_trunc('day', received_utc), count(*)
+from main.indication
+group by date_trunc('day', received_utc)
+order by date_trunc('day', received_utc) desc;
