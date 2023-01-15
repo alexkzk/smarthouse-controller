@@ -29,7 +29,7 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 @RequiredArgsConstructor
 public class MqttConfiguration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
+    /*private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final IndicationService indicationService;
@@ -97,11 +97,11 @@ public class MqttConfiguration {
                 LOGGER.error("Error during saving an MQTT message", e);
             }
         }).get();
-    }
+    }*/
 
-    @Bean
+    /*@Bean
     public IntegrationFlow mqttOutboundFlow() {
         return f -> f.handle(new MqttPahoMessageHandler(mqttUrl, mqttSubscriber));
-    }
+    }*/
 
 }

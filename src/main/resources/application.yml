@@ -19,7 +19,7 @@ spring:
     password: ${SMARTHOUSE_POSTGRES_PASSWORD}
 
 logging:
-  filepath: /var/log/smarthouse
+  filepath: .
   main:
     name: smarthouse
     max-history: 90
@@ -70,6 +70,26 @@ smarthouse:
 
 metar-locations:
   location-mapping:
+    MONTGOMERY:
+      KMGM: America/Chicago
+    ANCHORAGE:
+      PANC: America/Anchorage
+    PHOENIX:
+      KPHX: America/Denver
+    LITTLE-ROCK:
+      KLIT: America/Chicago
+    PHILADELPHIA:
+      KPHL: America/New_York
+    MINEAPOLIS:
+      KMSP: America/Chicago
+    BISMARK:
+      KBIS: America/Chicago
+    PORTLAND:
+      KPDX: America/Los_Angeles
+    AUGUSTA:
+      KAGS: America/New_York
+    INDIANAPOLIS:
+      KIND: America/New_York
     SEATTLE:
       KSEA: America/Los_Angeles
     SAN-FRANCISCO:
@@ -78,6 +98,10 @@ metar-locations:
       KMIA: America/New_York
     ORLANDO:
       KMCO: America/New_York
+    BOISE:
+      KBOI: America/Denver
+    CHEYENNE:
+      KCYS: America/Denver
     ATLANTA:
       KATL: America/New_York
     BOSTON:
@@ -102,3 +126,5 @@ metar-locations:
       KCLE: America/New_York
     HELENA:
       KHLN: America/Denver
+    SALT-LAKE-CITY:
+      KSLC: America/Denver
