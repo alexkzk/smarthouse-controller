@@ -184,7 +184,7 @@ order by aggregation_period, received DESC;
 
 
 -- CHECK AMOUNT OF INDICATIONS DURING EACH DAY
-select date_trunc('day', received_utc), count(*)
+select date_trunc('day', received), count(*)
 from main.indication
-group by date_trunc('day', received_utc)
-order by date_trunc('day', received_utc) desc;
+group by date_trunc('day', received)
+order by date_trunc('day', received) desc;

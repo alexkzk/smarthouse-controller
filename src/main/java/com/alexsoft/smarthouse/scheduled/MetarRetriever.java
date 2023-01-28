@@ -78,6 +78,12 @@ public class MetarRetriever {
         indicationService.createAverageMeasurement(1, ChronoUnit.DAYS);
     }
 
+    @Scheduled(cron = "0 0 0 1 * *")
+    public void aggregateMonthly(){
+        LOGGER.info("Monthly aggregating");
+        indicationService.createAverageMeasurement(1, ChronoUnit.MONTHS);
+    }
+
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void getSeattleMetar() {
 

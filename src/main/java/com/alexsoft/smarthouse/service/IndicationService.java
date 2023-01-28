@@ -73,6 +73,10 @@ public class IndicationService {
     public void createAverageMeasurement(Integer amount, TemporalUnit temporalUnit) {
         LocalDateTime endDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime().withSecond(0).withNano(0);
         LocalDateTime startDate = endDate.minus(amount, temporalUnit);
+        createAverageMeasurement(amount, temporalUnit, startDate, endDate);
+    }
+
+    public void createAverageMeasurement(Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate) {
         LOGGER.info("Start date: {}, end date: {}", startDate, endDate);
         List<Indication> indications = aggregateOnInterval(amount, temporalUnit, startDate, endDate);
         indications.forEach(indication -> indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit)));
@@ -87,7 +91,13 @@ public class IndicationService {
     ) {
 
         long startMillis = System.currentTimeMillis();
-        List<Indication> fetchedHouseStates = indicationRepository.findBetween(startDate, endDate);
+        List<Indication> fetchedHouseStates;
+
+        if (temporalUnit == ChronoUnit.MONTHS) {
+            fetchedHouseStates = indicationRepository.findBetween(startDate, endDate, AggregationPeriod.DAILY);
+        } else {
+            fetchedHouseStates = indicationRepository.findBetween(startDate, endDate);
+        }
 
         if (amount != null && 0 != amount) {
             long aggregationStart = System.currentTimeMillis();
@@ -330,10 +340,17 @@ public class IndicationService {
     }
 
     public ChartDto getAggregatedDataDaily(String place, String period) {
-        if("HOLLYWOOD".equalsIgnoreCase(place)) {
+        if ("HOLLYWOOD".equalsIgnoreCase(place)) {
             place = S_OCEAN_DR_HOLLYWOOD;
         }
-        List<Map<String, Object>> aggregates = indicationRepository.getAggregatedDaily(StringUtils.isBlank(place) ? "%" : place, StringUtils.isBlank(period) ? "%" : period);
+        List<Map<String, Object>> aggregates;
+
+        if (!"MONTHLY".equals(period)) {
+            aggregates = indicationRepository.getAggregatedDaily(StringUtils.isBlank(place) ? "%" : place, StringUtils.isBlank(period) ? "%" : period);
+        } else {
+            aggregates = indicationRepository.getAggregatedMonthly(StringUtils.isBlank(place) ? "%" : place, StringUtils.isBlank(period) ? "%" : period);
+        }
+
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
@@ -467,7 +484,7 @@ public class IndicationService {
                 placesAdded.add(currPlace);
                 valueArr[aqiHeader.indexOf(currPlace)] = ((BigDecimal) siaq).doubleValue();
             }
-            valueArr[aqiHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+            valueArr[aqiHeader.indexOf(DATE)] = map.get("period").equals("MONTHLY") ? dateUtils.timestampToLocalDateTimeString(msgReceivedTs, DateTimeFormatter.ofPattern("MMM YY")) : dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
         }
 
         List<String> placesAddedList = new ArrayList<>(placesAdded);
@@ -508,7 +525,7 @@ public class IndicationService {
             Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
             Object[] valueArr = ahsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[ahsHeader.size()]);
             valueArr[ahsHeader.indexOf(place)] = ((BigDecimal) dbAh).doubleValue();
-            valueArr[ahsHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+            valueArr[ahsHeader.indexOf(DATE)] = map.get("period").equals("MONTHLY") ? dateUtils.timestampToLocalDateTimeString(msgReceivedTs, DateTimeFormatter.ofPattern("MMM YY")) : dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
         }
         Collection<Object[]> ahValues = ahsMap.values();
         List<Object[]> ahList = new ArrayList<>(ahValues.size()+1);
@@ -538,7 +555,7 @@ public class IndicationService {
             Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
             Object[] valueArr = rhsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[rhsHeader.size()]);
             valueArr[rhsHeader.indexOf(place)] = ((BigDecimal) dbRh).doubleValue();
-            valueArr[rhsHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+            valueArr[rhsHeader.indexOf(DATE)] = map.get("period").equals("MONTHLY") ? dateUtils.timestampToLocalDateTimeString(msgReceivedTs, DateTimeFormatter.ofPattern("MMM YY")) : dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
         }
         Collection<Object[]> rhValues = rhsMap.values();
         List<Object[]> rhList = new ArrayList<>(rhValues.size()+1);
@@ -569,7 +586,7 @@ public class IndicationService {
             Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
             Object[] valueArr = inTempsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[inTempHeader.size()]);
             valueArr[inTempHeader.indexOf(place)] = ((BigDecimal) dbTemp).doubleValue();
-            valueArr[inTempHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+            valueArr[inTempHeader.indexOf(DATE)] = map.get("period").equals("MONTHLY") ? dateUtils.timestampToLocalDateTimeString(msgReceivedTs, DateTimeFormatter.ofPattern("MMM YY")) : dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
         }
         Collection<Object[]> inTempsValues = inTempsMap.values();
         List<Object[]> inTempsList = new ArrayList<>(inTempsValues.size()+1);
@@ -597,7 +614,7 @@ public class IndicationService {
             Timestamp msgReceivedTs = (Timestamp) map.get("msg_received");
             Object[] valueArr = outTempsMap.computeIfAbsent(msgReceivedTs, (date) -> new Object[outTempHeader.size()]);
             valueArr[outTempHeader.indexOf(place)] = ((BigDecimal) dbTemp).doubleValue();
-            valueArr[outTempHeader.indexOf(DATE)] = dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
+            valueArr[outTempHeader.indexOf(DATE)] = map.get("period").equals("MONTHLY") ? dateUtils.timestampToLocalDateTimeString(msgReceivedTs, DateTimeFormatter.ofPattern("MMM YY")) : dateUtils.timestampToLocalDateTimeString(msgReceivedTs);
         }
         Collection<Object[]> outTempValues = outTempsMap.values();
         List<Object[]> outTempList = new ArrayList<>(outTempsMap.size()+1);

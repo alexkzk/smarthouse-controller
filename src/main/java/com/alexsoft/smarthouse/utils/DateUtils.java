@@ -35,6 +35,8 @@ public class DateUtils {
             return roundedLocalDateTime.withHour(localDateTime.getHour() / round * round).withMinute(0);
         } else if (temporalUnit.equals(ChronoUnit.DAYS)) {
             return roundedLocalDateTime.withDayOfMonth(localDateTime.getDayOfMonth() / round * round).withHour(0).withMinute(0);
+        } else if (temporalUnit.equals(ChronoUnit.MONTHS)) {
+            return roundedLocalDateTime.withMonth(localDateTime.getMonthValue()).withDayOfMonth(1).withHour(0).withMinute(0);
         }
         return roundedLocalDateTime;
     }
@@ -61,6 +63,10 @@ public class DateUtils {
 
     public String timestampToLocalDateTimeString(Timestamp ts) {
         return timestampToLocalDateTime(ts).format(chartDateTimePattern);
+    }
+
+    public String timestampToLocalDateTimeString(Timestamp ts, DateTimeFormatter dateTimeFormatter) {
+        return timestampToLocalDateTime(ts).format(dateTimeFormatter);
     }
 
 

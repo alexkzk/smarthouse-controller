@@ -18,6 +18,11 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
 
     @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
             " air.pressure left join fetch air.quality left join fetch air.temp" +
+            " left join fetch air.wind where hs.receivedUtc > :startDate AND hs.receivedUtc < :endDate AND hs.aggregationPeriod = :aggregationPeriod")
+    List<Indication> findBetween(LocalDateTime startDate, LocalDateTime endDate, AggregationPeriod aggregationPeriod);
+
+    @Query("from Indication as hs left join fetch hs.air as air left join fetch" +
+            " air.pressure left join fetch air.quality left join fetch air.temp" +
             " left join fetch air.wind")
     List<Indication> findAll();
 
@@ -173,6 +178,28 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
             + "order by msg_received desc"
             , nativeQuery = true)
     List<Map<String, Object>> getAggregatedDaily(String place, String period);
+
+    @Query(value = "select received_utc as msg_received,\n"
+            + "       in_out,\n"
+            + "       indication_place,\n"
+            + "       aggregation_period as period,\n"
+            + "       round(CAST(float8(celsius) as numeric), 1)                  as temp,\n"
+            + "       round(CAST(float8(rh) as numeric), 0)                       as rh,\n"
+            + "       round(CAST(float8(ah) as numeric), 1)                       as ah,\n"
+            + "       round(CAST(float8(mm_hg) as numeric), 0)                    as mm_hg,\n"
+            + "       round(CAST(float8(direction) as numeric), 0) as direction,\n"
+            + "       round(CAST(float8(speed_ms) as numeric), 0)  as speed_ms\n"
+            + "from main.indication\n"
+            + "         left join main.air a on a.id = indication.air_id\n"
+            + "         left join main.air_temp_indication t on t.id = a.temp_id\n"
+            + "         left join main.air_pressure_indication ap on ap.id = a.pressure_id\n"
+            + "         left join main.air_wind_indication w on w.id = a.wind_id\n"
+            + "where "
+            + "     indication_place LIKE :place AND "
+            + "     aggregation_period LIKE :period "
+            + "order by msg_received desc"
+            , nativeQuery = true)
+    List<Map<String, Object>> getAggregatedMonthly(String place, String period);
 
     @Query(value = "select received_utc as msg_received,\n"
             + "       in_out,\n"
