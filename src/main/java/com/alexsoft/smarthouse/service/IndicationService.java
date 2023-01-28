@@ -7,7 +7,7 @@ import static com.alexsoft.smarthouse.utils.MathUtils.measureToString;
 import static com.alexsoft.smarthouse.utils.MathUtils.round;
 import static java.util.stream.Collectors.toList;
 
-import com.alexsoft.smarthouse.configuration.SmarthouseConfiguration;
+import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
@@ -43,10 +43,10 @@ public class IndicationService {
 
     public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
 
-    private final SmarthouseConfiguration smarthouseConfiguration;
     private final IndicationRepository indicationRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
+    private final MetarLocationsConfig metarLocationsConfig;
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
@@ -79,7 +79,11 @@ public class IndicationService {
     public void createAverageMeasurement(Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate) {
         LOGGER.info("Start date: {}, end date: {}", startDate, endDate);
         List<Indication> indications = aggregateOnInterval(amount, temporalUnit, startDate, endDate);
-        indications.forEach(indication -> indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit)));
+        indications.forEach(indication -> {
+            indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit));
+            String timeZone = metarLocationsConfig.getLocationMapping().get(indication.getIndicationPlace()).values().stream().findFirst().get();
+            indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
+        });
         List<Indication> savedIndications = saveAll(indications);
         LOGGER.info("Saved {} aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.",
                 savedIndications.size(), startDate, endDate, amount, temporalUnit);
