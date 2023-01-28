@@ -184,7 +184,12 @@ order by aggregation_period, received DESC;
 
 
 -- CHECK AMOUNT OF INDICATIONS DURING EACH DAY
-select date_trunc('day', received), count(*)
+select date_trunc('day', received_utc), count(*)
 from main.indication
-group by date_trunc('day', received)
-order by date_trunc('day', received) desc;
+group by date_trunc('day', received_utc)
+order by date_trunc('day', received_utc) desc;
+
+delete
+from main.indication
+where received_utc >= '2022-09-07 00:00:00.000000'
+  and received_utc < '2022-10-14 00:00:00.000000';
