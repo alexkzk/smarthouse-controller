@@ -96,8 +96,8 @@ public class MetarRetriever {
                 Indication indication = houseStateFromMetar(metar);
                 indication.setIndicationPlace(entry.getKey());
                 indication.setReceivedUtc(indication.getReceivedUtc());
-                indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(),
-                        entry.getValue().values().stream().findFirst().get()));
+                String timeZone = entry.getValue().values().stream().findFirst().get();
+                indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } else {
                 LOGGER.info("Metar is expired: {}", metar);

@@ -57,8 +57,7 @@ public class DateUtils {
     }
 
     public LocalDateTime timestampToLocalDateTime(Timestamp ts) {
-        return ZonedDateTime.of(ts.toLocalDateTime(), ZoneId.of("UTC")).withZoneSameInstant(userTimezone)
-                .toLocalDateTime();
+        return ts.toLocalDateTime();
     }
 
     public String timestampToLocalDateTimeString(Timestamp ts) {
