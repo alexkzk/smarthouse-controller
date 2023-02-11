@@ -1,22 +1,46 @@
 package com.alexsoft.smarthouse.service;
 
-import static com.alexsoft.smarthouse.utils.Constants.*;
+import static com.alexsoft.smarthouse.utils.Constants.DATE;
+import static com.alexsoft.smarthouse.utils.Constants.GR;
+import static com.alexsoft.smarthouse.utils.Constants.IAQ;
+import static com.alexsoft.smarthouse.utils.Constants.IN_PREFIX;
+import static com.alexsoft.smarthouse.utils.Constants.MIAMI_MEASURE_PLACE;
+import static com.alexsoft.smarthouse.utils.Constants.NORTH_MEASURE_PLACE;
+import static com.alexsoft.smarthouse.utils.Constants.OUTSIDE_STATUS_PATTERN;
+import static com.alexsoft.smarthouse.utils.Constants.OUT_PREFIX;
+import static com.alexsoft.smarthouse.utils.Constants.PM_10;
+import static com.alexsoft.smarthouse.utils.Constants.PM_2_5;
+import static com.alexsoft.smarthouse.utils.Constants.SEATTLE_MEASURE_PLACE;
+import static com.alexsoft.smarthouse.utils.Constants.SIAQ;
+import static com.alexsoft.smarthouse.utils.Constants.SOUTH_MEASURE_PLACE;
+import static com.alexsoft.smarthouse.utils.Constants.S_OCEAN_DR_HOLLYWOOD;
 import static com.alexsoft.smarthouse.utils.MathUtils.doubleToInt;
 import static com.alexsoft.smarthouse.utils.MathUtils.getNumberOrString;
-import static com.alexsoft.smarthouse.utils.MathUtils.measureToString;
 import static com.alexsoft.smarthouse.utils.MathUtils.round;
 import static java.util.stream.Collectors.toList;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
-import com.alexsoft.smarthouse.db.entity.*;
+import com.alexsoft.smarthouse.db.entity.Air;
+import com.alexsoft.smarthouse.db.entity.Indication;
+import com.alexsoft.smarthouse.db.entity.Pressure;
+import com.alexsoft.smarthouse.db.entity.Quality;
+import com.alexsoft.smarthouse.db.entity.Temp;
+import com.alexsoft.smarthouse.db.entity.Wind;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import jakarta.persistence.EntityManager;
+import jakarta.annotation.PreDestroy;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -25,11 +49,23 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +90,74 @@ public class IndicationService {
     @Value("${smarthouse.short-status-null-string}")
     private String shortStatusNullString;
 
-    private final EntityManager em;
+    @Value("${smarthouse.db.port}")
+    private String dbPort;
+
+    @Value("${spring.datasource.username}")
+    private String dbUsername;
+
+    @Value("${smarthouse.db.hostname}")
+    private String dbHostname;
+
+    @Value("${smarthouse.db.filename}")
+    private String dbFilename;
+
+    @Value("${smarthouse.db.dump-on-destroy}")
+    private boolean dumpOnDestroy;
+
+    @Value("${smarthouse.ftp.hostname}")
+    private String ftpHostname;
+
+    @Value("${smarthouse.ftp.username}")
+    private String ftpUsername;
+
+    @Value("${smarthouse.ftp.password}")
+    private String ftpPassword;
+
+    @Value("${smarthouse.ftp.remote-path}")
+    private String ftpRemotePath;
+
+    @Value("${smarthouse.ftp.upload-on-destroy}")
+    private boolean uploadDumpOnDestroy;
+
+    @PreDestroy
+    public void preDestroy() {
+        if (!dumpOnDestroy) {
+            return;
+        }
+        long start = System.currentTimeMillis();
+        try {
+            LOGGER.info("pg_dump started");
+            Process p;
+            p = new ProcessBuilder("/usr/bin/pg_dump", "--file=" + dbFilename, "--username=" + dbUsername,
+                    "--host=" + dbHostname, "--port=" + dbPort, "-w", "--clean", "--if-exists").start();
+            p.waitFor();
+            Path path = Paths.get(dbFilename);
+            Long mb = null;
+            try {
+                mb = Files.size(path) / 1024 / 1024;
+            } catch (IOException e) {
+                LOGGER.warn(e.getMessage(), e);
+            }
+            LOGGER.info("pg_dump process completed successfully. Time: %d ms. Dump size: %d MB".formatted(
+                    System.currentTimeMillis() - start, mb));
+            if (uploadDumpOnDestroy) {
+                LOGGER.info("Uploading to FTP %s started".formatted(ftpHostname));
+                start = System.currentTimeMillis();
+                if (uploadToFtp()) {
+                    LOGGER.info(
+                            "Uploaded to FTP %s. Time: %d".formatted(ftpHostname, System.currentTimeMillis() - start));
+                } else {
+                    LOGGER.warn("Uploading to FTP %s failed. Time: %d".formatted(ftpHostname,
+                            System.currentTimeMillis() - start));
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.warn("pg_dump process failed, %s, time taken: %d".formatted(e.getMessage(),
+                    System.currentTimeMillis() - start));
+        }
+    }
 
     public List<Indication> aggregateOnInterval(
             Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days
@@ -694,32 +797,43 @@ public class IndicationService {
         }
     }
 
-    public List<Indication> findWithinInterval(final Integer minutes, final Integer hours, final Integer days) {
-        return indicationRepository.findBetween(dateUtils.getInterval(minutes, hours, days, true), dateUtils.getInterval(0, 0, 0, true));
-    }
-
-    private Long calculateAveragePm25(List<Indication> indications) {
-        return round(indications.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getPm25() != null).mapToDouble(hst -> hst.getAir().getQuality().getPm25()).average().orElse(Double.NaN));
-    }
-
-    public Long calculateAverageIaq(List<Indication> indications) {
-        return round(indications.stream().filter(hst -> hst.getAir().getQuality() != null && hst.getAir().getQuality().getIaq() != null).mapToInt(hst -> hst.getAir().getQuality().getIaq()).average().orElse(Double.NaN));
-    }
-
-    private String toAirQualityString(Long avgIaq, Long avgPm25) {
-        return String.format("IAQ %s/%s", measureToString(avgIaq), measureToString(avgPm25));
-    }
-
-    private String toTempAndAhString(Long temp, Long ah, String iata) {
-        if(temp == null && ah == null) {
-            return null;
-        }
-        return String.format(TEMP_AND_AH_PATTERN, iata, measureToString(temp), measureToString(ah));
-    }
-
     public List<Indication> findAfter(String date, AggregationPeriod period, String place) {
         LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm"));
-        LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev")).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+        LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev"))
+                .withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
         return indicationRepository.findAfterAndPeriodAndPlace(utcLocalDateTime, period, place);
+    }
+
+    public boolean uploadToFtp() {
+        FTPClient ftpClient = new FTPClient();
+        try {
+            ftpClient.connect(ftpHostname, 21);
+            ftpClient.login(ftpUsername, ftpPassword);
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+            File LocalFile = new File(dbFilename);
+            String[] split = dbFilename.split("/");
+            String remoteFileName = split[split.length - 1];
+            String remoteFile = ftpRemotePath + "/" + remoteFileName;
+            InputStream inputStream = new FileInputStream(LocalFile);
+            boolean done = ftpClient.storeFile(remoteFile, inputStream);
+            inputStream.close();
+            if (done) {
+                return true;
+            }
+        } catch (IOException ex) {
+            System.out.println("Error: " + ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (ftpClient.isConnected()) {
+                    ftpClient.logout();
+                    ftpClient.disconnect();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return false;
     }
 }

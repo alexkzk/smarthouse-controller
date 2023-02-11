@@ -13,10 +13,10 @@ spring:
       ddl-auto: validate
     database: postgresql
   datasource:
-    url: jdbc:postgresql://localhost:5432/smarthouse
+    url: jdbc:postgresql://${smarthouse.db.hostname}:${smarthouse.db.port}/${smarthouse.db.name}
     driver-class-name: org.postgresql.Driver
     username: smarthouse
-    password: ${SMARTHOUSE_POSTGRES_PASSWORD}
+    password: smarthouse
 
 logging:
   filepath: .
@@ -56,6 +56,18 @@ time:
   chart-date-time-pattern: E d, HH:mm
 
 smarthouse:
+  db:
+    port: 5439
+    name: smarthouse
+    hostname: localhost
+    filename: /home/akuzko/smarthouse/smarthouse-dbdump.sql
+    dump-on-destroy: true
+  ftp:
+    ${SMARTHOUSE_FTP_HOST:}
+    username: anonymous
+    password: ${smarthouse.ftp.username}@${smarthouse.ftp.hostname}
+    remote-path: /G/backup/smarthouse
+    upload-on-destroy: true
   colors:
     MIAMI: '#00B0FF'
     UKLN: '#8d47b5'
