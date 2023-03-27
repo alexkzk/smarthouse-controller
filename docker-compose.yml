@@ -1,15 +1,31 @@
 version: '3.8'
 services:
-  db:
+  smarthouse-controller:
+    image: 'smarthouse-controller:latest'
+    build:
+      context: .
+    container_name: smarthouse-controller
+    depends_on:
+      - smarthouse-db
+    ports:
+      - '24867:24867'
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://smarthouse-db:5432/smarthouse
+      - SPRING_DATASOURCE_USERNAME=smarthouse
+      - SPRING_DATASOURCE_PASSWORD=smarthouse
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    restart: always
+  smarthouse-db:
     image: postgres:14.5
-    container_name: smarthouse
+    container_name: smarthouse-db
     environment:
       - POSTGRES_USER=smarthouse
       - POSTGRES_PASSWORD=smarthouse
     ports:
-      - '15783:5432'
+      - '24870:5432'
     volumes:
       - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql
+    restart: always
 volumes:
   db:
     driver: local

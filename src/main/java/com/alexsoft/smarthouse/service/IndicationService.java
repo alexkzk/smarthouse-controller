@@ -32,11 +32,9 @@ import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -99,11 +97,17 @@ public class IndicationService {
     @Value("${smarthouse.db.hostname}")
     private String dbHostname;
 
+    @Value("#{T(java.lang.System).getProperty('user.home') + '/smarthouse'}/")
+    private String dbDumpFilePath;
+
     @Value("${smarthouse.db.filename}")
-    private String dbFilename;
+    private String dbDumpFilename;
 
     @Value("${smarthouse.db.dump-on-destroy}")
     private boolean dumpOnDestroy;
+
+    @Value("${smarthouse.db.restore-on-startup}")
+    private boolean restoreOnStartup;
 
     @Value("${smarthouse.ftp.hostname}")
     private String ftpHostname;
@@ -120,6 +124,28 @@ public class IndicationService {
     @Value("${smarthouse.ftp.upload-on-destroy}")
     private boolean uploadDumpOnDestroy;
 
+    @PostConstruct
+    public void init() {
+        if (restoreOnStartup) {
+            String downloadedDump = downloadFromFtp();
+            if (downloadedDump != null) {
+                LOGGER.info("psql restore started");
+                long start = System.currentTimeMillis();
+                Process p;
+                try {
+                    p = new ProcessBuilder("/usr/lib/pgsql/bin/psql", "--file=" + downloadedDump, "--username=" + dbUsername,
+                            "--host=" + dbHostname, "--port=" + dbPort).start();
+                    p.waitFor();
+                    LOGGER.info("Database restored. Time: {} ms", System.currentTimeMillis() - start);
+                } catch (Exception e) {
+                    LOGGER.error("Restoring database failed", e);
+                }
+            } else {
+                LOGGER.warn("No DB dump to restore");
+            }
+        }
+    }
+
     @PreDestroy
     public void preDestroy() {
         if (!dumpOnDestroy) {
@@ -127,12 +153,13 @@ public class IndicationService {
         }
         long start = System.currentTimeMillis();
         try {
-            LOGGER.info("pg_dump started");
+            LOGGER.info("pg_dump started: {} {} {} {} {} {} {} {}", "/usr/bin/pg_dump", "--file=" + dbDumpFilePath + dbDumpFilename, "--username=" + dbUsername,
+                    "--host=" + dbHostname, "--port=" + dbPort, "-w", "--clean", "--if-exists");
             Process p;
-            p = new ProcessBuilder("/usr/bin/pg_dump", "--file=" + dbFilename, "--username=" + dbUsername,
+            p = new ProcessBuilder("/usr/bin/pg_dump", "--file=" + dbDumpFilePath + dbDumpFilename, "--username=" + dbUsername,
                     "--host=" + dbHostname, "--port=" + dbPort, "-w", "--clean", "--if-exists").start();
             p.waitFor();
-            Path path = Paths.get(dbFilename);
+            Path path = Paths.get(dbDumpFilePath + dbDumpFilename);
             Long mb = null;
             try {
                 mb = Files.size(path) / 1024 / 1024;
@@ -146,15 +173,15 @@ public class IndicationService {
                 start = System.currentTimeMillis();
                 if (uploadToFtp()) {
                     LOGGER.info(
-                            "Uploaded to FTP %s. Time: %d".formatted(ftpHostname, System.currentTimeMillis() - start));
+                            "Uploaded to FTP %s. Time: %d ms".formatted(ftpHostname, System.currentTimeMillis() - start));
                 } else {
-                    LOGGER.warn("Uploading to FTP %s failed. Time: %d".formatted(ftpHostname,
+                    LOGGER.warn("Uploading to FTP %s failed. Time: %d ms".formatted(ftpHostname,
                             System.currentTimeMillis() - start));
                 }
             }
 
         } catch (Exception e) {
-            LOGGER.warn("pg_dump process failed, %s, time taken: %d".formatted(e.getMessage(),
+            LOGGER.warn("pg_dump process failed, %s, time taken: %d ms".formatted(e.getMessage(),
                     System.currentTimeMillis() - start));
         }
     }
@@ -811,8 +838,8 @@ public class IndicationService {
             ftpClient.login(ftpUsername, ftpPassword);
             ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-            File LocalFile = new File(dbFilename);
-            String[] split = dbFilename.split("/");
+            File LocalFile = new File(dbDumpFilePath + dbDumpFilename);
+            String[] split = dbDumpFilePath.split("/");
             String remoteFileName = split[split.length - 1];
             String remoteFile = ftpRemotePath + "/" + remoteFileName;
             InputStream inputStream = new FileInputStream(LocalFile);
@@ -822,8 +849,7 @@ public class IndicationService {
                 return true;
             }
         } catch (IOException ex) {
-            System.out.println("Error: " + ex.getMessage());
-            ex.printStackTrace();
+            LOGGER.error("Uploading db dump to FTP failed", ex);
         } finally {
             try {
                 if (ftpClient.isConnected()) {
@@ -831,9 +857,68 @@ public class IndicationService {
                     ftpClient.disconnect();
                 }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                LOGGER.error("Closing connection to FTP failed", ex);
             }
         }
         return false;
+    }
+
+    public String downloadFromFtp() {
+
+        FTPClient ftpClient = new FTPClient();
+        try {
+
+            ftpClient.connect(ftpHostname, 21);
+            ftpClient.login(ftpUsername, ftpPassword);
+            ftpClient.enterLocalPassiveMode();
+            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+
+            long start = System.currentTimeMillis();
+            File downloadedDump = new File(dbDumpFilePath + dbDumpFilename);
+            downloadedDump.createNewFile();
+            OutputStream outputStream2 = new BufferedOutputStream(new FileOutputStream(downloadedDump));
+            String ftpFilePath = "G/backup/smarthouse/" + dbDumpFilename;
+            InputStream inputStream = ftpClient.retrieveFileStream(ftpFilePath);
+            LOGGER.info("Downloading {} from ftp {}", ftpFilePath, ftpHostname);
+            byte[] bytesArray = new byte[4096];
+            int bytesRead = -1;
+            if (inputStream == null) {
+                LOGGER.warn("DB dump was not found on the FTP server");
+                return null;
+            }
+            while ((bytesRead = inputStream.read(bytesArray)) != -1) {
+                outputStream2.write(bytesArray, 0, bytesRead);
+            }
+
+            if (ftpClient.completePendingCommand()) {
+                Path path = Paths.get(dbDumpFilePath + dbDumpFilename);
+                Long mb = null;
+                try {
+                    mb = Files.size(path) / 1024 / 1024;
+                } catch (Exception e) {
+                    LOGGER.error("Error during calculating the downloaded file size {}", downloadedDump);
+                    return null;
+                }
+
+                LOGGER.info("{} downloaded, time: {} ms, size: {} MB", dbDumpFilePath + dbDumpFilename, System.currentTimeMillis() - start, mb);
+            }
+            outputStream2.close();
+            inputStream.close();
+            return dbDumpFilePath + dbDumpFilename;
+
+        } catch (IOException ex) {
+            LOGGER.error("Downloading db dump failed", ex);
+            return null;
+        } finally {
+            try {
+                if (ftpClient.isConnected()) {
+                    ftpClient.logout();
+                    ftpClient.disconnect();
+                }
+            } catch (IOException ex) {
+                LOGGER.error("Closing FTP connection failed");
+                return null;
+            }
+        }
     }
 }

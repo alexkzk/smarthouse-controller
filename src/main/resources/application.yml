@@ -12,6 +12,10 @@ spring:
     hibernate:
       ddl-auto: validate
     database: postgresql
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
   datasource:
     url: jdbc:postgresql://${smarthouse.db.hostname}:${smarthouse.db.port}/${smarthouse.db.name}
     driver-class-name: org.postgresql.Driver
@@ -57,17 +61,18 @@ time:
 
 smarthouse:
   db:
-    port: 5439
+    port: 5436
     name: smarthouse
     hostname: localhost
-    filename: /home/akuzko/smarthouse/smarthouse-dbdump.sql
+    filename: smarthouse-dbdump.sql
     dump-on-destroy: true
+    restore-on-startup: false
   ftp:
     ${SMARTHOUSE_FTP_HOST:}
     username: anonymous
     password: ${smarthouse.ftp.username}@${smarthouse.ftp.hostname}
     remote-path: /G/backup/smarthouse
-    upload-on-destroy: true
+    upload-on-destroy: ${smarthouse.db.dump-on-destroy}
   colors:
     MIAMI: '#00B0FF'
     UKLN: '#8d47b5'

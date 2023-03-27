@@ -1,5 +1,7 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
+
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -8,17 +10,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
-
-import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
+import lombok.*;
 
 @Getter
 @Setter
