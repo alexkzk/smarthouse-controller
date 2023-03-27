@@ -8,7 +8,6 @@ RUN ./mvnw clean install
 
 FROM openjdk:17.0.1-jdk-slim
 #FROM arm64v8/adoptopenjdk:11-jdk-hotspot-focal
-RUN mkdir "~/smarthouse"
 ARG DEPENDENCY=/var/tmp/smarthouse/target
 #COPY --from=build /var/tmp/smarthouse/utils/pg_dump /usr/bin/pg_dump
 COPY --from=build ${DEPENDENCY}/*.jar /opt/smarthouse/smarthouse.jar

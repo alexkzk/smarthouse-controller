@@ -24,7 +24,8 @@ services:
     ports:
       - '24870:5432'
     volumes:
-      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql
+#      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql # restore db from local dump
+      - /home/akuzko/smarthouse/docker/postgresql:/var/lib/postgresql/data
     restart: always
 volumes:
   db:
