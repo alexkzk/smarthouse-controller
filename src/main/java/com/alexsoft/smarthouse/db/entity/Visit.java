@@ -18,6 +18,7 @@ public class Visit {
     Integer id;
     LocalDateTime time;
     String ipAddress;
+    String path;
 
     @Override
     public boolean equals(Object o) {

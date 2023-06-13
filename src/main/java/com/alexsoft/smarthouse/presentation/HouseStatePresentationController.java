@@ -20,7 +20,7 @@ public class HouseStatePresentationController {
 
     @GetMapping("/summary")
     public String aggregate(Model model, HttpServletRequest request) {
-        ChartDto chartDto = indicationService.getAggregatedData(request.getRemoteAddr());
+        ChartDto chartDto = indicationService.getAggregatedData(request.getRemoteAddr(), request.getServletPath());
         model.addAttribute(chartDto);
         return "status/summary";
     }
@@ -29,9 +29,9 @@ public class HouseStatePresentationController {
     public String aggregateV2(Model model, @RequestParam(required = false) String place, @RequestParam(required = false) String period, HttpServletRequest request) {
         ChartDto chartDto;
         if (StringUtils.isBlank(place) && StringUtils.isBlank(period)) {
-            chartDto = indicationService.getAggregatedDataV2(request.getRemoteAddr());
+            chartDto = indicationService.getAggregatedDataV2(request.getRemoteAddr(), request.getServletPath());
         } else {
-            chartDto = indicationService.getAggregatedDataDaily(place.toUpperCase(), period.toUpperCase(), request.getRemoteAddr());
+            chartDto = indicationService.getAggregatedDataDaily(place.toUpperCase(), period.toUpperCase(), request.getRemoteAddr(), request.getServletPath());
         }
         model.addAttribute(chartDto);
         return "status/summary";
