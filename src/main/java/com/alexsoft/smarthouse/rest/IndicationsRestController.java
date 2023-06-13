@@ -4,6 +4,7 @@ import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.service.IndicationService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,35 +24,35 @@ public class IndicationsRestController {
 
     @GetMapping("/average")
     public ResponseEntity<List<Indication>> findWithinInterval(
-            @RequestParam Integer interval, @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days
+            @RequestParam Integer interval, @RequestParam Integer minutes, @RequestParam Integer hours, @RequestParam Integer days, HttpServletRequest request
     ) {
-        return ResponseEntity.ok(indicationService.aggregateOnInterval(interval, ChronoUnit.MINUTES, minutes, hours, days));
+        return ResponseEntity.ok(indicationService.aggregateOnInterval(interval, ChronoUnit.MINUTES, minutes, hours, days, request.getRemoteAddr()));
     }
 
     @GetMapping("/average/short")
-    public ResponseEntity<String> findWithinInterval() {
-        return ResponseEntity.ok(indicationService.getHourlyAveragedShortStatus());
+    public ResponseEntity<String> findWithinInterval(HttpServletRequest request) {
+        return ResponseEntity.ok(indicationService.getHourlyAveragedShortStatus(request.getRemoteAddr()));
     }
 
     @GetMapping("/average/outTemp")
-    public ResponseEntity<String> getAverageChornomorskTemp() {
-        return ResponseEntity.ok("{temp: " + indicationService.getAverageChornomorskTemp() + "}");
+    public ResponseEntity<String> getAverageChornomorskTemp(HttpServletRequest request) {
+        return ResponseEntity.ok("{temp: " + indicationService.getAverageChornomorskTemp(request.getRemoteAddr()) + "}");
     }
 
     @GetMapping
-    public ResponseEntity<List<Indication>> findAll() {
-        return ResponseEntity.ok(indicationService.findAll());
+    public ResponseEntity<List<Indication>> findAll(HttpServletRequest request) {
+        return ResponseEntity.ok(indicationService.findRecent(request.getRemoteAddr()));
     }
 
     @GetMapping(params = "startDate")
     public ResponseEntity<List<Indication>> findAfter(@RequestParam String startDate,
                                                       @RequestParam(required = false) AggregationPeriod period,
-                                                      @RequestParam(required = false) String place) {
-        return ResponseEntity.ok(indicationService.findAfter(startDate, period, place));
+                                                      @RequestParam(required = false) String place, HttpServletRequest request) {
+        return ResponseEntity.ok(indicationService.findAfter(startDate, period, place, request.getRemoteAddr()));
     }
 
     @GetMapping("/aggregate")
-    public ResponseEntity<ChartDto> aggregate() {
-        return ResponseEntity.ok(indicationService.getAggregatedData());
+    public ResponseEntity<ChartDto> aggregate(HttpServletRequest request) {
+        return ResponseEntity.ok(indicationService.getAggregatedData(request.getRemoteAddr()));
     }
 }

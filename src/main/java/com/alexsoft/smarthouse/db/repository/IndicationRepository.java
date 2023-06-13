@@ -157,7 +157,7 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
             + "  AND DATE_PART('month', AGE(now() at time zone 'utc', received_local)) = 0\n"
             + "  AND DATE_PART('year', AGE(now() at time zone 'utc', received_local)) = 0\n"
             + "  AND aggregation_period = 'HOURLY' order by msg_received desc", nativeQuery = true)
-    List<Map<String, Object>> getAggregated();
+    List<Map<String, Object>> getAggregatedHourlyAndMinutely();
 
     @Query(value = "select received_local as msg_received,\n"
             + "       in_out,\n"
@@ -183,6 +183,30 @@ public interface IndicationRepository extends JpaRepository<Indication, Integer>
             + "order by msg_received desc"
             , nativeQuery = true)
     List<Map<String, Object>> getAggregatedDaily(String place, String period);
+
+    @Query(value = "select received_local as msg_received,\n"
+            + "       in_out,\n"
+            + "       indication_place,\n"
+            + "       aggregation_period as period,\n"
+            + "       round(CAST(float8(celsius) as numeric), 1)                  as temp,\n"
+            + "       round(CAST(float8(rh) as numeric), 0)                       as rh,\n"
+            + "       round(CAST(float8(ah) as numeric), 1)                       as ah,\n"
+            + "       round(CAST(float8(mm_hg) as numeric), 0)                    as mm_hg,\n"
+            + "       round(CAST(float8(direction) as numeric), 0) as direction,\n"
+            + "       round(CAST(float8(speed_ms) as numeric), 0)  as speed_ms\n"
+            + "from main.indication\n"
+            + "         left join main.air a on a.id = indication.air_id\n"
+            + "         left join main.air_temp_indication t on t.id = a.temp_id\n"
+            + "         left join main.air_pressure_indication ap on ap.id = a.pressure_id\n"
+            + "         left join main.air_wind_indication w on w.id = a.wind_id\n"
+            + "where "
+            + "     indication_place LIKE :place AND "
+            + "     aggregation_period LIKE :period AND "
+            + "     received_local > :start AND "
+            + "     received_local < :end "
+            + "order by msg_received desc"
+            , nativeQuery = true)
+    List<Map<String, Object>> getAggregatedDailyByDate(String place, String period, LocalDateTime start, LocalDateTime end);
 
     @Query(value = "select received_local as msg_received,\n"
             + "       in_out,\n"

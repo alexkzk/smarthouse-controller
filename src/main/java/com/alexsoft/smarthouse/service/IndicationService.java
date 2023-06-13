@@ -20,13 +20,9 @@ import static com.alexsoft.smarthouse.utils.MathUtils.round;
 import static java.util.stream.Collectors.toList;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
-import com.alexsoft.smarthouse.db.entity.Air;
-import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.db.entity.Pressure;
-import com.alexsoft.smarthouse.db.entity.Quality;
-import com.alexsoft.smarthouse.db.entity.Temp;
-import com.alexsoft.smarthouse.db.entity.Wind;
+import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
+import com.alexsoft.smarthouse.db.repository.VisitRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
@@ -78,6 +74,7 @@ public class IndicationService {
     public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
 
     private final IndicationRepository indicationRepository;
+    private final VisitRepository visitRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
     private final MetarLocationsConfig metarLocationsConfig;
@@ -186,11 +183,10 @@ public class IndicationService {
         }
     }
 
-    public List<Indication> aggregateOnInterval(
-            Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days
-    ) {
+    public List<Indication> aggregateOnInterval(Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days, String remoteAddr) {
         LOGGER.debug("Aggregating houseStates on {} min startDate, requested period: {} days, {} hours, {} minutes",
                 amount, temporalUnit, days, hours, minutes);
+        logVisit(remoteAddr);
 
         LocalDateTime startDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
                 .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
@@ -198,6 +194,13 @@ public class IndicationService {
                 .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
 
         return aggregateOnInterval(amount, temporalUnit, startDate, LocalDateTime.now());
+    }
+
+    private void logVisit(String remoteAddr) {
+        Visit visit = new Visit();
+        visit.setTime(LocalDateTime.now());
+        visit.setIpAddress(remoteAddr);
+        visitRepository.save(visit);
     }
 
     public void createAverageMeasurement(Integer amount, TemporalUnit temporalUnit) {
@@ -220,9 +223,7 @@ public class IndicationService {
         LOGGER.debug(savedIndications.toString());
     }
 
-    public List<Indication> aggregateOnInterval(
-            Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate
-    ) {
+    public List<Indication> aggregateOnInterval(Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate) {
 
         long startMillis = System.currentTimeMillis();
         List<Indication> fetchedHouseStates;
@@ -252,8 +253,7 @@ public class IndicationService {
         }
     }
 
-    private List<Indication> aggregateByInterval(Integer amount, TemporalUnit temporalUnit, List<Indication> fetchedHouseStates,
-                                                 String indicationPlace, InOut inOut) {
+    private List<Indication> aggregateByInterval(Integer amount, TemporalUnit temporalUnit, List<Indication> fetchedHouseStates, String indicationPlace, InOut inOut) {
         LOGGER.info("Aggregating {} measurements for {} {} indication place", fetchedHouseStates.size(), indicationPlace, inOut);
         if (amount == 1 && temporalUnit == ChronoUnit.DAYS) {
             // That's needed because of picking up different day when fetched within last 24 hours to avoid aggregating by two days e.g. 17 Jun 01:00 and 16 Jun 23:00
@@ -358,7 +358,8 @@ public class IndicationService {
         return indicationRepository.findBetween(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
     }
 
-    public String getHourlyAveragedShortStatus() {
+    public String getHourlyAveragedShortStatus(String remoteAddr) {
+        logVisit(remoteAddr);
 
         List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(toList());
 
@@ -407,7 +408,8 @@ public class IndicationService {
         );
     }
 
-    public Integer getAverageChornomorskTemp() {
+    public Integer getAverageChornomorskTemp(String remoteAddr) {
+        logVisit(remoteAddr);
 
         List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(toList());
 
@@ -449,7 +451,13 @@ public class IndicationService {
         return indicationRepository.findAll();
     }
 
-    public ChartDto getAggregatedData() {
+    public List<Indication> findRecent(String remoteAddr) {
+        logVisit(remoteAddr);
+        return indicationRepository.findBetween(LocalDateTime.now().minusDays(7), LocalDateTime.now(), AggregationPeriod.HOURLY);
+    }
+
+    public ChartDto getAggregatedData(String remoteAddr) {
+        logVisit(remoteAddr);
         List<Map<String, Object>> aggregates = indicationRepository.getAggregatedSqlAveraged();
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
@@ -461,8 +469,9 @@ public class IndicationService {
         return chartDto;
     }
 
-    public ChartDto getAggregatedDataV2() {
-        List<Map<String, Object>> aggregates = indicationRepository.getAggregated();
+    public ChartDto getAggregatedDataV2(String remoteAddr) {
+        logVisit(remoteAddr);
+        List<Map<String, Object>> aggregates = indicationRepository.getAggregatedHourlyAndMinutely();
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
@@ -473,7 +482,8 @@ public class IndicationService {
         return chartDto;
     }
 
-    public ChartDto getAggregatedDataDaily(String place, String period) {
+    public ChartDto getAggregatedDataDaily(String place, String period, String remoteAddr) {
+        logVisit(remoteAddr);
         if ("HOLLYWOOD".equalsIgnoreCase(place)) {
             place = S_OCEAN_DR_HOLLYWOOD;
         }
@@ -824,7 +834,8 @@ public class IndicationService {
         }
     }
 
-    public List<Indication> findAfter(String date, AggregationPeriod period, String place) {
+    public List<Indication> findAfter(String date, AggregationPeriod period, String place, String remoteAddr) {
+        logVisit(remoteAddr);
         LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm"));
         LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev"))
                 .withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();

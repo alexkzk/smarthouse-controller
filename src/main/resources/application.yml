@@ -10,7 +10,7 @@ spring:
     name: smarthouse
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     database: postgresql
     show-sql: false
     properties:

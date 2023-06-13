@@ -1,0 +1,12 @@
+server:
+  port: 8180
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:24870/smarthouse
+    driver-class-name: org.postgresql.Driver
+    username: smarthouse
+    password: smarthouse
+
+mqtt:
+  msgSavingEnabled: false
