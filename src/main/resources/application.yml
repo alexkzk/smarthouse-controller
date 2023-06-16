@@ -145,3 +145,5 @@ metar-locations:
       KHLN: America/Denver
     SALT-LAKE-CITY:
       KSLC: America/Denver
+    DESTIN:
+      KVPS: America/New_York
