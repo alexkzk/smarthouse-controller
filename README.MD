@@ -41,11 +41,11 @@ You'll need JDK and Maven installed for next steps
 ### Docker deployment
 Built and push a docker image
 
-`sudo docker build -t alexsoft/smarthouse ~/IdeaProjects/smarthouse-controller && sudo docker tag alexsoft/smarthouse smarthouse:1.37 && sudo docker push smarthouse:1.37`
+`docker build -t alexsoft/smarthouse ~/IdeaProjects/smarthouse-controller && docker tag alexsoft/smarthouse smarthouse:1.37 && docker push smarthouse:1.37`
 
 Run docker image
 
-`sudo docker stop smarthouse && sudo docker rm smarthouse && sudo docker run --restart=always -d -p 8080:8080 --name=smarthouse smarthouse:1.05 && sudo docker logs -f smarthouse`
+`docker stop smarthouse-controller && docker rm smarthouse-controller && docker run --restart=always -d -p 8080:8080 --name=smarthouse-controller smarthouse:1.05 && docker logs -f smarthouse-controller`
 
 
 
