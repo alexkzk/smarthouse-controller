@@ -147,3 +147,5 @@ metar-locations:
       KSLC: America/Denver
     DESTIN:
       KVPS: America/New_York
+    JACKSONVILLE:
+      KJAX: America/New_York
