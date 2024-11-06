@@ -39,13 +39,16 @@ public class IndicationRepositoryV2 {
             whereBase += "AND indication_place = ANY(:places) ";
         }
 
-        String timeCondition = "";
+        String timeCondition;
 
         if ("DAILY".equalsIgnoreCase(period)) {
             timeCondition = "AND DATE_PART('day', AGE(now() at time zone 'utc', received_local)) <= 30 " +
                     "AND DATE_PART('month', AGE(now() at time zone 'utc', received_local)) = 0 " +
                     "AND DATE_PART('year', AGE(now() at time zone 'utc', received_local)) = 0 ";
-        } else if ("HOURLY".equalsIgnoreCase(period)) {
+        } else if ("MONTHLY".equalsIgnoreCase(period)) {
+            timeCondition = "";
+        } else {
+            period = "HOURLY";
             timeCondition = "AND date_trunc('day', received_local) = date_trunc('day', now() at time zone 'utc') " +
                     "AND date_trunc('month', received_local) = date_trunc('month', now() at time zone 'utc') " +
                     "AND date_trunc('year', received_local) = date_trunc('year', now() at time zone 'utc') " +
