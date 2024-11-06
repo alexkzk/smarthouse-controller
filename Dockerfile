@@ -1,4 +1,5 @@
-FROM openjdk:17.0.1-jdk-slim as build
+FROM arm64v8/openjdk:17.0.1-jdk-slim as build
+#FROM openjdk:17.0.1-jdk-slim as build
 WORKDIR /var/tmp/smarthouse
 COPY mvnw .
 COPY .mvn .mvn
@@ -6,7 +7,8 @@ COPY pom.xml .
 COPY src src
 RUN ./mvnw clean install
 
-FROM openjdk:17.0.1-jdk-slim
+FROM arm64v8/openjdk:17.0.1-jdk-slim
+#FROM openjdk:17.0.1-jdk-slim as build
 #FROM arm64v8/adoptopenjdk:11-jdk-hotspot-focal
 ARG DEPENDENCY=/var/tmp/smarthouse/target
 #COPY --from=build /var/tmp/smarthouse/utils/pg_dump /usr/bin/pg_dump

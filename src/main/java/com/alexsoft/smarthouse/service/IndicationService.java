@@ -1,60 +1,15 @@
 package com.alexsoft.smarthouse.service;
 
-import static com.alexsoft.smarthouse.utils.Constants.DATE;
-import static com.alexsoft.smarthouse.utils.Constants.GR;
-import static com.alexsoft.smarthouse.utils.Constants.IAQ;
-import static com.alexsoft.smarthouse.utils.Constants.IN_PREFIX;
-import static com.alexsoft.smarthouse.utils.Constants.MIAMI_MEASURE_PLACE;
-import static com.alexsoft.smarthouse.utils.Constants.NORTH_MEASURE_PLACE;
-import static com.alexsoft.smarthouse.utils.Constants.OUTSIDE_STATUS_PATTERN;
-import static com.alexsoft.smarthouse.utils.Constants.OUT_PREFIX;
-import static com.alexsoft.smarthouse.utils.Constants.PM_10;
-import static com.alexsoft.smarthouse.utils.Constants.PM_2_5;
-import static com.alexsoft.smarthouse.utils.Constants.SEATTLE_MEASURE_PLACE;
-import static com.alexsoft.smarthouse.utils.Constants.SIAQ;
-import static com.alexsoft.smarthouse.utils.Constants.SOUTH_MEASURE_PLACE;
-import static com.alexsoft.smarthouse.utils.Constants.S_OCEAN_DR_HOLLYWOOD;
-import static com.alexsoft.smarthouse.utils.MathUtils.doubleToInt;
-import static com.alexsoft.smarthouse.utils.MathUtils.getNumberOrString;
-import static com.alexsoft.smarthouse.utils.MathUtils.round;
-import static java.util.stream.Collectors.toList;
-
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
+import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.db.repository.VisitRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.io.*;
-import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +20,27 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import java.io.*;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.alexsoft.smarthouse.utils.Constants.*;
+import static com.alexsoft.smarthouse.utils.MathUtils.doubleToInt;
+import static java.util.stream.Collectors.toList;
+
 @Service
 @RequiredArgsConstructor
 public class IndicationService {
@@ -74,6 +50,7 @@ public class IndicationService {
     public static final Comparator<Object> OBJECT_TO_STRING_COMPARATOR = Comparator.comparing(o -> ((String) o));
 
     private final IndicationRepository indicationRepository;
+    private final IndicationRepositoryV2 indicationRepositoryV2;
     private final VisitRepository visitRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
@@ -81,9 +58,6 @@ public class IndicationService {
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
-
-    @Value("${smarthouse.short-status-null-string}")
-    private String shortStatusNullString;
 
     @Value("${smarthouse.db.port}")
     private String dbPort;
@@ -181,20 +155,6 @@ public class IndicationService {
             LOGGER.warn("pg_dump process failed, %s, time taken: %d ms".formatted(e.getMessage(),
                     System.currentTimeMillis() - start));
         }
-    }
-
-    public List<Indication> aggregateOnInterval(Integer amount, TemporalUnit temporalUnit, Integer minutes, Integer hours, Integer days, String remoteAddr,
-            String servletPath) {
-        LOGGER.debug("Aggregating houseStates on {} min startDate, requested period: {} days, {} hours, {} minutes",
-                amount, temporalUnit, days, hours, minutes);
-        logVisit(remoteAddr, servletPath);
-
-        LocalDateTime startDate = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()
-                .minus(Duration.ofMinutes(minutes == null || minutes < 0 ? 0 : minutes))
-                .minus(Duration.ofHours(hours == null || hours < 0 ? 0 : hours))
-                .minus(Duration.ofDays(days == null || days < 0 ? 0 : days));
-
-        return aggregateOnInterval(amount, temporalUnit, startDate, LocalDateTime.now());
     }
 
     private void logVisit(String remoteAddr, String servletPath) {
@@ -356,121 +316,6 @@ public class IndicationService {
                 indication.getAir().getTemp().getAh() == null;
     }
 
-    public List<Indication> findHourly() {
-        return indicationRepository.findBetween(dateUtils.getInterval(15, 0, 0, true), dateUtils.getInterval(0, 0, 0, true));
-    }
-
-    public String getHourlyAveragedShortStatus(String remoteAddr, String servletPath) {
-        logVisit(remoteAddr, servletPath);
-
-        List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(toList());
-
-        List<Indication> northMeasurements = filterByPlace(hourlyAverage, NORTH_MEASURE_PLACE);
-        List<Indication> southMeasurements = filterByPlace(hourlyAverage, SOUTH_MEASURE_PLACE);
-        List<Indication> seattleMeasurements = filterByPlace(hourlyAverage, SEATTLE_MEASURE_PLACE);
-        List<Indication> miamiMeasurements = filterByPlace(hourlyAverage, MIAMI_MEASURE_PLACE);
-
-        Long southTemp = calculateAverageTemperature(southMeasurements);
-        Long northTemp = calculateAverageTemperature(northMeasurements);
-        Long northAh = calculateAverageAh(northMeasurements);
-        Long southAh = calculateAverageAh(southMeasurements);
-
-        Long seattleTemp = null;
-        Long seattleAh = null;
-        if (!CollectionUtils.isEmpty(seattleMeasurements)) {
-            seattleTemp = calculateAverageTemperature(seattleMeasurements);
-            seattleAh = calculateAverageAh(seattleMeasurements);
-        }
-
-        Long miamiTemp = null;
-        Long miamiAh = null;
-        if (!CollectionUtils.isEmpty(miamiMeasurements)) {
-            miamiTemp = calculateAverageTemperature(miamiMeasurements);
-            miamiAh = calculateAverageAh(miamiMeasurements);
-        }
-
-        boolean actualMeasuresNorth;
-
-        if (southTemp == null) {
-            actualMeasuresNorth = true;
-        } else if (northTemp == null) {
-            actualMeasuresNorth = false;
-        } else {
-            actualMeasuresNorth = northTemp < southTemp;
-        }
-
-        return String.format(OUTSIDE_STATUS_PATTERN,
-                actualMeasuresNorth ? "N" : "S",
-                actualMeasuresNorth ? getNumberOrString(northTemp, shortStatusNullString) : getNumberOrString(southTemp, shortStatusNullString),
-                getNumberOrString(seattleTemp, shortStatusNullString),    //todo refactor getNumberOrString so MathUtils be a Spring component and inject shortStatusNullString by itself
-                getNumberOrString(miamiTemp, shortStatusNullString),
-                actualMeasuresNorth ? getNumberOrString(northAh, shortStatusNullString) : getNumberOrString(southAh, shortStatusNullString),
-                getNumberOrString(seattleAh, shortStatusNullString),
-                getNumberOrString(miamiAh, shortStatusNullString)
-        );
-    }
-
-    public Integer getAverageChornomorskTemp(String remoteAddr, String servletPath) {
-        logVisit(remoteAddr, servletPath);
-
-        List<Indication> hourlyAverage = findHourly().stream().filter(hst -> hst.getInOut() == InOut.OUT).collect(toList());
-
-        List<Indication> northMeasurements = filterByPlace(hourlyAverage, NORTH_MEASURE_PLACE);
-        List<Indication> southMeasurements = filterByPlace(hourlyAverage, SOUTH_MEASURE_PLACE);
-
-        Long southTemp = calculateAverageTemperature(southMeasurements);
-        Long northTemp = calculateAverageTemperature(northMeasurements);
-
-        boolean actualMeasuresNorth;
-
-        if (southTemp == null && northTemp == null) {
-            return null;
-        } else if (southTemp == null) {
-            actualMeasuresNorth = true;
-        } else if (northTemp == null) {
-            actualMeasuresNorth = false;
-        } else {
-            actualMeasuresNorth = northTemp < southTemp;
-        }
-
-        return actualMeasuresNorth ? northTemp.intValue() : southTemp.intValue();
-
-    }
-
-    private List<Indication> filterByPlace(List<Indication> hourlyAverage, String measurePlace) {
-        return hourlyAverage.stream().filter(hst -> hst.getIndicationPlace().equalsIgnoreCase(measurePlace)).collect(toList());
-    }
-    
-    public Long calculateAverageTemperature(List<Indication> indications) {
-        return round(indications.stream().filter(hst -> hst.getAir().getTemp() != null && hst.getAir().getTemp().getCelsius() != null).mapToDouble(hst -> hst.getAir().getTemp().getCelsius()).average().orElse(Double.NaN));
-    }
-
-    public Long calculateAverageAh(List<Indication> indications) {
-        return round(indications.stream().filter(hst -> hst.getAir().getTemp() != null && hst.getAir().getTemp().getAh() != null).mapToDouble(hst -> hst.getAir().getTemp().getAh()).average().orElse(Double.NaN));
-    }
-
-    public List<Indication> findAll() {
-        return indicationRepository.findAll();
-    }
-
-    public List<Indication> findRecent(String remoteAddr, String servletPath) {
-        logVisit(remoteAddr, servletPath);
-        return indicationRepository.findBetween(LocalDateTime.now().minusDays(7), LocalDateTime.now(), AggregationPeriod.HOURLY);
-    }
-
-    public ChartDto getAggregatedData(String remoteAddr, String servletPath) {
-        logVisit(remoteAddr, servletPath);
-        List<Map<String, Object>> aggregates = indicationRepository.getAggregatedSqlAveraged();
-        ChartDto chartDto = new ChartDto();
-        setTemps(aggregates, chartDto);
-        setRhs(aggregates, chartDto);
-        setAhs(aggregates, chartDto);
-        setAqis(aggregates, chartDto);
-        setColors(chartDto);
-
-        return chartDto;
-    }
-
     public ChartDto getAggregatedDataV2(String remoteAddr, String servletPath) {
         logVisit(remoteAddr, servletPath);
         List<Map<String, Object>> aggregates = indicationRepository.getAggregatedHourlyAndMinutely();
@@ -507,30 +352,12 @@ public class IndicationService {
         return chartDto;
     }
 
-    /*public ChartDto getAggregatedDataDailyV2(String place) {
-        Query q = em.createNativeQuery("select received_utc as msg_received,\n"
-                + "       in_out,\n"
-                + "       indication_place,\n"
-                + "       aggregation_period as period,\n"
-                + "       round(CAST(float8(celsius) as numeric), 1)                  as temp,\n"
-                + "       round(CAST(float8(rh) as numeric), 0)                       as rh,\n"
-                + "       round(CAST(float8(ah) as numeric), 1)                       as ah,\n"
-                + "       round(CAST(float8(mm_hg) as numeric), 0)                    as mm_hg,\n"
-                + "       round(CAST(float8(direction) as numeric), 0) as direction,\n"
-                + "       round(CAST(float8(speed_ms) as numeric), 0)  as speed_ms\n"
-                + "from main.indication\n"
-                + "         left join main.air a on a.id = indication.air_id\n"
-                + "         left join main.air_temp_indication t on t.id = a.temp_id\n"
-                + "         left join main.air_pressure_indication ap on ap.id = a.pressure_id\n"
-                + "         left join main.air_wind_indication w on w.id = a.wind_id\n"
-                + "where indication_place LIKE :place"
-                + "  AND DATE_PART('day', AGE(now() at time zone 'utc', received_utc)) <= 5\n"
-                + "  AND DATE_PART('month', AGE(now() at time zone 'utc', received_utc)) = 0\n"
-                + "  AND DATE_PART('year', AGE(now() at time zone 'utc', received_utc)) = 0\n"
-                + "  AND aggregation_period = 'DAILY' order by msg_received desc");
-        q.setParameter("place", StringUtils.isBlank(place) ? "%" : place);
+    public ChartDto getAggregatedDataV3(String commaSeparatedPlaces, String period, String remoteAddr, String servletPath) {
+        logVisit(remoteAddr, servletPath);
+        List<String> places = commaSeparatedPlaces == null ? null : Arrays.stream(commaSeparatedPlaces.split(",")).map(String::toUpperCase).toList();
+        String period2 = period == null ? "" : period.toUpperCase();
+        List<Map<String, Object>> aggregates = indicationRepositoryV2.getAggregatedData(places, period2);
 
-        List<Map<String, Object>> aggregates = q.getResultList();
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
         setRhs(aggregates, chartDto);
@@ -539,7 +366,7 @@ public class IndicationService {
         setColors(chartDto);
 
         return chartDto;
-    }*/
+    }
 
     private void setColors(ChartDto chartDto) {
         Object[] aqiColors = new Object[]{"#ff0000", "#791d00", "#e27f67", "#969eff", "#4254f5"};
@@ -834,14 +661,6 @@ public class IndicationService {
                 LOGGER.warn("Out of range temp measurements observed");
             }
         }
-    }
-
-    public List<Indication> findAfter(String date, AggregationPeriod period, String place, String remoteAddr, String servletPath, String path) {
-        logVisit(remoteAddr, servletPath);
-        LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm"));
-        LocalDateTime utcLocalDateTime = ZonedDateTime.of(localDateTime, ZoneId.of("Europe/Kiev"))
-                .withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
-        return indicationRepository.findAfterAndPeriodAndPlace(utcLocalDateTime, period, place);
     }
 
     public boolean uploadToFtp() {
