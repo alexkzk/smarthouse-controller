@@ -47,6 +47,7 @@ Run docker image
 
 `docker stop smarthouse-controller && docker rm smarthouse-controller && docker run --restart=always -d -p 8080:8080 --name=smarthouse-controller smarthouse:1.05 && docker logs -f smarthouse-controller`
 
-
+Rebuild and redeploy on PI4
+`cd ~/smarthouse-controller && git pull origin master && docker-compose down && docker rmi smarthouse-controller && docker-compose up -d`
 
 Author: Author. 2020.
