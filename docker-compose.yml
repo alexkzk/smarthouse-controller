@@ -37,7 +37,7 @@ services:
       - "1883:1883"  # MQTT port
       - "9001:9001"  # Websockets (optional)
     volumes:
-      - /home/alexkzk/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: always
 
 volumes:
