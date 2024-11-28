@@ -53,6 +53,9 @@ public class DateUtils {
     }
 
     public LocalDateTime toLocalDateTimeAtZone(LocalDateTime ts, String timeZone) {
+        if (timeZone == null) {
+            return toLocalDateTime(ts);
+        }
         return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZone)).toLocalDateTime();
     }
 

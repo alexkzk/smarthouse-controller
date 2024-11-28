@@ -87,7 +87,12 @@ public class MetarRetriever {
                 Indication indication = toIndication(metar);
                 indication.setIndicationPlace(entry.getKey());
                 indication.setReceivedUtc(indication.getReceivedUtc());
-                String timeZone = entry.getValue().values().stream().findFirst().get();
+                String timeZone = null;
+                try {
+                    timeZone = entry.getValue().values().stream().findFirst().get();
+                } catch (Exception e) {
+                    LOGGER.warn("Could not obtain timezone, default one will be used", e);
+                }
                 indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } else {
