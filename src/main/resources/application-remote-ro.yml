@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${SMARTHOUSE_DB_HOST:localhost}:24870/smarthouse
+
+logging:
+  filepath: ./log
+  level:
+    org:
+      hibernate:
+        SQL: debug
+
+mqtt:
+  server: ${MQTT_HOST:localhost}
+  msgSavingEnabled: false

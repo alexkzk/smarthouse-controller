@@ -13,8 +13,6 @@ import com.alexsoft.smarthouse.utils.TempUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -95,7 +93,7 @@ public class IndicationService {
     @Value("${smarthouse.ftp.upload-on-destroy}")
     private boolean uploadDumpOnDestroy;
 
-    @PostConstruct
+    /*@PostConstruct
     public void init() {
         if (restoreOnStartup) {
             String downloadedDump = downloadFromFtp();
@@ -155,7 +153,7 @@ public class IndicationService {
             LOGGER.warn("pg_dump process failed, %s, time taken: %d ms".formatted(e.getMessage(),
                     System.currentTimeMillis() - start));
         }
-    }
+    }*/
 
     private void logVisit(String remoteAddr, String servletPath) {
         Visit visit = new Visit();
@@ -177,7 +175,7 @@ public class IndicationService {
         indications.forEach(indication -> {
             indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit));
             String timeZone = metarLocationsConfig.getLocationMapping().get(indication.getIndicationPlace()).values().stream().findFirst().get();
-            indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
+            indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
         });
         List<Indication> savedIndications = saveAll(indications);
         LOGGER.info("Saved {} aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.",
@@ -666,7 +664,7 @@ public class IndicationService {
         }
     }
 
-    public boolean uploadToFtp() {
+    /*public boolean uploadToFtp() {
         FTPClient ftpClient = new FTPClient();
         try {
             ftpClient.connect(ftpHostname, 21);
@@ -696,9 +694,9 @@ public class IndicationService {
             }
         }
         return false;
-    }
+    }*/
 
-    public String downloadFromFtp() {
+    /*public String downloadFromFtp() {
 
         FTPClient ftpClient = new FTPClient();
         try {
@@ -755,5 +753,5 @@ public class IndicationService {
                 return null;
             }
         }
-    }
+    }*/
 }

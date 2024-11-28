@@ -38,21 +38,18 @@ logging:
     com.alexsoft.smarthouse: debug
 
 mqtt:
-  server: localhost
-  port: 8883
-  topic: ALEXKZK-SMARTHOUSE
+  server: smarthouse-mqtt-broker
+  port: 1883
+  topic: mqtt.smarthouse
   subscriber: smarthouse-controller
-  user: alexkzk
-  password: ${MOSQUITTO_PASSWORD}
+#  user: ${MQTT_USER}  # currently not used
+#  password: ${MOSQUITTO_PASSWORD}  # currently not used
   msgSavingEnabled: true
 
 avwx:
   baseUri: https://avwx.rest/api
   metarSubUri: /metar/{ICAO}?options=&airport=true&reporting=true&format=json&onfail=cache
   token: ${AVWX_TOKEN:your-avwx-token-here}
-  chernivtsi-icao: UKLN
-  seattle-icao: KSEA
-  miami-icao: KMIA
   metar-receiving-cron: 0 */30 * * * *
 
 time:

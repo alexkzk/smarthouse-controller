@@ -29,15 +29,6 @@ public class MetarRetriever {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MetarRetriever.class);
 
-    @Value("${avwx.chernivtsi-icao}")
-    private String chernivtsiIcao;
-
-    @Value("${avwx.seattle-icao}")
-    private String seattleIcao;
-
-    @Value("${avwx.miami-icao}")
-    private String miamiIcao;
-
     @Value("${avwx.token}")
     private String avwxToken;
 
@@ -85,19 +76,19 @@ public class MetarRetriever {
     }
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
-    public void getSeattleMetar() {
+    public void retrieveAndProcessMetarData() {
 
         metarLocationsConfig.getLocationMapping().entrySet().forEach(entry -> {
 
-            Metar metar = getMetar(entry.getValue().keySet().stream().findFirst().get());
+            Metar metar = readMetar(entry.getValue().keySet().stream().findFirst().get());
 
             if (metarIsNotExpired(metar)) {
 
-                Indication indication = houseStateFromMetar(metar);
+                Indication indication = toIndication(metar);
                 indication.setIndicationPlace(entry.getKey());
                 indication.setReceivedUtc(indication.getReceivedUtc());
                 String timeZone = entry.getValue().values().stream().findFirst().get();
-                indication.setReceivedLocal(dateUtils.ttoLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
+                indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } else {
                 LOGGER.info("Metar is expired: {}", metar);
@@ -105,7 +96,7 @@ public class MetarRetriever {
         });
     }
 
-    private Indication houseStateFromMetar(Metar metar) {
+    private Indication toIndication(Metar metar) {
         Float temp = Float.valueOf(metar.getTemperature().getValue());
         Integer devpoint = metar.getDewpoint().getValue();
         Integer rh = tempUtils.calculateRelativeHumidity(temp, Float.valueOf(devpoint));
@@ -131,7 +122,7 @@ public class MetarRetriever {
             ChronoUnit.HOURS.between(metar.getTime().getIssueDateTime(), ZonedDateTime.now()) < 1;
     }
 
-    public Metar getMetar(String icao) {
+    public Metar readMetar(String icao) {
         String url = baseUri + metarSubUri + "&token=" + avwxToken;
         url = url.replace("{ICAO}", icao);
         Metar forObject = null;

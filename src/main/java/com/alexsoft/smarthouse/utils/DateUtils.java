@@ -52,7 +52,7 @@ public class DateUtils {
         return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(userTimezone).toLocalDateTime();
     }
 
-    public LocalDateTime ttoLocalDateTimeAtZone(LocalDateTime ts, String timeZone) {
+    public LocalDateTime toLocalDateTimeAtZone(LocalDateTime ts, String timeZone) {
         return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZone)).toLocalDateTime();
     }
 

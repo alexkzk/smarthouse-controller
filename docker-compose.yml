@@ -7,6 +7,7 @@ services:
     container_name: smarthouse-controller
     depends_on:
       - smarthouse-db
+      - smarthouse-mqtt-broker
     ports:
       - '24867:24867'
     environment:
@@ -15,6 +16,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=smarthouse
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     restart: always
+
   smarthouse-db:
     image: postgres:14.5
     container_name: smarthouse-db
@@ -24,9 +26,20 @@ services:
     ports:
       - '24870:5432'
     volumes:
-#      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql # restore db from local dump
+      #      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql # restore db from local dump
       - ./postgresql_data:/var/lib/postgresql/data
     restart: always
+
+  smarthouse-mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: smarthouse-mqtt-broker
+    ports:
+      - "1883:1883"  # MQTT port
+      - "9001:9001"  # Websockets (optional)
+    volumes:
+      - /home/alexkzk/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: always
+
 volumes:
   db:
     driver: local
