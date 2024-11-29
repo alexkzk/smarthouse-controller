@@ -20,10 +20,19 @@ public class IndicationRepositoryV2 {
         String selectBase = "SELECT received_local AS msg_received, " +
                 "       in_out, " +
                 "       indication_place, " +
-                "       aggregation_period AS period, " +
-                "       ROUND(CAST(FLOAT8(celsius) AS numeric), 1) AS temp, " +
-                "       ROUND(CAST(FLOAT8(rh) AS numeric), 0) AS rh, " +
-                "       ROUND(CAST(FLOAT8(ah) AS numeric), 1) AS ah, " +
+                "       aggregation_period AS period, "
+                + "       CASE\n"
+                + "           WHEN FLOAT8(celsius) = 'NaN' THEN NULL\n"
+                + "           ELSE ROUND(CAST(FLOAT8(celsius) AS numeric), 1)\n"
+                + "           END AS temp,\n"
+                + "       CASE\n"
+                + "           WHEN FLOAT8(rh) = 'NaN' THEN NULL\n"
+                + "           ELSE ROUND(CAST(FLOAT8(rh) AS numeric), 0)\n"
+                + "           END AS rh,\n"
+                + "       CASE\n"
+                + "           WHEN FLOAT8(ah) = 'NaN' THEN NULL\n"
+                + "           ELSE ROUND(CAST(FLOAT8(ah) AS numeric), 1)\n"
+                + "           END AS ah, " +
                 "       ROUND(CAST(FLOAT8(mm_hg) AS numeric), 0) AS mm_hg, " +
                 "       ROUND(CAST(FLOAT8(direction) AS numeric), 0) AS direction, " +
                 "       ROUND(CAST(FLOAT8(speed_ms) AS numeric), 0) AS speed_ms " +

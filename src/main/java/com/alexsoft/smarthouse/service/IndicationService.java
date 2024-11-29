@@ -357,7 +357,7 @@ public class IndicationService {
 
     public ChartDto getAggregatedDataV3(String commaSeparatedPlaces, String period, String remoteAddr, String servletPath) {
         if ("florida".equalsIgnoreCase(commaSeparatedPlaces)) {
-            commaSeparatedPlaces = "miami,orlando,jacksonville,destin";
+            commaSeparatedPlaces = "miami,orlando,jacksonville,destin,apt2107s";
         }
         logVisit(remoteAddr, servletPath);
         List<String> places = commaSeparatedPlaces == null ? null : Arrays.stream(commaSeparatedPlaces.split(",")).map(String::toUpperCase).toList();
