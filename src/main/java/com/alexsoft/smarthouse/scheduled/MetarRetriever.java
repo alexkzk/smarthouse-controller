@@ -112,6 +112,7 @@ public class MetarRetriever {
         indication.setIssued(metar.getTime().getIssueDateTime().toLocalDateTime());
         indication.setReceivedUtc(now);
         indication.setPublisherId(metar.getStation());
+        indication.setMetar(metar.getRaw());
         Air air = new Air();
         indication.setAir(air);
         Temp temp1 = new Temp();
@@ -130,15 +131,15 @@ public class MetarRetriever {
     public Metar readMetar(String icao) {
         String url = baseUri + metarSubUri + "&token=" + avwxToken;
         url = url.replace("{ICAO}", icao);
-        Metar forObject = null;
+        Metar metar = null;
         try {
-            forObject = this.restTemplate.getForObject(url, Metar.class);
+            metar = this.restTemplate.getForObject(url, Metar.class);
         } catch (HttpClientErrorException e) {
             // TODO just return null in this case and not to check on the metar's expirity the URL should be changed to onfail=error
             LOGGER.warn(e.getMessage(), e);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
         }
-        return forObject;
+        return metar;
     }
 }

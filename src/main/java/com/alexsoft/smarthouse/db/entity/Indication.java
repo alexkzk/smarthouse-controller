@@ -64,6 +64,9 @@ public class Indication implements Comparable<Indication> {
     @OneToOne(cascade = CascadeType.ALL)
     private Air air;
 
+    @Transient
+    private String metar;
+
     @Override
     public int compareTo(Indication o) {
         if (receivedUtc == null) {

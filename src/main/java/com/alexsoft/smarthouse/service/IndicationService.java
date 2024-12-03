@@ -3,6 +3,7 @@ package com.alexsoft.smarthouse.service;
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
+import com.alexsoft.smarthouse.db.repository.IndicationRepositoryCustom;
 import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.db.repository.VisitRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
@@ -18,13 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.io.*;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,6 +44,7 @@ public class IndicationService {
 
     private final IndicationRepository indicationRepository;
     private final IndicationRepositoryV2 indicationRepositoryV2;
+    private final IndicationRepositoryCustom indicationRepositoryCustom;
     private final VisitRepository visitRepository;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
@@ -285,7 +281,9 @@ public class IndicationService {
 
     public List<Indication> saveAll(List<Indication> indicationsToSave) {
         if (msgSavingEnabled) {
-            return indicationRepository.saveAll(indicationsToSave);
+            List<IndicationV2> indicationV2s = indicationsToSave.stream().map(this::toIndicationV2).filter(Objects::nonNull).toList();
+            indicationRepositoryV2.saveAllAndFlush(indicationV2s);
+            return indicationRepository.saveAllAndFlush(indicationsToSave);
         } else {
             LOGGER.debug("Skipping of saving indications");
             return Collections.emptyList();
@@ -303,6 +301,10 @@ public class IndicationService {
                 resetTempAndHumidForPlace("TERRACE", indicationToSave);
                 setEmptyMeasurementsToNull(indicationToSave);
                 convertPressureToMmHg(indicationToSave);
+            }
+            IndicationV2 indicationV2 = toIndicationV2(indicationToSave);
+            if (indicationV2 != null) {
+                indicationRepositoryV2.saveAndFlush(indicationV2);
             }
             Indication savedIndication = indicationRepository.saveAndFlush(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
@@ -362,7 +364,7 @@ public class IndicationService {
         logVisit(remoteAddr, servletPath);
         List<String> places = commaSeparatedPlaces == null ? null : Arrays.stream(commaSeparatedPlaces.split(",")).map(String::toUpperCase).toList();
         String period2 = period == null ? "" : period.toUpperCase();
-        List<Map<String, Object>> aggregates = indicationRepositoryV2.getAggregatedData(places, period2);
+        List<Map<String, Object>> aggregates = indicationRepositoryCustom.getAggregatedData(places, period2);
 
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
@@ -666,6 +668,31 @@ public class IndicationService {
             if (indication.getAir().getTemp().normalize()) {
                 LOGGER.warn("Out of range temp measurements observed");
             }
+        }
+    }
+
+    private IndicationV2 toIndicationV2(Indication indication) {
+        if ("INSTANT".equals(indication.getAggregationPeriod().name())) {
+            IndicationV2 indicationV2 = new IndicationV2();
+            indicationV2.setIndicationPlace(indication.getIndicationPlace());
+            indicationV2.setLocalTime(indication.getReceivedLocal());
+            indicationV2.setUtcTime(indication.getReceivedUtc());
+            indicationV2.setAggregationPeriod("INSTANT");
+            indicationV2.setPublisherId(indication.getPublisherId());
+            indicationV2.setInOut(indication.getInOut().name());
+            indicationV2.setMetar(indication.getMetar());
+            if (indication.getAir() != null) {
+                if (indication.getAir().getTemp() != null) {
+                    indicationV2.setTempCelsius(indication.getAir().getTemp().getCelsius());
+                    indicationV2.setRelativeHumidity(indication.getAir().getTemp().getRh());
+                }
+                if (indication.getAir().getPressure() != null) {
+                    indicationV2.setPressureMmHg(indication.getAir().getPressure().getMmHg());
+                }
+            }
+            return indicationV2;
+        } else {
+            return null;
         }
     }
 

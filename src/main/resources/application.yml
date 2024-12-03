@@ -110,6 +110,8 @@ metar-locations:
       KSFO: America/Los_Angeles
     MIAMI:
       KMIA: America/New_York
+    FORT-LAUDERDALE:
+      KFLL: America/New_York
     ORLANDO:
       KMCO: America/New_York
     BOISE:
