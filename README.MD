@@ -50,4 +50,17 @@ Run docker image
 Rebuild and redeploy on PI4
 `cd ~/smarthouse-controller && git pull origin master && docker-compose down && docker rmi smarthouse-controller && docker-compose up -d`
 
+
+### Database operations
+
+Dump table
+`docker exec smarthouse-db sh -c "pg_dump -U smarthouse -t main.indication_v2 smarthouse | gzip > /home/indication_v2.sql.gz"`
+
+Copy and Gzip file from inside a container
+`docker cp smarthouse-db:/home/indication_v2.sql.gz ~`
+
+Restore locally
+`gunzip -c ~/Downloads/indication_v2.sql.gz | psql -U smarthouse -d smarthouse -h localhost -p 24870 -f indication_v2.sql`
+
+
 Author: Author. 2020.

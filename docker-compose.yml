@@ -15,7 +15,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=smarthouse
       - SPRING_DATASOURCE_PASSWORD=smarthouse
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-    restart: always
+    restart: unless-stopped
 
   smarthouse-db:
     image: postgres:14.5
@@ -28,7 +28,7 @@ services:
     volumes:
       #      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql # restore db from local dump
       - ./postgresql_data:/var/lib/postgresql/data
-    restart: always
+    restart: unless-stopped
 
   smarthouse-mqtt-broker:
     image: eclipse-mosquitto:latest
@@ -38,7 +38,7 @@ services:
       - "9001:9001"  # Websockets (optional)
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-    restart: always
+    restart: unless-stopped
 
 volumes:
   db:
