@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.alexsoft.smarthouse.utils.Constants.*;
 import static com.alexsoft.smarthouse.utils.MathUtils.doubleToInt;
@@ -282,8 +283,8 @@ public class IndicationService {
     public List<Indication> saveAll(List<Indication> indicationsToSave) {
         if (msgSavingEnabled) {
             List<IndicationV2> indicationV2s = indicationsToSave.stream().map(this::toIndicationV2).filter(Objects::nonNull).toList();
-            indicationRepositoryV2.saveAllAndFlush(indicationV2s);
-            return indicationRepository.saveAllAndFlush(indicationsToSave);
+            indicationRepositoryV2.saveAll(indicationV2s);
+            return indicationRepository.saveAll(indicationsToSave);
         } else {
             LOGGER.debug("Skipping of saving indications");
             return Collections.emptyList();
@@ -304,9 +305,9 @@ public class IndicationService {
             }
             IndicationV2 indicationV2 = toIndicationV2(indicationToSave);
             if (indicationV2 != null) {
-                indicationRepositoryV2.saveAndFlush(indicationV2);
+                indicationRepositoryV2.save(indicationV2);
             }
-            Indication savedIndication = indicationRepository.saveAndFlush(indicationToSave);
+            Indication savedIndication = indicationRepository.save(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
             return savedIndication;
         } else {
@@ -358,13 +359,15 @@ public class IndicationService {
     }
 
     public ChartDto getAggregatedDataV3(String commaSeparatedPlaces, String period, String remoteAddr, String servletPath) {
-        if ("florida".equalsIgnoreCase(commaSeparatedPlaces)) {
-            commaSeparatedPlaces = "miami,orlando,jacksonville,destin,apt2107s";
-        }
         logVisit(remoteAddr, servletPath);
         List<String> places = commaSeparatedPlaces == null ? null : Arrays.stream(commaSeparatedPlaces.split(",")).map(String::toUpperCase).toList();
-        String period2 = period == null ? "" : period.toUpperCase();
-        List<Map<String, Object>> aggregates = indicationRepositoryCustom.getAggregatedData(places, period2);
+        if (places != null && places.contains("FLORIDA")) {
+            places = Stream.concat(
+                    places.stream().filter(e -> e.equals("FLORIDA")),
+                    Stream.of("MIAMI", "ORLANDO", "JACKSONVILLE", "DESTIN", "APT2107S-B", "APT2107S-MB")
+            ).collect(Collectors.toList());
+        }
+        List<Map<String, Object>> aggregates = indicationRepositoryCustom.getAggregatedData(places, period == null ? "" : period.toUpperCase());
 
         ChartDto chartDto = new ChartDto();
         setTemps(aggregates, chartDto);
