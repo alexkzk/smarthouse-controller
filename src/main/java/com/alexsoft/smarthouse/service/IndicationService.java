@@ -686,11 +686,12 @@ public class IndicationService {
             indicationV2.setMetar(indication.getMetar());
             if (indication.getAir() != null) {
                 if (indication.getAir().getTemp() != null) {
-                    indicationV2.setTempCelsius(indication.getAir().getTemp().getCelsius());
-                    indicationV2.setRelativeHumidity(indication.getAir().getTemp().getRh());
+                    indicationV2.getTemperature().setValue(indication.getAir().getTemp().getCelsius());
+                    indicationV2.getRelativeHumidity().setValue((double)indication.getAir().getTemp().getRh());
+                    indicationV2.getAbsoluteHumidity().setValue(indication.getAir().getTemp().getAh());
                 }
                 if (indication.getAir().getPressure() != null) {
-                    indicationV2.setPressureMmHg(indication.getAir().getPressure().getMmHg());
+                    indicationV2.getPressure().setValue(indication.getAir().getPressure().getMmHg());
                 }
             }
             return indicationV2;
