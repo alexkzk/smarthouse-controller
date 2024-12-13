@@ -71,14 +71,7 @@ smarthouse:
     remote-path: /G/backup/smarthouse
     upload-on-destroy: ${smarthouse.db.dump-on-destroy}
   colors:
-    MIAMI: '#00B0FF'
-    UKLN: '#8d47b5'
-    SEATTLE: '#109618'
-    NORTH: '#3769cd'
-    SOUTH: '#379bcd'
-    NORTH2: grey
-    LIVING-ROOM: '#dc3912'
-    TERRACE: '#ff5959'
+    MIAMI: '#0BB0FF'
 
   short-status-null-string: N
 

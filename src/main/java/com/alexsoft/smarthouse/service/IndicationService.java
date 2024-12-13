@@ -1,6 +1,7 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
+import com.alexsoft.smarthouse.configuration.SmarthouseConfiguration;
 import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.db.repository.IndicationRepositoryCustom;
@@ -50,6 +51,7 @@ public class IndicationService {
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
     private final MetarLocationsConfig metarLocationsConfig;
+    private final SmarthouseConfiguration smarthouseConfiguration;
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
@@ -364,7 +366,7 @@ public class IndicationService {
         if (places != null && places.contains("FLORIDA")) {
             places = Stream.concat(
                     places.stream().filter(e -> e.equals("FLORIDA")),
-                    Stream.of("MIAMI", "ORLANDO", "JACKSONVILLE", "DESTIN", "APT2107S-B", "APT2107S-MB")
+                    Stream.of("MIAMI", "FORT-LAUDERDALE", "ORLANDO", "JACKSONVILLE", "DESTIN", "APT2107S-B", "APT2107S-MB")
             ).collect(Collectors.toList());
         }
         List<Map<String, Object>> aggregates = indicationRepositoryCustom.getAggregatedData(places, period == null ? "" : period.toUpperCase());
@@ -386,35 +388,38 @@ public class IndicationService {
         Object[] outdoorTemp = (Object[]) chartDto.getOutdoorTemps()[0];
         List<Object> outdoorTempHeader = Arrays.stream(outdoorTemp).collect(toList());
         outdoorTempHeader = outdoorTempHeader.subList(1, outdoorTempHeader.size());
-        Object[] outdoorColors = outdoorTempHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
+        Object[] outdoorColors = outdoorTempHeader.stream().map(s -> getColorForPlace((String) s)).toArray();
         chartDto.setOutdoorColors(outdoorColors);
 
         Object[] rhs = (Object[]) chartDto.getRhs()[0];
         List<Object> rhHeader = Arrays.stream(rhs).collect(toList());
         rhHeader = rhHeader.subList(1, rhHeader.size());
-        Object[] rhColors = rhHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
+        Object[] rhColors = rhHeader.stream().map(s -> getColorForPlace((String) s)).toArray();
         chartDto.setRhsColors(rhColors);
 
         Object[] ahs = (Object[]) chartDto.getAhs()[0];
         List<Object> ahHeader = Arrays.stream(ahs).collect(toList());
         ahHeader = ahHeader.subList(1, ahHeader.size());
-        Object[] ahColors = ahHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
+        Object[] ahColors = ahHeader.stream().map(s -> getColorForPlace((String) s)).toArray();
         chartDto.setAhsColors(ahColors);
 
         Object[] indoor = (Object[]) chartDto.getIndoorTemps()[0];
         List<Object> indoorHeader = Arrays.stream(indoor).collect(toList());
         indoorHeader = indoorHeader.subList(1, indoorHeader.size());
-        Object[] indoorColors = indoorHeader.stream().map(s -> intToARGB(s.hashCode())).toArray();
+        Object[] indoorColors = indoorHeader.stream().map(s -> getColorForPlace((String) s)).toArray();
         chartDto.setIndoorColors(indoorColors);
 
     }
 
-    public static String intToARGB(int i){
-        if (i == "LOS-ANGELES".hashCode()) {
-            i = "LOS-ANGELES".toLowerCase().hashCode();
-        } else if (i == S_OCEAN_DR_HOLLYWOOD.hashCode()){
-            i = "HOLLYWOOD-FL".hashCode();
+    public String getColorForPlace(String place){
+        int i = place.hashCode();
+        if (smarthouseConfiguration.getColors() != null) {
+            String s = smarthouseConfiguration.getColors().get(place);
+            if (StringUtils.isNotBlank(s)) {
+                return s;
+            }
         }
+
         String color = Integer.toHexString(((i >> 24) & 0xFF)) +
                 Integer.toHexString(((i >> 16) & 0xFF)) +
                 Integer.toHexString(((i >> 8) & 0xFF)) +
