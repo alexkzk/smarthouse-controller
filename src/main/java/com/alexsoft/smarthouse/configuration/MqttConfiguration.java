@@ -128,7 +128,7 @@ public class MqttConfiguration {
     @Scheduled(cron = "0 0/1 * * * ?")
     public void powerControl() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(List.of("APT2107S-MB", "APT2107S-B"),
+        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(List.of("APT2107S-MB"),
                 localDateTime.minusMinutes(5));
         if (CollectionUtils.isEmpty(indications)) {
             powerState = "off";
