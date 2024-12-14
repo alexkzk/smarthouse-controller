@@ -88,8 +88,9 @@ public class IndicationV2 {
         return temperature;
     }
 
-    public void setTemperature(Measurement temperature) {
+    public IndicationV2 setTemperature(Measurement temperature) {
         this.temperature = (temperature != null) ? temperature : new Measurement();
+        return this;
     }
 
     public Measurement getRelativeHumidity() {
@@ -110,8 +111,10 @@ public class IndicationV2 {
         return absoluteHumidity;
     }
 
-    public void setAbsoluteHumidity(Measurement absoluteHumidity) {
+    public IndicationV2
+    setAbsoluteHumidity(Measurement absoluteHumidity) {
         this.absoluteHumidity = (absoluteHumidity != null) ? absoluteHumidity : new Measurement();
+        return this;
     }
 
     public Measurement getPressure() {
