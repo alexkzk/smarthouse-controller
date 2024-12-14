@@ -127,8 +127,9 @@ public class MqttConfiguration {
 
     @Scheduled(cron = "0 0/1 * * * ?")
     public void powerControl() {
+        LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(List.of("APT2107S-MB", "APT2107S-B"),
-                LocalDateTime.now().minusMinutes(5));
+                localDateTime.minusMinutes(5));
         if (CollectionUtils.isEmpty(indications)) {
             powerState = "off";
             sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"AC\",\"state\":\"off\"}");
@@ -145,7 +146,7 @@ public class MqttConfiguration {
         }
         Measurement humValue = new Measurement().setValue("on".equals(powerState) ? 10.0 : 0.0);
         try {
-            indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("APT2107S-HUM").setLocalTime(LocalDateTime.now())
+            indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("APT2107S-HUM").setLocalTime(localDateTime)
                     .setPublisherId("PI4").setInOut("IN").setAggregationPeriod("INSTANT").setTemperature(humValue).setAbsoluteHumidity(humValue));
         } catch (Exception e) {
             LOGGER.error("Error during saving humidity measurement: {}", humValue, e);
@@ -158,7 +159,7 @@ public class MqttConfiguration {
                 indication.setIndicationPlace(S_OCEAN_DR_HOLLYWOOD);
             }
             indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            indication.setReceivedLocal(dateUtils.toLocalDateTime(indication.getReceivedUtc()));
+            indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
             indicationService.save(indication, true, AggregationPeriod.INSTANT);
         } catch (Exception e) {
             LOGGER.error("Error during processing indication: {}", indication, e);
