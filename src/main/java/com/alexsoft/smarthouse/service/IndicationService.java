@@ -173,12 +173,7 @@ public class IndicationService {
         List<Indication> indications = aggregateOnInterval(amount, temporalUnit, startDate, endDate);
         indications.forEach(indication -> {
             indication.setAggregationPeriod(AggregationPeriod.of(temporalUnit));
-            String timeZone = null;
-            try {
-                timeZone = metarLocationsConfig.getLocationMapping().get(indication.getIndicationPlace()).values().stream().findFirst().get();
-            } catch (Exception e) {
-                LOGGER.warn("Could not obtain timezone for {}, default one will be used", indication.getIndicationPlace(), e);
-            }
+            Optional<String> timeZone = metarLocationsConfig.getLocationMapping().get(indication.getIndicationPlace()).values().stream().findFirst();
             indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
         });
         List<Indication> savedIndications = saveAll(indications);

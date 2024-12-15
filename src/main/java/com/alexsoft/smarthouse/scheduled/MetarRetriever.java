@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
@@ -78,21 +79,15 @@ public class MetarRetriever {
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void retrieveAndProcessMetarData() {
 
-        metarLocationsConfig.getLocationMapping().entrySet().forEach(entry -> {
+        metarLocationsConfig.getLocationMapping().forEach((key, value) -> {
 
-            Metar metar = readMetar(entry.getValue().keySet().stream().findFirst().get());
+            Metar metar = readMetar(value.keySet().stream().findFirst().get());
 
             if (metarIsNotExpired(metar)) {
-
                 Indication indication = toIndication(metar);
-                indication.setIndicationPlace(entry.getKey());
+                indication.setIndicationPlace(key);
                 indication.setReceivedUtc(indication.getReceivedUtc());
-                String timeZone = null;
-                try {
-                    timeZone = entry.getValue().values().stream().findFirst().get();
-                } catch (Exception e) {
-                    LOGGER.warn("Could not obtain timezone, default one will be used", e);
-                }
+                Optional<String> timeZone = value.values().stream().findFirst();
                 indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
                 indicationService.save(indication, true, AggregationPeriod.INSTANT);
             } else {

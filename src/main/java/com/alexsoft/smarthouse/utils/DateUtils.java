@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,11 +53,11 @@ public class DateUtils {
         return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(userTimezone).toLocalDateTime();
     }
 
-    public LocalDateTime toLocalDateTimeAtZone(LocalDateTime ts, String timeZone) {
-        if (timeZone == null) {
+    public LocalDateTime toLocalDateTimeAtZone(LocalDateTime ts, Optional<String> timeZone) {
+        if (timeZone.isEmpty()) {
             return toLocalDateTime(ts);
         }
-        return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZone)).toLocalDateTime();
+        return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZone.get())).toLocalDateTime();
     }
 
     public LocalDateTime timestampToLocalDateTime(Timestamp ts) {
