@@ -45,6 +45,7 @@ mqtt:
 #  user: ${MQTT_USER}  # currently not used
 #  password: ${MOSQUITTO_PASSWORD}  # currently not used
   msgSavingEnabled: true
+  msgSendingEnabled: true
 
 avwx:
   baseUri: https://avwx.rest/api
