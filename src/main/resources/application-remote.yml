@@ -12,3 +12,4 @@ logging:
 mqtt:
   server: ${MQTT_HOST:localhost}
   msgSavingEnabled: false
+  msgSendingEnabled: false

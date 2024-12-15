@@ -7,8 +7,9 @@ spring:
     password: smarthouse
 
 mqtt:
-  msgSavingEnabled: false
   server: ${MQTT_HOST:localhost}
+  msgSavingEnabled: true
+  msgSendingEnabled: false
 
   # UNCOMMENT TO LOG HIBERNATE DB REQUESTS
 #  jpa:

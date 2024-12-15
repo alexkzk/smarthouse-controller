@@ -17,7 +17,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -90,5 +89,16 @@ public class Indication implements Comparable<Indication> {
     @Override
     public int hashCode() {
         return Objects.hash(id, issued, receivedUtc, publisherId, indicationPlace, inOut, aggregationPeriod, air);
+    }
+
+    @Override
+    public String toString() {
+        return "\n{" +
+                "publisherId='" + publisherId + '\'' +
+                ", indicationPlace='" + indicationPlace + '\'' +
+                ", inOut=" + inOut +
+                ", aggregationPeriod=" + aggregationPeriod +
+                ", " + air +
+                '}';
     }
 }

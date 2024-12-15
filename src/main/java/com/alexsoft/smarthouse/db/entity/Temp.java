@@ -14,7 +14,6 @@ import static com.alexsoft.smarthouse.utils.MathUtils.isNullOrNan;
 
 @Getter
 @Setter
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -79,5 +78,12 @@ public class Temp {
     @Override
     public int hashCode() {
         return Objects.hash(id, celsius, rh, ah);
+    }
+
+    @Override
+    public String toString() {
+        return "t=" + celsius +
+                ", rh=" + rh +
+                ", ah=" + ah;
     }
 }

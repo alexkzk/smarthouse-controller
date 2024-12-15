@@ -3,8 +3,11 @@ package com.alexsoft.smarthouse.configuration;
 import com.alexsoft.smarthouse.db.entity.Indication;
 import com.alexsoft.smarthouse.db.entity.IndicationV2;
 import com.alexsoft.smarthouse.db.entity.Measurement;
+import com.alexsoft.smarthouse.db.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
+import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.service.ApplianceService;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,6 +39,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
+import static com.alexsoft.smarthouse.service.ApplianceService.MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC;
 import static com.alexsoft.smarthouse.utils.Constants.S_OCEAN_DR_HOLLYWOOD;
 
 @Configuration
@@ -44,7 +50,6 @@ public class MqttConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
 
@@ -57,6 +62,9 @@ public class MqttConfiguration {
     @Value("${mqtt.subscriber}")
     private String mqttSubscriber;
 
+    @Value("${mqtt.msgSavingEnabled}")
+    private Boolean msgSavingEnabled;
+
 //    @Value("${mqtt.user}")
 //    private String mqttUser;
 
@@ -65,14 +73,6 @@ public class MqttConfiguration {
 
     private final DateUtils dateUtils;
     private final IndicationService indicationService;
-
-    private String powerState;
-//    private final IntegrationFlow mqttOutboundFlow;
-
-    public void sendMessage(String topic, String messagePayload) {
-        LOGGER.info("Sending MQTT message: topic={}, payload={}", topic, messagePayload);
-        mqttOutboundFlow().getInputChannel().send(MessageBuilder.withPayload(messagePayload).setHeader("mqtt_topic", topic).build());
-    }
 
     @Bean
     public DefaultMqttPahoClientFactory mqttClientFactory() {
@@ -123,34 +123,6 @@ public class MqttConfiguration {
                 LOGGER.error("Error processing MQTT message: {}", payload, e);
             }
         };
-    }
-
-    @Scheduled(cron = "0 0/1 * * * ?")
-    public void powerControl() {
-        LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(List.of("APT2107S-MB"),
-                localDateTime.minusMinutes(5));
-        if (CollectionUtils.isEmpty(indications)) {
-            powerState = "off";
-            sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"AC\",\"state\":\"off\"}");
-            LOGGER.info("Power control method executed, indications were empty");
-        }
-        double ah = indications.stream().mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow();
-        LOGGER.info("Power control method executed, ah was: {}", ah);
-        if (ah > 12) {
-            powerState = "on";
-            sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"AC\",\"state\":\"on\"}");
-        } else if (ah < 11) {
-            powerState = "off";
-            sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"AC\",\"state\":\"off\"}");
-        }
-        Measurement humValue = new Measurement().setValue("on".equals(powerState) ? 10.0 : 0.0);
-        try {
-            indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("APT2107S-HUM").setLocalTime(localDateTime)
-                    .setPublisherId("PI4").setInOut("IN").setAggregationPeriod("INSTANT").setTemperature(humValue).setAbsoluteHumidity(humValue));
-        } catch (Exception e) {
-            LOGGER.error("Error during saving humidity measurement: {}", humValue, e);
-        }
     }
 
     private void processIndication(Indication indication) {

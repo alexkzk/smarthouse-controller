@@ -11,7 +11,6 @@ import java.util.Objects;
 
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -48,5 +47,11 @@ public class Air {
     @Override
     public int hashCode() {
         return Objects.hash(id, temp, quality, pressure, wind);
+    }
+
+    @Override
+    public String toString() {
+        return temp +
+                ", " + pressure;
     }
 }

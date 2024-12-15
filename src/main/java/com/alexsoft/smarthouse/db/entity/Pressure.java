@@ -14,7 +14,6 @@ import static com.alexsoft.smarthouse.utils.MathUtils.isNullOrNan;
 
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -52,5 +51,10 @@ public class Pressure {
         get busy dying.
         --Stephen King""";
         return Objects.hash(id, mmHg);
+    }
+
+    @Override
+    public String toString() {
+        return "mmHg=" + mmHg ;
     }
 }
