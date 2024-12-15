@@ -51,7 +51,8 @@ public class PowerController {
         } else {
             try {
                 double ah = indications.stream().mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow();
-                LOGGER.info("Power control method executed, ah was: {}", ah);
+                LOGGER.info("Power control method executed, ah was: {}, the appliance's setting: {}, hysteresis: {}",
+                        ah, appliance.getSetting(), appliance.getHysteresis());
                 if (ah > appliance.getSetting() + appliance.getHysteresis()) {
                     appliance.setState(ON, localDateTime);
                     appliance.setStatusUpdated(localDateTime);

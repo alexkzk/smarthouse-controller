@@ -30,7 +30,6 @@ public class ApplianceService {
     private final MqttSender mqttSender;
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
-        appliance.setState(ON, localDateTime);
         String color = appliance.getState() == OFF ? "31" : "32";
         LOGGER.info("Switching {} \u001B[" + color + "m{}\u001B[0m", appliance.getDescription(), appliance.getState());
         mqttSender.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
