@@ -271,7 +271,7 @@ public class IndicationService {
                     .speedMs(doubleToInt(winds.stream().filter(wind -> wind.getSpeedMs() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
                     .build();
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            LOGGER.error("Failed to average wind for {}", indications, e);
         }
 
         averagedIndication.setAir(Air.builder()

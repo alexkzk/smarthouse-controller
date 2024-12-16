@@ -27,13 +27,11 @@ public class ApplianceService {
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
         Long durationInMinutes = null;
-        LocalDateTime switchedOn = appliance.getSwitchedOn();
-        LocalDateTime switchedOff = appliance.getSwitchedOff();
 
-        if (switchedOn != null && switchedOff != null) {
-            LocalDateTime lastSwitchDate = switchedOn.isAfter(switchedOff) ? switchedOn : switchedOff;
-            durationInMinutes = Math.abs(Duration.between(lastSwitchDate, localDateTime).toMinutes());
+        if (appliance.getSwitched() != null) {
+            durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), localDateTime).toMinutes());
         }
+
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
         mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
