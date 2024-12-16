@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import jakarta.persistence.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,6 +32,8 @@ public class Appliance {
     private LocalDateTime lockedAt;
     @Convert(converter = StringListConverter.class)
     private List<String> referenceSensors;
+    private Double durationOnMinutes;
+    private Double durationOffMinutes;
 
     @Deprecated
     public void setState(ApplianceState state) {
@@ -41,8 +44,14 @@ public class Appliance {
         if (state != this.state) {
             if (state == ON) {
                 turnedOn = localdatetime;
+                if (durationOnMinutes != null && durationOffMinutes != null) {
+                   durationOffMinutes = (double) Duration.between(turnedOff, turnedOn).toMinutes();
+                }
             } else if (state == OFF) {
                 turnedOff = localdatetime;
+                if (durationOnMinutes != null && durationOffMinutes != null) {
+                    durationOnMinutes = (double) Duration.between(turnedOn, turnedOff).toMinutes();
+                }
             }
         }
         this.state = state;
