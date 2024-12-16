@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 
 @Entity
 @Table(schema = "main")
@@ -25,7 +26,8 @@ public class Appliance {
     private boolean locked = false;
     private Double setting;
     private Double hysteresis;
-    private LocalDateTime statusUpdated;
+    private LocalDateTime turnedOn;
+    private LocalDateTime turnedOff;
     private LocalDateTime lockedAt;
     @Convert(converter = StringListConverter.class)
     private List<String> referenceSensors;
@@ -37,7 +39,11 @@ public class Appliance {
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {
-            statusUpdated = localdatetime;
+            if (state == ON) {
+                turnedOn = localdatetime;
+            } else if (state == OFF) {
+                turnedOff = localdatetime;
+            }
         }
         this.state = state;
     }
