@@ -54,7 +54,6 @@ public class PowerController {
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(), averagingStartDateTime);
         if (CollectionUtils.isEmpty(indications)) {
             appliance.setState(OFF, localDateTime);
-            appliance.setStatusUpdated(localDateTime);
             LOGGER.info("Power control method executed, indications were empty");
         } else {
             try {
@@ -63,10 +62,8 @@ public class PowerController {
                         ah, appliance.getSetting(), appliance.getHysteresis());
                 if (ah > appliance.getSetting() + appliance.getHysteresis()) {
                     appliance.setState(ON, localDateTime);
-                    appliance.setStatusUpdated(localDateTime);
                 } else if (ah < appliance.getSetting() - appliance.getHysteresis()) {
                     appliance.setState(OFF, localDateTime);
-                    appliance.setStatusUpdated(localDateTime);
                 }
             } catch (Exception e) {
                 LOGGER.error("Error during calculating average absolute humidity", e);
