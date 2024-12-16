@@ -106,23 +106,12 @@ public class MqttConfiguration {
             LOGGER.debug("Received an MQTT message: {}", payload);
             try {
                 Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
-                processIndication(indication);
+                indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+                indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
+                indicationService.save(indication, MetarRetriever.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Error processing MQTT message: {}", payload, e);
             }
         };
-    }
-
-    private void processIndication(Indication indication) {
-        try {
-            if ("HOLLYWOOD-FL".equals(indication.getIndicationPlace())) {
-                indication.setIndicationPlace(S_OCEAN_DR_HOLLYWOOD);
-            }
-            indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-            indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
-            indicationService.save(indication, MetarRetriever.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
-        } catch (Exception e) {
-            LOGGER.error("Error during processing indication: {}", indication, e);
-        }
     }
 }

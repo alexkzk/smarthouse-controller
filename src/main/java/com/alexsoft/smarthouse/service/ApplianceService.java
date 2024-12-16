@@ -30,7 +30,7 @@ public class ApplianceService {
     private final MqttSender mqttSender;
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
-        LOGGER.info("Switching {} {}", appliance.getDescription(), appliance.getFormattedState());
+        LOGGER.info("{} is {}", appliance.getDescription(), appliance.getFormattedState());
         mqttSender.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         Measurement humValue = new Measurement().setValue(appliance.getState() == ON ? 10.0 : 0.0);

@@ -291,8 +291,7 @@ public class IndicationService {
         }
     }
 
-    public Indication save(Indication indicationToSave, IndicationV2 indicationV2, boolean normalize, AggregationPeriod aggregationPeriod) {
-
+    public void save(Indication indicationToSave, IndicationV2 indicationV2, boolean normalize, AggregationPeriod aggregationPeriod) {
         if (msgSavingEnabled) {
             if (normalize) {
                 indicationToSave.setAggregationPeriod(aggregationPeriod);
@@ -308,10 +307,8 @@ public class IndicationService {
             }
             Indication savedIndication = indicationRepository.save(indicationToSave);
             LOGGER.debug("Saved indication {}", savedIndication);
-            return savedIndication;
         } else {
             LOGGER.debug("Skipping of saving indication {}", indicationToSave);
-            return null;
         }
     }
 
