@@ -3,6 +3,9 @@ package com.alexsoft.smarthouse.scheduled;
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.utils.DateUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -107,6 +110,7 @@ public class MetarRetriever {
         Integer rh = tempUtils.calculateRelativeHumidity(temp, Float.valueOf(devpoint));
         LocalDateTime now = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
         Indication indication = new Indication();
+        indication.setAggregationPeriod(AggregationPeriod.INSTANT);
         indication.setIndicationPlace(metar.getStation());
         indication.setInOut(InOut.OUT);
         indication.setIssued(metar.getTime().getIssueDateTime().toLocalDateTime());
@@ -120,6 +124,12 @@ public class MetarRetriever {
         temp1.setCelsius(temp.doubleValue());
         temp1.setRh(rh);
         temp1.setAh(tempUtils.calculateAbsoluteHumidity(temp, rh).doubleValue());
+        try {
+            air.setWind(new Wind(null, metar.getWindDirection().getValue(),
+                    ((int) BigDecimal.valueOf(metar.getWindSpeed().getValue() * 0.514444).setScale(2, RoundingMode.HALF_UP).doubleValue())));
+        } catch (Exception e) {
+            LOGGER.error("Error during setting wind speed and wind direction", e);
+        }
         return indication;
     }
 
@@ -144,7 +154,7 @@ public class MetarRetriever {
     }
 
     public static IndicationV2 toIndicationV2(Indication indication) {
-        if ("INSTANT".equals(indication.getAggregationPeriod().name())) {
+        if (indication.getAggregationPeriod() != null && "INSTANT".equals(indication.getAggregationPeriod().name())) {
             IndicationV2 indicationV2 = new IndicationV2();
             indicationV2.setIndicationPlace(indication.getIndicationPlace());
             indicationV2.setLocalTime(indication.getReceivedLocal());
