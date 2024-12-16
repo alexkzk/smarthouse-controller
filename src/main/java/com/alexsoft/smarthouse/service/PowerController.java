@@ -14,6 +14,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -57,8 +59,9 @@ public class PowerController {
             LOGGER.info("Power control method executed, indications were empty");
         } else {
             try {
-                double ah = indications.stream().mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow();
-                LOGGER.info("Power control method executed, ah was: {}, the appliance's setting: {}, hysteresis: {}",
+                double ah = BigDecimal.valueOf(indications.stream().mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
+                LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
                 if (ah > appliance.getSetting() + appliance.getHysteresis()) {
                     appliance.setState(ON, localDateTime);
