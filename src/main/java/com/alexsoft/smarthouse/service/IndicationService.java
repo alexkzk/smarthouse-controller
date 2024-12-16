@@ -282,8 +282,6 @@ public class IndicationService {
 
     public List<Indication> saveAll(List<Indication> indicationsToSave) {
         if (msgSavingEnabled) {
-            List<IndicationV2> indicationV2s = indicationsToSave.stream().map(MetarRetriever::toIndicationV2).filter(Objects::nonNull).toList();
-            indicationRepositoryV2.saveAll(indicationV2s);
             return indicationRepository.saveAll(indicationsToSave);
         } else {
             LOGGER.debug("Skipping of saving indications");
