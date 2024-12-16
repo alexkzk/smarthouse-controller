@@ -27,7 +27,8 @@ public class ApplianceService {
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
         Long durationInMinutes = appliance.getTurnedOn() != null && appliance.getTurnedOff() != null ?
-                Duration.between(appliance.getTurnedOn(), appliance.getTurnedOff()).toMinutes() : null;
+                Duration.between(localDateTime, appliance.getTurnedOn().isAfter(appliance.getTurnedOff()) ? appliance.getTurnedOn() : appliance.getTurnedOff())
+                        .toMinutes() : null;
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
         mqttSender.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
