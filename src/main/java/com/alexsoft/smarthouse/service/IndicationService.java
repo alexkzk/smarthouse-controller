@@ -10,6 +10,7 @@ import com.alexsoft.smarthouse.db.repository.VisitRepository;
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
+import com.alexsoft.smarthouse.scheduled.MetarRetriever;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import lombok.RequiredArgsConstructor;
@@ -281,7 +282,7 @@ public class IndicationService {
 
     public List<Indication> saveAll(List<Indication> indicationsToSave) {
         if (msgSavingEnabled) {
-            List<IndicationV2> indicationV2s = indicationsToSave.stream().map(this::toIndicationV2).filter(Objects::nonNull).toList();
+            List<IndicationV2> indicationV2s = indicationsToSave.stream().map(MetarRetriever::toIndicationV2).filter(Objects::nonNull).toList();
             indicationRepositoryV2.saveAll(indicationV2s);
             return indicationRepository.saveAll(indicationsToSave);
         } else {
@@ -290,7 +291,7 @@ public class IndicationService {
         }
     }
 
-    public Indication save(Indication indicationToSave, boolean normalize, AggregationPeriod aggregationPeriod) {
+    public Indication save(Indication indicationToSave, IndicationV2 indicationV2, boolean normalize, AggregationPeriod aggregationPeriod) {
 
         if (msgSavingEnabled) {
             if (normalize) {
@@ -302,7 +303,6 @@ public class IndicationService {
                 setEmptyMeasurementsToNull(indicationToSave);
                 convertPressureToMmHg(indicationToSave);
             }
-            IndicationV2 indicationV2 = toIndicationV2(indicationToSave);
             if (indicationV2 != null) {
                 indicationRepositoryV2.save(indicationV2);
             }
@@ -676,31 +676,6 @@ public class IndicationService {
         }
     }
 
-    private IndicationV2 toIndicationV2(Indication indication) {
-        if ("INSTANT".equals(indication.getAggregationPeriod().name())) {
-            IndicationV2 indicationV2 = new IndicationV2();
-            indicationV2.setIndicationPlace(indication.getIndicationPlace());
-            indicationV2.setLocalTime(indication.getReceivedLocal());
-            indicationV2.setUtcTime(indication.getReceivedUtc());
-            indicationV2.setAggregationPeriod("INSTANT");
-            indicationV2.setPublisherId(indication.getPublisherId());
-            indicationV2.setInOut(indication.getInOut().name());
-            indicationV2.setMetar(indication.getMetar());
-            if (indication.getAir() != null) {
-                if (indication.getAir().getTemp() != null) {
-                    indicationV2.getTemperature().setValue(indication.getAir().getTemp().getCelsius());
-                    indicationV2.getRelativeHumidity().setValue((double)indication.getAir().getTemp().getRh());
-                    indicationV2.getAbsoluteHumidity().setValue(indication.getAir().getTemp().getAh());
-                }
-                if (indication.getAir().getPressure() != null) {
-                    indicationV2.getPressure().setValue(indication.getAir().getPressure().getMmHg());
-                }
-            }
-            return indicationV2;
-        } else {
-            return null;
-        }
-    }
 
     /*public boolean uploadToFtp() {
         FTPClient ftpClient = new FTPClient();

@@ -78,6 +78,22 @@ public class IndicationV2 {
     })
     private Measurement pressure = new Measurement();
 
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "wind_kt")),
+            @AttributeOverride(name = "min", column = @Column(name = "wind_kt_min")),
+            @AttributeOverride(name = "max", column = @Column(name = "wind_kt_max"))
+    })
+    private Measurement windSpeed = new Measurement();
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "wind_dir")),
+            @AttributeOverride(name = "min", column = @Column(name = "wind_dir_min")),
+            @AttributeOverride(name = "max", column = @Column(name = "wind_dir_max"))
+    })
+    private Measurement windDirection = new Measurement();
+
     @Column(length = 512)
     private String metar;
 

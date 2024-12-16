@@ -1,19 +1,14 @@
 package com.alexsoft.smarthouse.configuration;
 
 import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.db.entity.IndicationV2;
-import com.alexsoft.smarthouse.db.entity.Measurement;
-import com.alexsoft.smarthouse.db.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
-import com.alexsoft.smarthouse.enums.ApplianceState;
-import com.alexsoft.smarthouse.service.ApplianceService;
+import com.alexsoft.smarthouse.scheduled.MetarRetriever;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,18 +25,11 @@ import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
-import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.scheduling.annotation.Scheduled;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.UUID;
 
-import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
-import static com.alexsoft.smarthouse.service.ApplianceService.MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC;
 import static com.alexsoft.smarthouse.utils.Constants.S_OCEAN_DR_HOLLYWOOD;
 
 @Configuration
@@ -132,7 +120,7 @@ public class MqttConfiguration {
             }
             indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
             indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
-            indicationService.save(indication, true, AggregationPeriod.INSTANT);
+            indicationService.save(indication, MetarRetriever.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
         } catch (Exception e) {
             LOGGER.error("Error during processing indication: {}", indication, e);
         }

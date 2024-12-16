@@ -1,6 +1,7 @@
 package com.alexsoft.smarthouse.scheduled;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
+import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -10,9 +11,6 @@ import java.util.Optional;
 
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
-import com.alexsoft.smarthouse.db.entity.Air;
-import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.db.entity.Temp;
 import com.alexsoft.smarthouse.model.avwx.metar.Metar;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.TempUtils;
@@ -89,7 +87,14 @@ public class MetarRetriever {
                 indication.setReceivedUtc(indication.getReceivedUtc());
                 Optional<String> timeZone = value.values().stream().findFirst();
                 indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
-                indicationService.save(indication, true, AggregationPeriod.INSTANT);
+                IndicationV2 indicationV2 = toIndicationV2(indication);
+                try {
+                    indicationV2.setWindSpeed(new Measurement((double)metar.getWindSpeed().getValue(), null, null));
+                    indicationV2.setWindDirection(new Measurement((double)metar.getWindDirection().getValue(), null, null));
+                } catch (Exception e) {
+                    LOGGER.error("Error during setting wind speed and wind direction", e);
+                }
+                indicationService.save(indication, indicationV2, true, AggregationPeriod.INSTANT);
             } else {
                 LOGGER.info("Metar is expired: {}", metar);
             }
@@ -136,5 +141,31 @@ public class MetarRetriever {
             LOGGER.error(e.getMessage(), e);
         }
         return metar;
+    }
+
+    public static IndicationV2 toIndicationV2(Indication indication) {
+        if ("INSTANT".equals(indication.getAggregationPeriod().name())) {
+            IndicationV2 indicationV2 = new IndicationV2();
+            indicationV2.setIndicationPlace(indication.getIndicationPlace());
+            indicationV2.setLocalTime(indication.getReceivedLocal());
+            indicationV2.setUtcTime(indication.getReceivedUtc());
+            indicationV2.setAggregationPeriod("INSTANT");
+            indicationV2.setPublisherId(indication.getPublisherId());
+            indicationV2.setInOut(indication.getInOut().name());
+            indicationV2.setMetar(indication.getMetar());
+            if (indication.getAir() != null) {
+                if (indication.getAir().getTemp() != null) {
+                    indicationV2.getTemperature().setValue(indication.getAir().getTemp().getCelsius());
+                    indicationV2.getRelativeHumidity().setValue((double)indication.getAir().getTemp().getRh());
+                    indicationV2.getAbsoluteHumidity().setValue(indication.getAir().getTemp().getAh());
+                }
+                if (indication.getAir().getPressure() != null) {
+                    indicationV2.getPressure().setValue(indication.getAir().getPressure().getMmHg());
+                }
+            }
+            return indicationV2;
+        } else {
+            return null;
+        }
     }
 }
