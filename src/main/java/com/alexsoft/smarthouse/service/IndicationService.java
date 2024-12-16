@@ -264,16 +264,21 @@ public class IndicationService {
                 .mmHg(pressures.stream().filter(pr -> pr.getMmHg() != null).mapToDouble(Pressure::getMmHg).average().orElse(Double.NaN)).build();
 
         List<Wind> winds = indications.stream().map(houseState -> houseState.getAir().getWind()).filter(Objects::nonNull).collect(Collectors.toList());
-        Wind averagedWind = Wind.builder()
-                .direction(doubleToInt(winds.stream().filter(wind -> wind.getDirection() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
-                .speedMs(doubleToInt(winds.stream().filter(winf -> winf.getSpeedMs() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
-                .build();
+        Wind averagedWind = null;
+        try {
+            averagedWind = Wind.builder()
+                    .direction(doubleToInt(winds.stream().filter(wind -> wind.getDirection() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
+                    .speedMs(doubleToInt(winds.stream().filter(wind -> wind.getSpeedMs() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
+                    .build();
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+        }
 
         averagedIndication.setAir(Air.builder()
                 .quality(quality.isEmpty() ? null : quality)
                 .temp(avgTemp.isEmpty() ? null : avgTemp)
                 .pressure(avgPressure.isEmpty() ? null : avgPressure)
-                .wind(averagedWind.isEmpty() ? null : averagedWind)
+                .wind(averagedWind == null || averagedWind.isEmpty() ? null : averagedWind)
                 .build());
 
         return averagedIndication;
