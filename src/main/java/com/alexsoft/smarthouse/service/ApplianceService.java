@@ -23,15 +23,26 @@ public class ApplianceService {
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
-    private final MqttSender mqttSender;
+    private final MqttService mqttService;
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
-        Long durationInMinutes = appliance.getTurnedOn() != null && appliance.getTurnedOff() != null ?
-                Duration.between(localDateTime, appliance.getTurnedOn().isAfter(appliance.getTurnedOff()) ? appliance.getTurnedOn() : appliance.getTurnedOff())
-                        .toMinutes() : null;
+        Long durationInMinutes = null;
+        LocalDateTime switchedOn = appliance.getSwitchedOn();
+        LocalDateTime switchedOff = appliance.getSwitchedOff();
+
+        if (switchedOn != null && switchedOff != null) {
+            LocalDateTime lastSwitchDate = switchedOn.isAfter(switchedOff) ? switchedOn : switchedOff;
+            durationInMinutes = Math.abs(Duration.between(lastSwitchDate, localDateTime).toMinutes());
+        }
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
-        mqttSender.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+
+        mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+
+        saveAuxApplianceMeasurement(appliance, localDateTime);
+    }
+
+    private void saveAuxApplianceMeasurement(Appliance appliance, LocalDateTime localDateTime) {
         Measurement humValue = new Measurement().setValue(appliance.getState() == ON ? 10.0 : 0.0);
         try {
             indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("APT2107S-HUM").setLocalTime(localDateTime)

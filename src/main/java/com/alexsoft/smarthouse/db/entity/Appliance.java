@@ -39,9 +39,9 @@ public class Appliance {
 
     @Convert(converter = StringListConverter.class)
     private List<String> referenceSensors;
-    private LocalDateTime turnedOn;
-
-    private LocalDateTime turnedOff;
+    private LocalDateTime switched;
+    private LocalDateTime switchedOn;
+    private LocalDateTime switchedOff;
 
     private Double durationOnMinutes;
 
@@ -55,18 +55,18 @@ public class Appliance {
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {
             if (state == ON) {
-                turnedOn = localdatetime;
-                if (turnedOn != null && turnedOff != null) {
-                   durationOffMinutes = (double) Duration.between(turnedOff, turnedOn).toMinutes();
+                switched = switchedOn = localdatetime;
+                if (switchedOn != null && switchedOff != null) {
+                   durationOffMinutes = (double) Duration.between(switchedOff, switchedOn).toMinutes();
                 }
             } else if (state == OFF) {
-                turnedOff = localdatetime;
-                if (turnedOn != null && turnedOff != null) {
-                    durationOnMinutes = (double) Duration.between(turnedOn, turnedOff).toMinutes();
+                switched = switchedOff = localdatetime;
+                if (switchedOn != null && switchedOff != null) {
+                    durationOnMinutes = (double) Duration.between(switchedOn, switchedOff).toMinutes();
                 }
             }
+            this.state = state;
         }
-        this.state = state;
     }
 
     public String getFormattedState() {

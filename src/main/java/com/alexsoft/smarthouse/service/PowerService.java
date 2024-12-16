@@ -27,9 +27,9 @@ import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 
 @Service
 @RequiredArgsConstructor
-public class PowerController {
+public class PowerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(PowerController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PowerService.class);
     public static final String POWER_CHECK_FREQUENCY_MINUTES = "1";
     public static final String POWER_CHECK_CRON_EXPRESSION = "0 0/" + POWER_CHECK_FREQUENCY_MINUTES + " * * * ?";
     public static final Duration AVERAGING_PERIOD = Duration.ofMinutes(5);
