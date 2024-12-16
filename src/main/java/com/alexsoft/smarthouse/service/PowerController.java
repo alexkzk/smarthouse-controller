@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +28,8 @@ import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 public class PowerController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PowerController.class);
-    public static final String FREQUENCY_MINUTES = "1";
-    public static final List<String> REFERENCE_HUMID_SENSORS = List.of("APT2107S-MB");
+    public static final String POWER_CHECK_FREQUENCY_MINUTES = "1";
+    public static final String POWER_CHECK_CRON_EXPRESSION = "0 0/" + POWER_CHECK_FREQUENCY_MINUTES + " * * * ?";
     public static final Duration AVERAGING_PERIOD = Duration.ofMinutes(5);
 
     private final DateUtils dateUtils;
@@ -35,15 +37,21 @@ public class PowerController {
     private final ApplianceService applianceService;
     private final ApplianceRepository applianceRepository;
 
+    @EventListener(ApplicationReadyEvent.class)
+    public void sendLastState() {
+        Appliance appliance = applianceRepository.findById("AC").orElseThrow();
+        LOGGER.info("Sending previous {} state", appliance.getDescription());
+        LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        applianceService.switchAppliance(appliance, localDateTime);
+    }
 
-
-    @Scheduled(cron = "0 0/" + FREQUENCY_MINUTES + " * * * ?")
+    @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
     public void powerControl() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(REFERENCE_HUMID_SENSORS,
-                localDateTime.minus(AVERAGING_PERIOD));
+        LocalDateTime averagingStartDateTime = localDateTime.minus(AVERAGING_PERIOD);
         String applianceCode = "AC";
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
+        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(), averagingStartDateTime);
         if (CollectionUtils.isEmpty(indications)) {
             appliance.setState(OFF, localDateTime);
             appliance.setStatusUpdated(localDateTime);

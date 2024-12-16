@@ -30,8 +30,7 @@ public class ApplianceService {
     private final MqttSender mqttSender;
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
-        String color = appliance.getState() == OFF ? "31" : "32";
-        LOGGER.info("Switching {} \u001B[" + color + "m{}\u001B[0m", appliance.getDescription(), appliance.getState());
+        LOGGER.info("Switching {} {}", appliance.getDescription(), appliance.getFormattedState());
         mqttSender.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         Measurement humValue = new Measurement().setValue(appliance.getState() == ON ? 10.0 : 0.0);
