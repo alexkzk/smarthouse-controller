@@ -54,13 +54,16 @@ public class Appliance {
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {
-            if (durationOnMinutes != null && durationOffMinutes != null) {
-                durationOffMinutes = (double) Duration.between(turnedOff, turnedOn).toMinutes();
-            }
             if (state == ON) {
                 turnedOn = localdatetime;
+                if (turnedOn != null && turnedOff != null) {
+                   durationOffMinutes = (double) Duration.between(turnedOff, turnedOn).toMinutes();
+                }
             } else if (state == OFF) {
                 turnedOff = localdatetime;
+                if (turnedOn != null && turnedOff != null) {
+                    durationOnMinutes = (double) Duration.between(turnedOn, turnedOff).toMinutes();
+                }
             }
         }
         this.state = state;
