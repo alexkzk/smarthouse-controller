@@ -4,6 +4,7 @@ import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.IndicationRepository;
 import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
+import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class ApplianceService {
         try {
             indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("DEHUMIDIFIER").setLocalTime(localDateTime)
                     .setPublisherId("PI4").setInOut("IN").setAggregationPeriod("INSTANT").setTemperature(humValue).setAbsoluteHumidity(humValue));
-            indicationRepository.save(Indication.builder().aggregationPeriod(AggregationPeriod.INSTANT).receivedUtc(utc).receivedLocal(localDateTime)
+            indicationRepository.save(Indication.builder().inOut(InOut.IN).aggregationPeriod(AggregationPeriod.INSTANT).receivedUtc(utc).receivedLocal(localDateTime)
                     .indicationPlace("DEHUMIDIFIER").air(Air.builder().temp(Temp.builder().celsius(value).build()).build()).build());
         } catch (Exception e) {
             LOGGER.error("Error during saving humidity measurement: {}", humValue, e);
