@@ -18,21 +18,33 @@ import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 @Getter
 @Setter
 public class Appliance {
+
     @Id
     private String code;
+
     private String description;
+
     @Enumerated(EnumType.STRING)
     private ApplianceState state;
+
     private Double consumptionKwh;
+
     private boolean locked = false;
-    private Double setting;
-    private Double hysteresis;
-    private LocalDateTime turnedOn;
-    private LocalDateTime turnedOff;
+
     private LocalDateTime lockedAt;
+
+    private Double setting;
+
+    private Double hysteresis;
+
     @Convert(converter = StringListConverter.class)
     private List<String> referenceSensors;
+    private LocalDateTime turnedOn;
+
+    private LocalDateTime turnedOff;
+
     private Double durationOnMinutes;
+
     private Double durationOffMinutes;
 
     @Deprecated
@@ -42,16 +54,13 @@ public class Appliance {
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {
+            if (durationOnMinutes != null && durationOffMinutes != null) {
+                durationOffMinutes = (double) Duration.between(turnedOff, turnedOn).toMinutes();
+            }
             if (state == ON) {
                 turnedOn = localdatetime;
-                if (durationOnMinutes != null && durationOffMinutes != null) {
-                   durationOffMinutes = (double) Duration.between(turnedOff, turnedOn).toMinutes();
-                }
             } else if (state == OFF) {
                 turnedOff = localdatetime;
-                if (durationOnMinutes != null && durationOffMinutes != null) {
-                    durationOnMinutes = (double) Duration.between(turnedOn, turnedOff).toMinutes();
-                }
             }
         }
         this.state = state;

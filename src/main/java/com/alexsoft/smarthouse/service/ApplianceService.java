@@ -1,21 +1,17 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.configuration.MqttConfiguration;
 import com.alexsoft.smarthouse.db.entity.Appliance;
 import com.alexsoft.smarthouse.db.entity.IndicationV2;
 import com.alexsoft.smarthouse.db.entity.Measurement;
-import com.alexsoft.smarthouse.db.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
-import com.alexsoft.smarthouse.enums.ApplianceState;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
-import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 
 @Service
@@ -30,7 +26,9 @@ public class ApplianceService {
     private final MqttSender mqttSender;
 
     public void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
-        LOGGER.info("{} is {}", appliance.getDescription(), appliance.getFormattedState());
+        Long durationInMinutes = appliance.getTurnedOn() != null && appliance.getTurnedOff() != null ?
+                Duration.between(appliance.getTurnedOn(), appliance.getTurnedOff()).toMinutes() : null;
+        LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
         mqttSender.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         Measurement humValue = new Measurement().setValue(appliance.getState() == ON ? 10.0 : 0.0);
