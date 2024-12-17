@@ -54,7 +54,7 @@ public class ApplianceService {
             indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("DEHUMIDIFIER").setLocalTime(localDateTime)
                     .setPublisherId("PI4").setInOut("IN").setAggregationPeriod("INSTANT").setTemperature(humValue).setAbsoluteHumidity(humValue));
             indicationRepository.save(Indication.builder().inOut(InOut.IN).aggregationPeriod(AggregationPeriod.INSTANT).receivedUtc(utc).receivedLocal(localDateTime)
-                    .indicationPlace("DEHUMIDIFIER").air(Air.builder().temp(Temp.builder().celsius(value).build()).build()).build());
+                    .indicationPlace("DEHUMIDIFIER").air(Air.builder().temp(Temp.builder().celsius(value).ah(value).build()).build()).build());
         } catch (Exception e) {
             LOGGER.error("Error during saving humidity measurement: {}", humValue, e);
         }

@@ -362,8 +362,8 @@ public class IndicationService {
         List<String> places = commaSeparatedPlaces == null ? null : Arrays.stream(commaSeparatedPlaces.split(",")).map(String::toUpperCase).toList();
         if (places != null && places.contains("FLORIDA")) {
             places = Stream.concat(
-                    places.stream().filter(e -> e.equals("FLORIDA")),
-                    Stream.of("MIAMI", "FORT-LAUDERDALE", "ORLANDO", "JACKSONVILLE", "DESTIN", "APT2107S-B", "APT2107S-MB")
+                    places.stream().filter(e -> !e.equals("FLORIDA")),
+                    Stream.of("MIAMI", "FORT-LAUDERDALE", "ORLANDO", "JACKSONVILLE", "DESTIN", "APT2107S-B", "APT2107S-MB", "DEHUMIDIFIER")
             ).collect(Collectors.toList());
         }
         List<Map<String, Object>> aggregates = indicationRepositoryCustom.getAggregatedData(places, period == null ? "" : period.toUpperCase());
