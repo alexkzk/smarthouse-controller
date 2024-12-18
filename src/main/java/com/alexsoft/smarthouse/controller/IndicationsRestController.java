@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.rest;
+package com.alexsoft.smarthouse.controller;
 
 import com.alexsoft.smarthouse.service.IndicationServiceV2;
 import lombok.AllArgsConstructor;

@@ -2,6 +2,7 @@ package com.alexsoft.smarthouse.db.entity;
 
 import com.alexsoft.smarthouse.db.converter.StringListConverter;
 import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -69,6 +70,7 @@ public class Appliance {
         }
     }
 
+    @JsonIgnore
     public String getFormattedState() {
         String color = getState() == OFF ? "31" : "32";
         return "\u001B[" + color + "m%s\u001B[0m".formatted(getState());
