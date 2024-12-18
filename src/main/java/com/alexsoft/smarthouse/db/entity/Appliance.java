@@ -5,6 +5,7 @@ import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import jakarta.persistence.*;
 import java.time.Duration;
@@ -16,6 +17,7 @@ import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 
 @Entity
 @Table(schema = "main")
+@ToString
 @Getter
 @Setter
 public class Appliance {

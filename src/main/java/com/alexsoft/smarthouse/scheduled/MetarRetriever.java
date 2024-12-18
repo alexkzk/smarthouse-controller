@@ -92,8 +92,8 @@ public class MetarRetriever {
                 indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
                 IndicationV2 indicationV2 = toIndicationV2(indication);
                 try {
-                    indicationV2.setWindSpeed(new Measurement((double)metar.getWindSpeed().getValue(), null, null));
-                    indicationV2.setWindDirection(new Measurement((double)metar.getWindDirection().getValue(), null, null));
+                    indicationV2.setWindSpeed(new Measurement(metar.getWindSpeed().getValue(), null, null));
+                    indicationV2.setWindDirection(new Measurement(metar.getWindDirection().getValue(), null, null));
                 } catch (Exception e) {
                     LOGGER.error("Error during setting wind speed and wind direction", e);
                 }

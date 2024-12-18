@@ -266,10 +266,9 @@ public class IndicationService {
         List<Wind> winds = indications.stream().map(houseState -> houseState.getAir().getWind()).filter(Objects::nonNull).collect(Collectors.toList());
         Wind averagedWind = null;
         try {
-            averagedWind = Wind.builder()
-                    .direction(doubleToInt(winds.stream().filter(wind -> wind.getDirection() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
-                    .speedMs(doubleToInt(winds.stream().filter(wind -> wind.getSpeedMs() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
-                    .build();
+            averagedWind = new Wind()
+                    .setDirection(doubleToInt(winds.stream().filter(wind -> wind.getDirection() != null).mapToDouble(Wind::getDirection).average().orElse(Double.NaN)))
+                    .setSpeedMs(doubleToInt(winds.stream().filter(wind -> wind.getSpeedMs() != null).mapToDouble(Wind::getSpeedMs).average().orElse(Double.NaN)));
         } catch (Exception e) {
             LOGGER.error("Failed to average wind for {}", indications, e);
         }

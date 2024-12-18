@@ -2,20 +2,19 @@ package com.alexsoft.smarthouse.db.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
+
 import jakarta.persistence.*;
 import java.util.Objects;
 
 @Getter
-@Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Accessors(chain = true)
 @Entity
 @Table(name = "air_wind_indication", schema = "main")
 public class Wind {
@@ -46,5 +45,20 @@ public class Wind {
     @Override
     public int hashCode() {
         return Objects.hash(id, direction, speedMs);
+    }
+
+    public Wind setId(Integer id) {
+        this.id = id;
+        return this;
+    }
+
+    public Wind setDirection(Integer direction) {
+        this.direction = direction;
+        return this;
+    }
+
+    public Wind setSpeedMs(Integer speedMs) {
+        this.speedMs = speedMs;
+        return this;
     }
 }

@@ -19,6 +19,12 @@ public class Measurement {
     private Double min;
     private Double max;
 
+    public Measurement(Integer value, Double min, Double max) {
+        this.value = value != null ? value.doubleValue() : null;
+        this.min = min;
+        this.max = max;
+    }
+
     public Measurement setValue(Double value) {
         if (value != null && value > -100) {
             this.value = Math.round(value * 10.0) / 10.0;
