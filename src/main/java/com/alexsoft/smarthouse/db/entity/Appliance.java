@@ -50,6 +50,9 @@ public class Appliance {
 
     private Double durationOffMinutes;
 
+    @Version
+    private Integer version;
+
     @Deprecated
     public void setState(ApplianceState state) {
         this.state = state;

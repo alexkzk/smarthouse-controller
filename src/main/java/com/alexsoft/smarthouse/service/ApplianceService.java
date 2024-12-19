@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -79,7 +80,14 @@ public class ApplianceService {
                 LOGGER.error("Error during calculating average absolute humidity", e);
             }
         }
-        applianceRepository.save(appliance);
+        try {
+            applianceRepository.save(appliance);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            Appliance updatedAppliance = applianceRepository.findById(applianceCode).orElseThrow();
+            updatedAppliance.setState(appliance.getState(), localDateTime);
+            applianceRepository.save(updatedAppliance);
+            LOGGER.info("OptimisticLockException handled");
+        }
         switchAppliance(appliance, localDateTime);
     }
 
