@@ -82,24 +82,29 @@ public class MetarRetriever {
 
         metarLocationsConfig.getLocationMapping().forEach((key, value) -> {
 
-            Metar metar = readMetar(value.keySet().stream().findFirst().get());
+            try {
+                Metar metar = readMetar(value.keySet().stream().findFirst().get());
 
-            if (metarIsNotExpired(metar)) {
-                Indication indication = toIndication(metar);
-                indication.setIndicationPlace(key);
-                indication.setReceivedUtc(indication.getReceivedUtc());
-                Optional<String> timeZone = value.values().stream().findFirst();
-                indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
-                IndicationV2 indicationV2 = toIndicationV2(indication);
-                try {
-                    indicationV2.setWindSpeed(new Measurement(metar.getWindSpeed().getValue(), null, null));
-                    indicationV2.setWindDirection(new Measurement(metar.getWindDirection().getValue(), null, null));
-                } catch (Exception e) {
-                    LOGGER.error("Error during setting wind speed and wind direction", e);
+                if (metarIsNotExpired(metar)) {
+                    Indication indication = toIndication(metar);
+                    indication.setIndicationPlace(key);
+                    indication.setReceivedUtc(indication.getReceivedUtc());
+                    Optional<String> timeZone = value.values().stream().findFirst();
+                    indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
+                    IndicationV2 indicationV2 = toIndicationV2(indication);
+                    try {
+                        indicationV2.setWindSpeed(new Measurement(metar.getWindSpeed().getValue(), null, null));
+                        indicationV2.setWindDirection(new Measurement(metar.getWindDirection().getValue(), null, null));
+                    } catch (Exception e) {
+                        LOGGER.error("Error during setting wind speed and wind direction", e);
+                    }
+                    indicationService.save(indication, indicationV2, true, AggregationPeriod.INSTANT);
+                } else {
+                    LOGGER.info("Metar is expired: {}", metar);
                 }
-                indicationService.save(indication, indicationV2, true, AggregationPeriod.INSTANT);
-            } else {
-                LOGGER.info("Metar is expired: {}", metar);
+
+            } catch (Exception e) {
+                LOGGER.error("Error during retrieving and processing metar data", e);
             }
         });
     }
@@ -154,24 +159,30 @@ public class MetarRetriever {
     }
 
     public static IndicationV2 toIndicationV2(Indication indication) {
-        IndicationV2 indicationV2 = new IndicationV2();
-        indicationV2.setIndicationPlace(indication.getIndicationPlace());
-        indicationV2.setLocalTime(indication.getReceivedLocal());
-        indicationV2.setUtcTime(indication.getReceivedUtc());
-        indicationV2.setAggregationPeriod("INSTANT");
-        indicationV2.setPublisherId(indication.getPublisherId());
-        indicationV2.setInOut(indication.getInOut().name());
-        indicationV2.setMetar(indication.getMetar());
-        if (indication.getAir() != null) {
-            if (indication.getAir().getTemp() != null) {
-                indicationV2.getTemperature().setValue(indication.getAir().getTemp().getCelsius());
-                indicationV2.getRelativeHumidity().setValue((double) indication.getAir().getTemp().getRh());
-                indicationV2.getAbsoluteHumidity().setValue(indication.getAir().getTemp().getAh());
+        try {
+            IndicationV2 indicationV2 = new IndicationV2();
+            indicationV2.setIndicationPlace(indication.getIndicationPlace());
+            indicationV2.setLocalTime(indication.getReceivedLocal());
+            indicationV2.setUtcTime(indication.getReceivedUtc());
+            indicationV2.setAggregationPeriod("INSTANT");
+            indicationV2.setPublisherId(indication.getPublisherId());
+            indicationV2.setInOut(indication.getInOut().name());
+            indicationV2.setMetar(indication.getMetar());
+            if (indication.getAir() != null) {
+                if (indication.getAir().getTemp() != null) {
+                    indicationV2.getTemperature().setValue(indication.getAir().getTemp().getCelsius());
+                    indicationV2.getRelativeHumidity().setValue((double) indication.getAir().getTemp().getRh());
+                    indicationV2.getAbsoluteHumidity().setValue(indication.getAir().getTemp().getAh());
+                }
+                if (indication.getAir().getPressure() != null) {
+                    indicationV2.getPressure().setValue(indication.getAir().getPressure().getMmHg());
+                }
             }
-            if (indication.getAir().getPressure() != null) {
-                indicationV2.getPressure().setValue(indication.getAir().getPressure().getMmHg());
-            }
+            return indicationV2;
+
+        } catch (Exception e) {
+            LOGGER.error("Error during toIndicationV2", e);
+            return null;
         }
-        return indicationV2;
     }
 }
