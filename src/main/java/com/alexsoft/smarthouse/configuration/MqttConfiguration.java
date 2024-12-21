@@ -102,14 +102,15 @@ public class MqttConfiguration {
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler messageHandler() {
         return message -> {
-            String payload = (String) message.getPayload();
-            LOGGER.debug("Received an MQTT message: {}", payload);
+            String payload = null;
             try {
+                payload = (String) message.getPayload();
+                LOGGER.debug("Received an MQTT message: {}", payload);
                 Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
                 indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
                 indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
                 indicationService.save(indication, MetarRetriever.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
-            } catch (JsonProcessingException e) {
+            } catch (Exception e) {
                 LOGGER.error("Error processing MQTT message: {}", payload, e);
             }
         };
