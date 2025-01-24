@@ -171,7 +171,7 @@ public class MetarRetriever {
             if (indication.getAir() != null) {
                 if (indication.getAir().getTemp() != null) {
                     indicationV2.getTemperature().setValue(indication.getAir().getTemp().getCelsius());
-                    indicationV2.getRelativeHumidity().setValue((double) indication.getAir().getTemp().getRh());
+                    indicationV2.getRelativeHumidity().setValue(indication.getAir().getTemp().getRh());
                     indicationV2.getAbsoluteHumidity().setValue(indication.getAir().getTemp().getAh());
                 }
                 if (indication.getAir().getPressure() != null) {

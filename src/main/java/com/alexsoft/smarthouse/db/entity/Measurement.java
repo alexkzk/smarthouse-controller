@@ -34,6 +34,15 @@ public class Measurement {
         return this;
     }
 
+    public Measurement setValue(Integer value) {
+        if (value != null && value > -100) {
+            this.value = Math.round(value * 10.0) / 10.0;
+        } else {
+            this.value = null;
+        }
+        return this;
+    }
+
     public Measurement setMin(Double min) {
         if (min != null && min > -100) {
             this.min = Math.round(min * 10.0) / 10.0;
