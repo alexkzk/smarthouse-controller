@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -79,6 +80,8 @@ public class ApplianceService {
                 } else if (ah < appliance.getSetting() - appliance.getHysteresis()) {
                     appliance.setState(OFF, localDateTime);
                 }
+            } catch (NoSuchElementException e) {
+                LOGGER.warn("There were no values for calculating average absolute humidity");
             } catch (Exception e) {
                 LOGGER.error("Error during calculating average absolute humidity", e);
             }

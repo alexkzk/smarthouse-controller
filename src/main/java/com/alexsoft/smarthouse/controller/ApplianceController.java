@@ -85,6 +85,7 @@ public class ApplianceController {
 
             Appliance updatedAppliance = applianceService.saveOrUpdateAppliance(appliance);
             logger.info("Successfully updated appliance with code '{}': {}", code, updatedAppliance);
+            applianceService.powerControl();
 
             return ResponseEntity.ok(updatedAppliance);
         }).orElse(ResponseEntity.notFound().build());
