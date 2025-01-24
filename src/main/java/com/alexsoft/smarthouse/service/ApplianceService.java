@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
@@ -67,7 +68,9 @@ public class ApplianceService {
             LOGGER.info("Power control method executed, indications were empty");
         } else {
             try {
-                double ah = BigDecimal.valueOf(indications.stream().mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
+                double ah = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                                .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
+                                .mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
                 LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
