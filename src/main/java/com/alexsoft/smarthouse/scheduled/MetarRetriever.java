@@ -49,10 +49,10 @@ public class MetarRetriever {
     @Value("${avwx.baseUri}")
     private String avwxBaseUri;
 
-    @Value("${flightradar.baseUri}")
+    @Value("${flightradar24.baseUri}")
     private String frBaseUri;
 
-    @Value("${flightradar.token}")
+    @Value("${flightradar24.token}")
     private String frToken;
 
     @Value("${avwx.metarSubUri}")
@@ -102,7 +102,7 @@ public class MetarRetriever {
 
 
 
-    @Scheduled(cron = "*/15 * * * * *")
+    @Scheduled(cron = "${flightradar24.aircraft-reading-cron}")
     public void retrieveAndProcessAircraftNumber() {
         readAircraftNumber();
     }
@@ -190,7 +190,13 @@ public class MetarRetriever {
     }
 
     public void readAircraftNumber() {
-        Map<String, List<Airspace>> airspaceGroups = airspaceRepository.findAll().stream().collect(Collectors.groupingBy(Airspace::getName));
+        ZoneId easternTimeZone = ZoneId.of("America/New_York");
+        int currentHour = ZonedDateTime.now(easternTimeZone).getHour();
+
+        Map<String, List<Airspace>> airspaceGroups = airspaceRepository.findAll().stream()
+                .filter(airspace -> airspace.getHourFrom() != null && airspace.getHourTo() != null)
+                .filter(airspace -> currentHour >= airspace.getHourFrom() && currentHour < airspace.getHourTo())
+                .collect(Collectors.groupingBy(Airspace::getName));
 
         for (Map.Entry<String, List<Airspace>> entry : airspaceGroups.entrySet()) {
             String name = entry.getKey();

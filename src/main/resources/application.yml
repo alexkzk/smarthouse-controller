@@ -53,10 +53,10 @@ avwx:
   token: ${AVWX_TOKEN:your-avwx-token-here}
   metar-receiving-cron: 0 */30 * * * *
 
-flightradar:
+flightradar24:
   baseUri: https://fr24api.flightradar24.com
   token: ${FLIGHTRADAR24_TOKEN}
-
+  aircraft-reading-cron: "0 */3 * * * *"
 time:
   local-time-zone: America/New_York
   chart-date-time-pattern: E d, HH:mm

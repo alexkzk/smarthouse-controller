@@ -20,6 +20,9 @@ public class Airspace {
 
     private String name;
 
+    private Integer hourFrom;
+    private Integer hourTo;
+
     @Column(columnDefinition = "jsonb")
     @Convert(converter = MapToJsonConverter.class)
     private Map<String, String> params;
