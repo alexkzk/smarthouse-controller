@@ -4,6 +4,8 @@ import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.db.entity.*;
 import com.alexsoft.smarthouse.db.repository.AirspaceActivityRepository;
 import com.alexsoft.smarthouse.db.repository.AirspaceRepository;
+import com.alexsoft.smarthouse.model.airplaneslive.Aircraft;
+import com.alexsoft.smarthouse.model.airplaneslive.AircraftData;
 import com.alexsoft.smarthouse.model.flightradar24.FrAircraft;
 import com.alexsoft.smarthouse.model.flightradar24.FlightData;
 import com.alexsoft.smarthouse.utils.DateUtils;
@@ -22,8 +24,10 @@ import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.model.avwx.metar.Metar;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -190,75 +194,60 @@ public class MetarRetriever {
     }
 
     public void readAircraftNumber() {
-        ZoneId easternTimeZone = ZoneId.of("America/New_York");
-        int currentHour = ZonedDateTime.now(easternTimeZone).getHour();
 
-        Map<String, List<Airspace>> airspaceGroups = airspaceRepository.findAll().stream()
-                .filter(airspace -> airspace.getHourFrom() != null && airspace.getHourTo() != null)
-                .filter(airspace -> currentHour >= airspace.getHourFrom() && currentHour < airspace.getHourTo())
-                .collect(Collectors.groupingBy(Airspace::getName));
+        List<Aircraft> aircrafts = new ArrayList<>();
+        String baseUrl = "https://api.airplanes.live/v2/point/YOUR_LAT/YOUR_LON/15";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseUrl);
 
-        for (Map.Entry<String, List<Airspace>> entry : airspaceGroups.entrySet()) {
-            String name = entry.getKey();
-            List<Airspace> airspaces = entry.getValue();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + frToken);
+        headers.set("Accept-Version", "v1");
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            List<FrAircraft> frAircrafts = new ArrayList<>();
+        String rawPayload = null;
 
-            // Process each airspace within the group
-            for (Airspace airspace : airspaces) {
-                String baseUrl = frBaseUri + "/api/live/flight-positions/light";
-                UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseUrl);
+        ResponseEntity<String> response = restTemplate.exchange(baseUrl, HttpMethod.GET, entity, String.class);
+        LOGGER.info("Airspace request: " + baseUrl);
 
-                // Add query params from Airspace
-                for (Map.Entry<String, String> param : airspace.getParams().entrySet()) {
-                    uriBuilder.queryParam(param.getKey(), param.getValue());
-                }
-                String urlWithParams = uriBuilder.build().toUriString();
-
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("Authorization", "Bearer " + frToken);
-                headers.set("Accept-Version", "v1");
-                HttpEntity<String> entity = new HttpEntity<>(headers);
-
-                String rawPayload = null;
-
-                try {
-                    // Retrieve raw response as String
-                    ResponseEntity<String> exchange = restTemplate.exchange(
-                            urlWithParams, HttpMethod.GET, entity, String.class
-                    );
-                    LOGGER.info("FlightRadar24 request: " + urlWithParams);
-
-                    // Log raw payload
-                    rawPayload = exchange.getBody();
-                    if (!rawPayload.equalsIgnoreCase("[]")) {
-                        // Parse raw payload into FlightData object
-                        FlightData flightData = new ObjectMapper().readValue(rawPayload, FlightData.class);
-                        if (flightData != null && CollectionUtils.isNotEmpty(flightData.getFrAircrafts())) {
-                            frAircrafts.addAll(flightData.getFrAircrafts());
-                        }
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error fetching data for airspace '{}': payload: {}", name, rawPayload, e);
-                }
+        // Log raw payload
+        rawPayload = response.getBody();
+        if (!rawPayload.equalsIgnoreCase("[]")) {
+            // Parse raw payload into FlightData object
+            AircraftData aircraftData = null;
+            try {
+                aircraftData = new ObjectMapper().readValue(rawPayload, AircraftData.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
             }
-
-            // Save AirspaceActivity to the repository
-            String aircraftsData = frAircrafts.stream()
-                    .map(FrAircraft::getCallsign)
-                    .filter(Objects::nonNull)
-                    .sorted()
-                    .collect(Collectors.joining(","));
-
-            AirspaceActivity activity = AirspaceActivity.builder()
-                    .airspace(name)
-                    .airborneAircrafts(frAircrafts.size())
-                    .aircrafts(aircraftsData)
-                    .timestamp(LocalDateTime.now())
-                    .build();
-
-            airspaceActivityRepository.save(activity);
+            if (aircraftData != null && CollectionUtils.isNotEmpty(aircraftData.getAircrafts())) {
+                aircrafts.addAll(aircraftData.getAircrafts());
+            }
         }
+
+        aircrafts = aircrafts.stream().filter(Objects::nonNull)
+                .filter(aircraft -> NumberUtils.isCreatable(aircraft.getAltBaro()) ? Integer.parseInt(aircraft.getAltBaro()) < 5000 : aircraft.getGroundSpeed() > 40)
+                .filter(aircraft -> aircraft.getLatitude() != null && aircraft.getLongitude() != null && aircraft.getGroundSpeed() != null)
+                .filter(aircraft -> aircraft.getLatitude() < 26.35 && aircraft.getLatitude() > 26.16)
+                .filter(aircraft -> aircraft.getLongitude() > -80.35 && aircraft.getLongitude() < -80.014)
+                .filter(aircraft -> aircraft.getGroundSpeed() > 40)
+                .collect(Collectors.toList());
+
+        // Save AirspaceActivity to the repository
+        String aircraftsData = aircrafts.stream()
+                .map(Aircraft::getFlight)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .sorted()
+                .collect(Collectors.joining(","));
+
+        AirspaceActivity activity = AirspaceActivity.builder()
+                .airspace("FXE")
+                .airborneAircrafts(aircrafts.size())
+                .aircrafts(aircraftsData)
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        airspaceActivityRepository.save(activity);
     }
 
     public static IndicationV2 toIndicationV2(Indication indication) {

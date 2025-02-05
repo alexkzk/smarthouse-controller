@@ -27,7 +27,7 @@ public class AirspaceActivity {
     @Column(nullable = false)
     private String airspace;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 2056)
     private Integer airborneAircrafts;
 
     private String aircrafts;

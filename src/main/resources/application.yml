@@ -55,8 +55,8 @@ avwx:
 
 flightradar24:
   baseUri: https://fr24api.flightradar24.com
-  token: ${FLIGHTRADAR24_TOKEN}
-  aircraft-reading-cron: "0 */3 * * * *"
+  token: aaa
+  aircraft-reading-cron: "0 0/1 * * * *"
 time:
   local-time-zone: America/New_York
   chart-date-time-pattern: E d, HH:mm
