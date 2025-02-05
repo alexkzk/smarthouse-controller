@@ -2,6 +2,10 @@ package com.alexsoft.smarthouse.scheduled;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.db.entity.*;
+import com.alexsoft.smarthouse.db.repository.AirspaceActivityRepository;
+import com.alexsoft.smarthouse.db.repository.AirspaceRepository;
+import com.alexsoft.smarthouse.model.flightradar24.FrAircraft;
+import com.alexsoft.smarthouse.model.flightradar24.FlightData;
 import com.alexsoft.smarthouse.utils.DateUtils;
 
 import java.math.BigDecimal;
@@ -10,21 +14,29 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.model.avwx.metar.Metar;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.TempUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class MetarRetriever {
@@ -35,7 +47,13 @@ public class MetarRetriever {
     private String avwxToken;
 
     @Value("${avwx.baseUri}")
-    private String baseUri;
+    private String avwxBaseUri;
+
+    @Value("${flightradar.baseUri}")
+    private String frBaseUri;
+
+    @Value("${flightradar.token}")
+    private String frToken;
 
     @Value("${avwx.metarSubUri}")
     private String metarSubUri;
@@ -45,12 +63,17 @@ public class MetarRetriever {
     private final IndicationService indicationService;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
+    private final AirspaceRepository airspaceRepository;
+    private final AirspaceActivityRepository airspaceActivityRepository;
 
-    public MetarRetriever(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils) {
+    public MetarRetriever(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
+            AirspaceRepository airspaceRepository, AirspaceActivityRepository airspaceActivityRepository) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
         this.dateUtils = dateUtils;
+        this.airspaceRepository = airspaceRepository;
+        this.airspaceActivityRepository = airspaceActivityRepository;
     }
 
     @Scheduled(cron = "0 0 */1 * * *")
@@ -76,6 +99,14 @@ public class MetarRetriever {
         LOGGER.info("Monthly aggregating");
         indicationService.createAverageMeasurement(1, ChronoUnit.MONTHS);
     }
+
+
+
+    @Scheduled(cron = "*/15 * * * * *")
+    public void retrieveAndProcessAircraftNumber() {
+        readAircraftNumber();
+    }
+
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void retrieveAndProcessMetarData() {
@@ -144,7 +175,7 @@ public class MetarRetriever {
     }
 
     public Metar readMetar(String icao) {
-        String url = baseUri + metarSubUri + "&token=" + avwxToken;
+        String url = avwxBaseUri + metarSubUri + "&token=" + avwxToken;
         url = url.replace("{ICAO}", icao);
         Metar metar = null;
         try {
@@ -156,6 +187,72 @@ public class MetarRetriever {
             LOGGER.error(e.getMessage(), e);
         }
         return metar;
+    }
+
+    public void readAircraftNumber() {
+        Map<String, List<Airspace>> airspaceGroups = airspaceRepository.findAll().stream().collect(Collectors.groupingBy(Airspace::getName));
+
+        for (Map.Entry<String, List<Airspace>> entry : airspaceGroups.entrySet()) {
+            String name = entry.getKey();
+            List<Airspace> airspaces = entry.getValue();
+
+            List<FrAircraft> frAircrafts = new ArrayList<>();
+
+            // Process each airspace within the group
+            for (Airspace airspace : airspaces) {
+                String baseUrl = frBaseUri + "/api/live/flight-positions/full";
+                UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseUrl);
+
+                // Add query params from Airspace
+                for (Map.Entry<String, String> param : airspace.getParams().entrySet()) {
+                    uriBuilder.queryParam(param.getKey(), param.getValue());
+                }
+                String urlWithParams = uriBuilder.build().toUriString();
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", "Bearer " + frToken);
+                headers.set("Accept-Version", "v1");
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                String rawPayload = null;
+
+                try {
+                    // Retrieve raw response as String
+                    ResponseEntity<String> exchange = restTemplate.exchange(
+                            urlWithParams, HttpMethod.GET, entity, String.class
+                    );
+                    LOGGER.info("FlightRadar24 request: " + urlWithParams);
+
+                    // Log raw payload
+                    rawPayload = exchange.getBody();
+                    if (!rawPayload.equalsIgnoreCase("[]")) {
+                        // Parse raw payload into FlightData object
+                        FlightData flightData = new ObjectMapper().readValue(rawPayload, FlightData.class);
+                        if (flightData != null && CollectionUtils.isNotEmpty(flightData.getFrAircrafts())) {
+                            frAircrafts.addAll(flightData.getFrAircrafts());
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error fetching data for airspace '{}': payload: {}", name, rawPayload, e);
+                }
+            }
+
+            // Save AirspaceActivity to the repository
+            String aircraftsData = frAircrafts.stream()
+                    .map(FrAircraft::getCallsign)
+                    .filter(Objects::nonNull)
+                    .sorted()
+                    .collect(Collectors.joining(","));
+
+            AirspaceActivity activity = AirspaceActivity.builder()
+                    .airspace(name)
+                    .airborneAircrafts(frAircrafts.size())
+                    .aircrafts(aircraftsData)
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            airspaceActivityRepository.save(activity);
+        }
     }
 
     public static IndicationV2 toIndicationV2(Indication indication) {
