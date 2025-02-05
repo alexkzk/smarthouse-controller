@@ -206,7 +206,7 @@ public class MetarRetriever {
 
             // Process each airspace within the group
             for (Airspace airspace : airspaces) {
-                String baseUrl = frBaseUri + "/api/live/flight-positions/full";
+                String baseUrl = frBaseUri + "/api/live/flight-positions/light";
                 UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(baseUrl);
 
                 // Add query params from Airspace
