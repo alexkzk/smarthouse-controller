@@ -3,6 +3,7 @@ FROM arm64v8/openjdk:17.0.1-jdk-slim AS builder
 #FROM openjdk:17.0.1-jdk-slim AS builder
 WORKDIR /var/tmp/smarthouse
 COPY mvnw .
+RUN chmod +x mvnw
 COPY .mvn .mvn
 COPY pom.xml .
 COPY src src
