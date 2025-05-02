@@ -1,6 +1,6 @@
 # Build stage
-FROM arm64v8/openjdk:17.0.1-jdk-slim AS builder
-#FROM openjdk:17.0.1-jdk-slim AS builder
+#FROM arm64v8/openjdk:17.0.1-jdk-slim AS builder
+FROM openjdk:17.0.1-jdk-slim AS builder
 WORKDIR /var/tmp/smarthouse
 COPY mvnw .
 COPY .mvn .mvn
@@ -9,8 +9,8 @@ COPY src src
 RUN ./mvnw clean install
 
 # Runtime stage
-FROM arm64v8/openjdk:17.0.1-jdk-slim
-#FROM openjdk:17.0.1-jdk-slim
+#FROM arm64v8/openjdk:17.0.1-jdk-slim
+FROM openjdk:17.0.1-jdk-slim
 ARG DEPENDENCY=/var/tmp/smarthouse/target
 #COPY --from=build /var/tmp/smarthouse/utils/pg_dump /usr/bin/pg_dump
 COPY --from=builder ${DEPENDENCY}/*.jar /opt/smarthouse/smarthouse.jar
