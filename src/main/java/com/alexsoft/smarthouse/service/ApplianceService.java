@@ -75,13 +75,23 @@ public class ApplianceService {
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
                 LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
-                if (!appliance.isLocked() || (appliance.getLockedUntil() != null && localDateTime.isAfter(appliance.getLockedUntil()))) {
+
+                if (appliance.getLockedUntil() != null && localDateTime.isAfter(appliance.getLockedUntil())) {
+                    appliance.setLocked(false);
+                    appliance.setLockedUntil(null);
+                    LOGGER.info("Appliance '{}' was unlocked", appliance.getDescription());
+                }
+
+                if (!appliance.isLocked()) {
                     if (ah > appliance.getSetting() + appliance.getHysteresis()) {
                         appliance.setState(ON, localDateTime);
                     } else if (ah < appliance.getSetting() - appliance.getHysteresis()) {
                         appliance.setState(OFF, localDateTime);
                     }
+                } else {
+                    LOGGER.info("Appliance '{}' is locked", appliance.getDescription());
                 }
+
             } catch (NoSuchElementException e) {
                 LOGGER.warn("There were no values for calculating average absolute humidity");
             } catch (Exception e) {
