@@ -57,10 +57,10 @@ public class ApplianceController {
                         logger.debug("Updating 'locked' field to: '{}'", locked);
                         appliance.setLocked(locked);
                         if (locked) {
-                            appliance.setLockedAt(localDateTime);
+                            appliance.setLockedUntil(localDateTime);
                             logger.debug("Set 'lockedAt' timestamp to: '{}'", localDateTime);
                         } else {
-                            appliance.setLockedAt(null);
+                            appliance.setLockedUntil(null);
                             logger.debug("'lockedAt' timestamp cleared");
                         }
                         break;

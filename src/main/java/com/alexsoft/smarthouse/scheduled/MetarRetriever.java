@@ -234,7 +234,7 @@ public class MetarRetriever {
 
         // Save AirspaceActivity to the repository
         String aircraftsData = aircrafts.stream()
-                .map(Aircraft::getFlight)
+                .map(Aircraft::getRegistration)
                 .filter(Objects::nonNull)
                 .map(String::trim)
                 .sorted()

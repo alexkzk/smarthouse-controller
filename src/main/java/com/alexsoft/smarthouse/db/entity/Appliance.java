@@ -34,7 +34,7 @@ public class Appliance {
 
     private boolean locked = false;
 
-    private LocalDateTime lockedAt;
+    private LocalDateTime lockedUntil;
 
     private Double setting;
 

@@ -75,10 +75,12 @@ public class ApplianceService {
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
                 LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
-                if (ah > appliance.getSetting() + appliance.getHysteresis()) {
-                    appliance.setState(ON, localDateTime);
-                } else if (ah < appliance.getSetting() - appliance.getHysteresis()) {
-                    appliance.setState(OFF, localDateTime);
+                if (!appliance.isLocked() || (appliance.getLockedUntil() != null && localDateTime.isAfter(appliance.getLockedUntil()))) {
+                    if (ah > appliance.getSetting() + appliance.getHysteresis()) {
+                        appliance.setState(ON, localDateTime);
+                    } else if (ah < appliance.getSetting() - appliance.getHysteresis()) {
+                        appliance.setState(OFF, localDateTime);
+                    }
                 }
             } catch (NoSuchElementException e) {
                 LOGGER.warn("There were no values for calculating average absolute humidity");
@@ -129,7 +131,7 @@ public class ApplianceService {
     public Appliance lockAppliance(String code) {
         return applianceRepository.findById(code).map(appliance -> {
             appliance.setLocked(true);
-            appliance.setLockedAt(LocalDateTime.now());
+            appliance.setLockedUntil(LocalDateTime.now());
             return applianceRepository.save(appliance);
         }).orElseThrow(() -> new IllegalArgumentException("Appliance with code " + code + " not found"));
     }
@@ -138,7 +140,7 @@ public class ApplianceService {
     public Appliance unlockAppliance(String code) {
         return applianceRepository.findById(code).map(appliance -> {
             appliance.setLocked(false);
-            appliance.setLockedAt(null);
+            appliance.setLockedUntil(null);
             return applianceRepository.save(appliance);
         }).orElseThrow(() -> new IllegalArgumentException("Appliance with code " + code + " not found"));
     }
