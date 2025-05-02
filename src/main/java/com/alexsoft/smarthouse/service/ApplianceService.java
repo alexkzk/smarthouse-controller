@@ -89,7 +89,8 @@ public class ApplianceService {
                         appliance.setState(OFF, localDateTime);
                     }
                 } else {
-                    LOGGER.info("Appliance '{}' is locked", appliance.getDescription());
+                    LOGGER.info("Appliance {} is locked {}", appliance.getDescription(), appliance.getLockedUntil() == null ?
+                            "indefinitely" : "until " + appliance.getLockedUntil());
                 }
 
             } catch (NoSuchElementException e) {
