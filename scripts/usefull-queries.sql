@@ -16,7 +16,18 @@ AND indication_place = 'DEHUMIDIFIER' GROUP BY DATE(local_time), EXTRACT(HOUR FR
 -- KFXE TRAFFIC
 SELECT
     (DATE_TRUNC('hour', timestamp - INTERVAL '5 hours') + INTERVAL '10 minutes' * FLOOR(EXTRACT(MINUTE FROM (timestamp + INTERVAL '5 hours')) / 10)) AS interval_start,
-    ROUND(AVG(airborne_aircrafts), 0) AS average_airborne_aircrafts,
+    ROUND(AVG(airborne_aircrafts), 1) AS average_airborne_aircrafts,
+    airspace
+FROM
+    airspace_activity
+GROUP BY
+    interval_start, airspace
+ORDER BY
+    interval_start desc;
+
+SELECT
+    (DATE_TRUNC('hour', timestamp - INTERVAL '5 hours') + INTERVAL '1 hour' * FLOOR(EXTRACT(MINUTE FROM (timestamp + INTERVAL '5 hours')) / 10)) AS interval_start,
+    ROUND(AVG(airborne_aircrafts), 1) AS average_airborne_aircrafts,
     airspace
 FROM
     airspace_activity

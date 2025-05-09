@@ -24,10 +24,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -112,7 +109,17 @@ public class ApplianceService {
 
     // Fetch all appliances
     public List<Appliance> getAllAppliances() {
-        return applianceRepository.findAll();
+        List<Appliance> all = applianceRepository.findAll();
+        all.forEach(appliance -> appliance.setDisplayStatus(
+                Map.of(
+                        "locked", String.valueOf(appliance.isLocked()),
+                        "setting", String.valueOf(appliance.getSetting()),
+                        "hysteresis", String.valueOf(appliance.getHysteresis()),
+                        "duration ON", String.valueOf(appliance.getDurationOnMinutes()),
+                        "duration OFF", String.valueOf(appliance.getDurationOffMinutes())
+                        )
+        ));
+        return all;
     }
 
     // Fetch a single appliance by code

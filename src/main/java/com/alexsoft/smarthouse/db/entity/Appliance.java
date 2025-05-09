@@ -11,6 +11,7 @@ import jakarta.persistence.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -52,6 +53,9 @@ public class Appliance {
 
     @Version
     private Integer version;
+
+    @Transient
+    private Map<String, String> displayStatus;
 
     @Deprecated
     public void setState(ApplianceState state) {
