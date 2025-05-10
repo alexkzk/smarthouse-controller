@@ -28,6 +28,7 @@ import java.util.*;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
+import static com.alexsoft.smarthouse.utils.TempUtils.calculateRelativeHumidityV2;
 
 @Service
 @RequiredArgsConstructor
@@ -54,24 +55,100 @@ public class ApplianceService {
         switchAppliance(appliance, localDateTime);
     }
 
+    @Scheduled(cron = "*/3 * * * * *")
+    public void updateTemp() {
+        LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        LocalDateTime averagingStartDateTime = localDateTime.minus(AVERAGING_PERIOD);
+        Appliance appliance = applianceRepository.findById("AC").orElseThrow();
+        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(),
+                averagingStartDateTime);
+        if (CollectionUtils.isEmpty(indications)) {
+            appliance.setState(OFF, localDateTime);
+            appliance.setActual(null);
+            Double humMasterBed = null;
+            Double tMasterBed = null;
+            Double humBed = null;
+            Double tBed = null;
+            try {
+                humMasterBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                                .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
+                                .filter(i -> i.getIndicationPlace().equals("APT2107S-MB"))
+                                .mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
+            } catch (Exception e) {
+            }
+
+            try {
+                tMasterBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                                .filter(i -> i.getTemperature() != null && i.getTemperature().getValue() != null)
+                                .filter(i -> i.getIndicationPlace().equals("APT2107S-MB"))
+                                .mapToDouble(i -> i.getTemperature().getValue()).average().orElseThrow())
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
+            } catch (Exception e) {
+
+            }
+
+            try {
+                humBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                                .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
+                                .filter(i -> i.getIndicationPlace().equals("APT2107S-B"))
+                                .mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
+            } catch (Exception e) {
+
+            }
+
+            try {
+                tBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                                .filter(i -> i.getTemperature() != null && i.getTemperature().getValue() != null)
+                                .filter(i -> i.getIndicationPlace().equals("APT2107S-B"))
+                                .mapToDouble(i -> i.getTemperature().getValue()).average().orElseThrow())
+                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
+            } catch (Exception e) {
+
+            }
+
+            Double average = (humMasterBed != null && tMasterBed != null)
+                    ? (humMasterBed + tMasterBed) / 2
+                    : (humMasterBed != null ? humMasterBed : (tMasterBed != null ? tMasterBed : null));
+
+            appliance.setActual(average);
+
+            appliance.setDisplayStatus(
+                    Map.of(
+                            "Actual AVG humidity", String.valueOf(calculateRelativeHumidityV2(24.0, appliance.getActual())),
+                            "Target humidity", String.valueOf(calculateRelativeHumidityV2(24.0, appliance.getSetting())),
+                            "Hysteresis", String.valueOf(appliance.getHysteresis()),
+                            "Locked", String.valueOf(appliance.isLocked()),
+                            "ON minutes", String.valueOf(appliance.getDurationOnMinutes()),
+                            "OFF minutes", String.valueOf(appliance.getDurationOffMinutes()),
+                            "Reference sensors", String.valueOf(appliance.getReferenceSensors()),
+                            "Master Bedroom",
+                            (tMasterBed != null ? String.format("%.1fC", tMasterBed) : "N/A") + " " +
+                                    (humMasterBed != null ? calculateRelativeHumidityV2(24.0, humMasterBed) + "%" : "N/A"),
+                            "Small Bedroom",
+                            (tBed != null ? String.format("%.1fC", tBed) : "N/A") + " " +
+                                    (humBed != null ? calculateRelativeHumidityV2(24.0, humBed) + "%" : "N/A")
+
+
+                    )
+            );
+            applianceRepository.save(appliance);
+        }
+    }
+
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
     public void powerControl() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-        LocalDateTime averagingStartDateTime = localDateTime.minus(AVERAGING_PERIOD);
         String applianceCode = "AC";
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(), averagingStartDateTime);
-        if (CollectionUtils.isEmpty(indications)) {
+        if (appliance.getActual() == null) {
             appliance.setState(OFF, localDateTime);
             appliance.setActual(null);
             LOGGER.info("Power control method executed, indications were empty");
         } else {
             try {
-                double ah = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
-                                .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
-                                .mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
-                        .setScale(2, RoundingMode.HALF_UP).doubleValue();
-                appliance.setActual(ah);
+                Double ah = appliance.getActual();
                 LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
 
@@ -111,9 +188,7 @@ public class ApplianceService {
 
     // Fetch all appliances
     public List<Appliance> getAllAppliances() {
-        List<Appliance> all = applianceRepository.findAll();
-        all.forEach(Appliance::refreshDisplayStatus);
-        return all;
+        return applianceRepository.findAll();
     }
 
     // Fetch a single appliance by code

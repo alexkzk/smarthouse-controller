@@ -1,5 +1,6 @@
 package com.alexsoft.smarthouse.db.entity;
 
+import com.alexsoft.smarthouse.converter.MapToJsonConverter;
 import com.alexsoft.smarthouse.db.converter.StringListConverter;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -55,22 +56,8 @@ public class Appliance {
     @Version
     private Integer version;
 
-    @Transient
+    @Convert(converter = MapToJsonConverter.class)
     private Map<String, String> displayStatus;
-
-    public void refreshDisplayStatus() {
-        this.setDisplayStatus(
-                Map.of(
-                        "Actual humidity", String.valueOf(this.getActual()),
-                        "Target humidity", String.valueOf(this.getSetting()),
-                        "Hysteresis", String.valueOf(this.getHysteresis()),
-                        "Locked", String.valueOf(this.isLocked()),
-                        "ON minutes", String.valueOf(this.getDurationOnMinutes()),
-                        "OFF minutes", String.valueOf(this.getDurationOffMinutes()),
-                        "Reference sensors", String.valueOf(this.getReferenceSensors())
-                )
-        );
-    }
 
     @Deprecated
     public void setState(ApplianceState state) {

@@ -20,4 +20,26 @@ public class TempUtils {
         double ah = 6.112 * Math.pow(2.71828, 17.67 * temp / (243.5 + temp)) * rh * 2.1674 / (273.15 + temp);
         return Math.round(ah * 10) / 10.0F;
     }
+
+    public static Integer calculateRelativeHumidityV2(Double temp, Double ah) {
+        if (temp == null || ah == null || ah < 0 || temp < -273.15) { // temp cannot be below absolute zero
+            return null;
+        }
+        // Calculate the denominator
+        double denominator = 6.112 * Math.pow(2.71828, (17.67 * temp) / (243.5 + temp)) * 2.1674;
+        if (denominator == 0) {
+            return null; // Avoid division by zero
+        }
+
+        // Calculate the relative humidity
+        double rh = (ah * (273.15 + temp)) / denominator;
+
+        // Ensure rh is within bounds (0 to 100%)
+        if (rh < 0 || rh > 100) {
+            return null;
+        }
+
+        // Round and return as Integer
+        return (int) Math.round(rh);
+    }
 }
