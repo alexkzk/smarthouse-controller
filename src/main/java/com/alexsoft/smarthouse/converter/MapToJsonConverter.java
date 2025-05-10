@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @Converter
@@ -25,6 +26,9 @@ public class MapToJsonConverter implements AttributeConverter<Map<String, String
 
     @Override
     public Map<String, String> convertToEntityAttribute(String dbData) {
+        if (dbData == null) {
+            return new HashMap<>();
+        }
         try {
             // Convert JSON string back to Map
             return objectMapper.readValue(dbData, new TypeReference<Map<String, String>>() {});

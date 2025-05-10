@@ -62,7 +62,7 @@ public class ApplianceService {
         Appliance appliance = applianceRepository.findById("AC").orElseThrow();
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(),
                 averagingStartDateTime);
-        if (CollectionUtils.isEmpty(indications)) {
+        if (CollectionUtils.isNotEmpty(indications)) {
             appliance.setState(OFF, localDateTime);
             appliance.setActual(null);
             Double humMasterBed = null;
