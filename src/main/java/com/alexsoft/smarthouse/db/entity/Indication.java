@@ -5,8 +5,6 @@ import static com.alexsoft.smarthouse.utils.Constants.ISO_DATE_TIME_PATTERN;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -24,7 +22,6 @@ import lombok.*;
 @Builder
 @Entity
 @Table(schema = "main")
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Indication implements Comparable<Indication> {
 
     @Id
