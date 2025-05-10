@@ -3,6 +3,7 @@ package com.alexsoft.smarthouse.controller;
 import com.alexsoft.smarthouse.db.entity.Appliance;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.service.ApplianceService;
+import com.alexsoft.smarthouse.service.MqttService;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ public class ApplianceController {
 
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;
+    private final MqttService mqttService;
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances() {
