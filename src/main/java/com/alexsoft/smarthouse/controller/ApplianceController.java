@@ -65,13 +65,13 @@ public class ApplianceController {
                         Boolean locked = (Boolean) value;
                         logger.debug("Updating 'locked' field to: '{}'", locked);
                         appliance.setLocked(locked);
-                        if (locked) {
+                        /*if (locked) {
                             appliance.setLockedUntil(localDateTime);
                             logger.debug("Set 'lockedAt' timestamp to: '{}'", localDateTime);
                         } else {
                             appliance.setLockedUntil(null);
                             logger.debug("'lockedAt' timestamp cleared");
-                        }
+                        }*/
                         break;
                     case "setting":
                         logger.debug("Updating 'setting' from '{}' to '{}'", appliance.getSetting(), value);
