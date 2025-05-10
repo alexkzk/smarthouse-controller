@@ -17,6 +17,8 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
+
 @RestController
 @RequestMapping("/appliances")
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class ApplianceController {
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances() {
+        mqttService.sendMessage("mqtt.smarthouse/control", "{\"command\":\"REALTIME_DATA_REQUESTED\",\"duration\":30}");
         List<Appliance> appliances = applianceService.getAllAppliances();
         return ResponseEntity.ok(appliances);
     }
