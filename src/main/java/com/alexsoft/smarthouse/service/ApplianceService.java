@@ -63,6 +63,7 @@ public class ApplianceService {
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(), averagingStartDateTime);
         if (CollectionUtils.isEmpty(indications)) {
             appliance.setState(OFF, localDateTime);
+            appliance.setActual(null);
             LOGGER.info("Power control method executed, indications were empty");
         } else {
             try {
@@ -70,6 +71,7 @@ public class ApplianceService {
                                 .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
                                 .mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
+                appliance.setActual(ah);
                 LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
 
@@ -110,15 +112,7 @@ public class ApplianceService {
     // Fetch all appliances
     public List<Appliance> getAllAppliances() {
         List<Appliance> all = applianceRepository.findAll();
-        all.forEach(appliance -> appliance.setDisplayStatus(
-                Map.of(
-                        "locked", String.valueOf(appliance.isLocked()),
-                        "setting", String.valueOf(appliance.getSetting()),
-                        "hysteresis", String.valueOf(appliance.getHysteresis()),
-                        "duration ON", String.valueOf(appliance.getDurationOnMinutes()),
-                        "duration OFF", String.valueOf(appliance.getDurationOffMinutes())
-                        )
-        ));
+        all.forEach(Appliance::refreshDisplayStatus);
         return all;
     }
 
