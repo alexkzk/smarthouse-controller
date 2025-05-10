@@ -130,11 +130,11 @@ public class ApplianceService {
                             String.valueOf(appliance.isLocked()),
                             "ON minutes",
                             appliance.getDurationOnMinutes() != null
-                                    ? String.format("%.2f", appliance.getDurationOnMinutes())
+                                    ? String.format("%.0f", appliance.getDurationOnMinutes())
                                     : "N/A",
                             "OFF minutes",
                             appliance.getDurationOffMinutes() != null
-                                    ? String.format("%.2f", appliance.getDurationOffMinutes())
+                                    ? String.format("%.0f", appliance.getDurationOffMinutes())
                                     : "N/A",
                             "Reference sensors",
                             appliance.getReferenceSensors() != null
@@ -142,15 +142,15 @@ public class ApplianceService {
                                     : "N/A",
                             "Master Bedroom",
                             (tMasterBed != null
-                                    ? String.format("%.2fC", tMasterBed)
-                                    : "N/A") + " " +
+                                    ? String.format("%.2f°C", tMasterBed)
+                                    : "N/A") + "/" +
                                     (humMasterBed != null
                                             ? String.format("%.2f%%", calculateRelativeHumidityV2(24.0, humMasterBed))
                                             : "N/A"),
                             "Small Bedroom",
                             (tBed != null
-                                    ? String.format("%.2fC", tBed)
-                                    : "N/A") + " " +
+                                    ? String.format("%.2f°C", tBed)
+                                    : "N/A") + "/" +
                                     (humBed != null
                                             ? String.format("%.2f%%", calculateRelativeHumidityV2(24.0, humBed))
                                             : "N/A")
