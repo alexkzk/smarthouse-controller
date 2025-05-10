@@ -63,8 +63,6 @@ public class ApplianceService {
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(),
                 averagingStartDateTime);
         if (CollectionUtils.isNotEmpty(indications)) {
-            appliance.setState(OFF, localDateTime);
-            appliance.setActual(null);
             Double humMasterBed = null;
             Double tMasterBed = null;
             Double humBed = null;
@@ -158,9 +156,11 @@ public class ApplianceService {
                                             : "N/A")
                     )
             );
-
-            applianceRepository.save(appliance);
+        } else {
+            appliance.setActual(null);
         }
+
+        applianceRepository.save(appliance);
     }
 
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
