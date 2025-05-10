@@ -116,19 +116,19 @@ public class ApplianceService {
 
             appliance.setDisplayStatus(
                     Map.of(
-                            "Actual AVG humidity", String.valueOf(calculateRelativeHumidityV2(24.0, appliance.getActual())),
-                            "Target humidity", String.valueOf(calculateRelativeHumidityV2(24.0, appliance.getSetting())),
-                            "Hysteresis", String.valueOf(appliance.getHysteresis()),
+                            "Actual AVG humidity", calculateRelativeHumidityV2(24.0, appliance.getActual())+"%",
+                            "Target humidity", calculateRelativeHumidityV2(24.0, appliance.getSetting())+"%",
+                            "Hysteresis", calculateRelativeHumidityV2(24.0, appliance.getHysteresis())+"%",
                             "Locked", String.valueOf(appliance.isLocked()),
                             "ON minutes", String.valueOf(appliance.getDurationOnMinutes()),
                             "OFF minutes", String.valueOf(appliance.getDurationOffMinutes()),
                             "Reference sensors", String.valueOf(appliance.getReferenceSensors()),
                             "Master Bedroom",
-                            (tMasterBed != null ? String.format("%.1fC", tMasterBed) : "N/A") + " " +
-                                    (humMasterBed != null ? calculateRelativeHumidityV2(24.0, humMasterBed) + "%" : "N/A"),
+                            (tMasterBed != null ? String.format("%.2f°C", tMasterBed) : "N/A") + "/" +
+                                    (humMasterBed != null ? String.format("%.2f°C").formatted(calculateRelativeHumidityV2(24.0, humMasterBed)) + "%" : "N/A"),
                             "Small Bedroom",
-                            (tBed != null ? String.format("%.1fC", tBed) : "N/A") + " " +
-                                    (humBed != null ? calculateRelativeHumidityV2(24.0, humBed) + "%" : "N/A")
+                            (tBed != null ? String.format("%.2f°C", tBed) : "N/A") + "/" +
+                                    (humBed != null ? String.format("%.2f°C").formatted(calculateRelativeHumidityV2(24.0, humBed)) + "%" : "N/A")
 
 
                     )

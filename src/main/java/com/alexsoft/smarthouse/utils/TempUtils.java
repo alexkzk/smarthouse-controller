@@ -21,10 +21,11 @@ public class TempUtils {
         return Math.round(ah * 10) / 10.0F;
     }
 
-    public static Integer calculateRelativeHumidityV2(Double temp, Double ah) {
+    public static Double calculateRelativeHumidityV2(Double temp, Double ah) {
         if (temp == null || ah == null || ah < 0 || temp < -273.15) { // temp cannot be below absolute zero
             return null;
         }
+
         // Calculate the denominator
         double denominator = 6.112 * Math.pow(2.71828, (17.67 * temp) / (243.5 + temp)) * 2.1674;
         if (denominator == 0) {
@@ -39,7 +40,8 @@ public class TempUtils {
             return null;
         }
 
-        // Round and return as Integer
-        return (int) Math.round(rh);
+        // Round to one decimal place and return as Double
+        return Math.round(rh * 10) / 10.0;
     }
+
 }
