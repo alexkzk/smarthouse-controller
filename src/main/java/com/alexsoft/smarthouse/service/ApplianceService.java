@@ -108,7 +108,7 @@ public class ApplianceService {
 
             }
 
-            Double average = (humMasterBed != null && tMasterBed != null)
+            Double average = (humMasterBed != null && humBed != null)
                     ? (humMasterBed + tMasterBed) / 2
                     : (humMasterBed != null ? humMasterBed : (tMasterBed != null ? tMasterBed : null));
 
