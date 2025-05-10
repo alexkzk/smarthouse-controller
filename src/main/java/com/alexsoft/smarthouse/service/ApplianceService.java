@@ -109,8 +109,8 @@ public class ApplianceService {
             }
 
             Double average = (humMasterBed != null && humBed != null)
-                    ? (humMasterBed + tMasterBed) / 2
-                    : (humMasterBed != null ? humMasterBed : (tMasterBed != null ? tMasterBed : null));
+                    ? (humMasterBed + humBed) / 2
+                    : (humMasterBed != null ? humMasterBed : (humBed != null ? humBed : null));
 
             appliance.setActual(average);
 
