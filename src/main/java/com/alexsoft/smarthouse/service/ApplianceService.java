@@ -1,9 +1,9 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.db.entity.*;
-import com.alexsoft.smarthouse.db.repository.ApplianceRepository;
-import com.alexsoft.smarthouse.db.repository.IndicationRepository;
-import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.repository.ApplianceRepository;
+import com.alexsoft.smarthouse.repository.IndicationRepository;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.entity.*;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.enums.InOut;
@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -46,6 +47,9 @@ public class ApplianceService {
     private final MqttService mqttService;
     private final DateUtils dateUtils;
     private final ApplianceRepository applianceRepository;
+
+    @Value("${mqtt.msgSavingEnabled}")
+    private Boolean msgSavingEnabled;
 
     @EventListener(ApplicationReadyEvent.class)
     public void sendLastState() {
@@ -159,8 +163,9 @@ public class ApplianceService {
         } else {
             appliance.setActual(null);
         }
-
-        applianceRepository.save(appliance);
+        if (msgSavingEnabled) {
+            applianceRepository.save(appliance);
+        }
     }
 
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
@@ -267,10 +272,12 @@ public class ApplianceService {
 
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
-        mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+        if (msgSavingEnabled) {
+            mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
 
-        saveAuxApplianceMeasurement(appliance, localDateTime);
+            saveAuxApplianceMeasurement(appliance, localDateTime);
+        }
     }
 
     private void saveAuxApplianceMeasurement(Appliance appliance, LocalDateTime localDateTime) {
@@ -278,11 +285,13 @@ public class ApplianceService {
         LocalDateTime utc = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
         Measurement humValue = new Measurement().setValue(value);
         try {
-            indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("DEHUMIDIFIER").setLocalTime(localDateTime)
-                    .setPublisherId("PI4").setInOut("IN").setAggregationPeriod("INSTANT").setTemperature(humValue).setAbsoluteHumidity(humValue))
-                    .setMetar("setting: %.2f, hysteresis: %.2f".formatted(appliance.getSetting(), appliance.getHysteresis()));
-            indicationRepository.save(Indication.builder().inOut(InOut.IN).aggregationPeriod(AggregationPeriod.INSTANT).receivedUtc(utc).receivedLocal(localDateTime)
-                    .indicationPlace("DEHUMIDIFIER").air(Air.builder().temp(Temp.builder().celsius(value).ah(value).build()).build()).build());
+            if (msgSavingEnabled) {
+                indicationRepositoryV2.save(new IndicationV2().setIndicationPlace("DEHUMIDIFIER").setLocalTime(localDateTime)
+                                .setPublisherId("PI4").setInOut("IN").setAggregationPeriod("INSTANT").setTemperature(humValue).setAbsoluteHumidity(humValue))
+                        .setMetar("setting: %.2f, hysteresis: %.2f".formatted(appliance.getSetting(), appliance.getHysteresis()));
+                indicationRepository.save(Indication.builder().inOut(InOut.IN).aggregationPeriod(AggregationPeriod.INSTANT).receivedUtc(utc).receivedLocal(localDateTime)
+                        .indicationPlace("DEHUMIDIFIER").air(Air.builder().temp(Temp.builder().celsius(value).ah(value).build()).build()).build());
+            }
         } catch (Exception e) {
             LOGGER.error("Error during saving humidity measurement: {}", humValue, e);
         }

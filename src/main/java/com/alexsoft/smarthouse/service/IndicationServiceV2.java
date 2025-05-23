@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.db.entity.IndicationV2;
-import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.entity.IndicationV2;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -7,9 +7,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.db.entity.Temp;
-import com.alexsoft.smarthouse.db.repository.IndicationRepository;
+import com.alexsoft.smarthouse.entity.Indication;
+import com.alexsoft.smarthouse.entity.Temp;
+import com.alexsoft.smarthouse.repository.IndicationRepository;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.service.IndicationService;

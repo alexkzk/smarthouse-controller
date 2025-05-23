@@ -1,6 +1,6 @@
-package com.alexsoft.smarthouse.db.entity;
+package com.alexsoft.smarthouse.entity;
 
-import com.alexsoft.smarthouse.converter.MapToJsonConverter;
+import com.alexsoft.smarthouse.utils.MapToJsonConverter;
 import lombok.*;
 
 import jakarta.persistence.*;

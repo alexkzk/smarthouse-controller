@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse.controller;
 
-import com.alexsoft.smarthouse.db.entity.Appliance;
+import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.service.ApplianceService;
 import com.alexsoft.smarthouse.service.MqttService;
@@ -17,13 +17,11 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
-import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
-
 @RestController
 @RequestMapping("/appliances")
 @RequiredArgsConstructor
-public class ApplianceController {
-    Logger logger = LoggerFactory.getLogger(ApplianceController.class);
+public class ApplianceRestController {
+    Logger logger = LoggerFactory.getLogger(ApplianceRestController.class);
 
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;

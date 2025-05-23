@@ -1,8 +1,6 @@
-package com.alexsoft.smarthouse.db.repository;
+package com.alexsoft.smarthouse.repository;
 
-import com.alexsoft.smarthouse.db.entity.IndicationV2;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.Sort;
+import com.alexsoft.smarthouse.entity.IndicationV2;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

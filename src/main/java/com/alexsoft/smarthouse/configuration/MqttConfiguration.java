@@ -1,12 +1,11 @@
 package com.alexsoft.smarthouse.configuration;
 
-import com.alexsoft.smarthouse.db.entity.Indication;
-import com.alexsoft.smarthouse.db.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.entity.Indication;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
-import com.alexsoft.smarthouse.scheduled.MetarRetriever;
+import com.alexsoft.smarthouse.service.MetarService;
 import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.DateUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -29,8 +28,6 @@ import org.springframework.messaging.MessageHandler;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.UUID;
-
-import static com.alexsoft.smarthouse.utils.Constants.S_OCEAN_DR_HOLLYWOOD;
 
 @Configuration
 @RequiredArgsConstructor
@@ -109,7 +106,7 @@ public class MqttConfiguration {
                 Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
                 indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
                 indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
-                indicationService.save(indication, MetarRetriever.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
+                indicationService.save(indication, MetarService.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
             } catch (Exception e) {
                 LOGGER.error("Error processing MQTT message: {}", payload, e);
             }

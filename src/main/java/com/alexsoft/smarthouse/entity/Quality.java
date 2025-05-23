@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.entity;
+package com.alexsoft.smarthouse.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

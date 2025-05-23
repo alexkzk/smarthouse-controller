@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.presentation;
+package com.alexsoft.smarthouse.controller;
 
 import com.alexsoft.smarthouse.dto.ChartDto;
 import com.alexsoft.smarthouse.service.IndicationService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequestMapping
 @RequiredArgsConstructor
-public class HouseStatePresentationController {
+public class SummaryController {
 
     private final IndicationService indicationService;
 

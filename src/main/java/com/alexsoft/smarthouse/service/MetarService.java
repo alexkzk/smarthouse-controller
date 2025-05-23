@@ -1,13 +1,11 @@
-package com.alexsoft.smarthouse.scheduled;
+package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
-import com.alexsoft.smarthouse.db.entity.*;
-import com.alexsoft.smarthouse.db.repository.AirspaceActivityRepository;
-import com.alexsoft.smarthouse.db.repository.AirspaceRepository;
+import com.alexsoft.smarthouse.repository.AirspaceActivityRepository;
+import com.alexsoft.smarthouse.repository.AirspaceRepository;
+import com.alexsoft.smarthouse.entity.*;
 import com.alexsoft.smarthouse.model.airplaneslive.Aircraft;
 import com.alexsoft.smarthouse.model.airplaneslive.AircraftData;
-import com.alexsoft.smarthouse.model.flightradar24.FrAircraft;
-import com.alexsoft.smarthouse.model.flightradar24.FlightData;
 import com.alexsoft.smarthouse.utils.DateUtils;
 
 import java.math.BigDecimal;
@@ -22,7 +20,6 @@ import java.util.stream.Collectors;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.model.avwx.metar.Metar;
-import com.alexsoft.smarthouse.service.IndicationService;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,9 +40,9 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
-public class MetarRetriever {
+public class MetarService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetarRetriever.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetarService.class);
 
     @Value("${avwx.token}")
     private String avwxToken;
@@ -70,7 +67,7 @@ public class MetarRetriever {
     private final AirspaceRepository airspaceRepository;
     private final AirspaceActivityRepository airspaceActivityRepository;
 
-    public MetarRetriever(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
+    public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
             AirspaceRepository airspaceRepository, AirspaceActivityRepository airspaceActivityRepository) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();

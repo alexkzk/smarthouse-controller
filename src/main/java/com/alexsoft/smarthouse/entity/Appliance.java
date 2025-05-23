@@ -1,7 +1,7 @@
-package com.alexsoft.smarthouse.db.entity;
+package com.alexsoft.smarthouse.entity;
 
-import com.alexsoft.smarthouse.converter.MapToJsonConverter;
-import com.alexsoft.smarthouse.db.converter.StringListConverter;
+import com.alexsoft.smarthouse.utils.MapToJsonConverter;
+import com.alexsoft.smarthouse.utils.StringListConverter;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;

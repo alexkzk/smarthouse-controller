@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.db.repository;
+package com.alexsoft.smarthouse.repository;
 
 import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;

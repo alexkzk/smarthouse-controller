@@ -1,9 +1,9 @@
-package com.alexsoft.smarthouse.db.entity;
+package com.alexsoft.smarthouse.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
-import lombok.Data;
+
 import lombok.Getter;
 import lombok.Setter;
 
