@@ -132,6 +132,8 @@ public class ApplianceService {
                                     : "N/A",
                             "Locked",
                             String.valueOf(appliance.isLocked()),
+                            "Locked Until",
+                            String.valueOf(appliance.getLockedUntil()),
                             "ON minutes",
                             appliance.getDurationOnMinutes() != null
                                     ? String.format("%.0f", appliance.getDurationOnMinutes())

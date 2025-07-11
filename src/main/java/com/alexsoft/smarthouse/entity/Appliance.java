@@ -57,6 +57,7 @@ public class Appliance {
     private Integer version;
 
     @Convert(converter = MapToJsonConverter.class)
+    @Column(length = 2048)
     private Map<String, String> displayStatus;
 
     @Deprecated

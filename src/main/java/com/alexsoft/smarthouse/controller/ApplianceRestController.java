@@ -11,9 +11,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -63,13 +65,22 @@ public class ApplianceRestController {
                         Boolean locked = (Boolean) value;
                         logger.debug("Updating 'locked' field to: '{}'", locked);
                         appliance.setLocked(locked);
-                        /*if (locked) {
-                            appliance.setLockedUntil(localDateTime);
-                            logger.debug("Set 'lockedAt' timestamp to: '{}'", localDateTime);
-                        } else {
+                        break;
+                    case "lockedUntil":
+                        String lockedUntil = (String) value;
+                        logger.debug("Updating 'lockedUntil' field to: '{}'", lockedUntil);
+                        if (lockedUntil.equals("null")) {
                             appliance.setLockedUntil(null);
-                            logger.debug("'lockedAt' timestamp cleared");
-                        }*/
+                        } else {
+                            LocalDateTime localDateTime1 = LocalDateTime.parse(lockedUntil, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
+                            if (appliance.getLockedUntil() == null) {
+                                appliance.setLockedUntil(localDateTime1);
+                            } else {
+                                Duration duration = Duration.between(LocalDateTime.now(), localDateTime1);
+                                appliance.setLockedUntil(appliance.getLockedUntil().plus(duration));
+                            }
+
+                        }
                         break;
                     case "setting":
                         logger.debug("Updating 'setting' from '{}' to '{}'", appliance.getSetting(), value);
