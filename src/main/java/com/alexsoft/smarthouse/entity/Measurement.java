@@ -1,9 +1,6 @@
 package com.alexsoft.smarthouse.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import jakarta.persistence.Embeddable;
@@ -14,6 +11,7 @@ import jakarta.persistence.Embeddable;
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Measurement {
     private Double value;
     private Double min;

@@ -1,10 +1,7 @@
 package com.alexsoft.smarthouse.entity;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import jakarta.persistence.*;
@@ -16,6 +13,7 @@ import java.time.LocalDateTime;
 @Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Table(schema = "main", name = "indication_v2")
 public class IndicationV2 {
 
@@ -93,6 +91,14 @@ public class IndicationV2 {
             @AttributeOverride(name = "max", column = @Column(name = "wind_dir_max"))
     })
     private Measurement windDirection = new Measurement();
+
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "value", column = @Column(name = "btc")),
+            @AttributeOverride(name = "min", column = @Column(name = "btc_min")),
+            @AttributeOverride(name = "max", column = @Column(name = "btc_max"))
+    })
+    private Measurement btc = new Measurement();
 
     @Column(length = 512)
     private String metar;
