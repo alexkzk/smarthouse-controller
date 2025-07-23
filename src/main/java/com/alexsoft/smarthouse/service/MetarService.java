@@ -2,7 +2,6 @@ package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.repository.AirspaceActivityRepository;
-import com.alexsoft.smarthouse.repository.AirspaceRepository;
 import com.alexsoft.smarthouse.entity.*;
 import com.alexsoft.smarthouse.model.airplaneslive.Aircraft;
 import com.alexsoft.smarthouse.model.airplaneslive.AircraftData;
@@ -64,16 +63,14 @@ public class MetarService {
     private final IndicationService indicationService;
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
-    private final AirspaceRepository airspaceRepository;
     private final AirspaceActivityRepository airspaceActivityRepository;
 
     public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
-            AirspaceRepository airspaceRepository, AirspaceActivityRepository airspaceActivityRepository) {
+            AirspaceActivityRepository airspaceActivityRepository) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
         this.dateUtils = dateUtils;
-        this.airspaceRepository = airspaceRepository;
         this.airspaceActivityRepository = airspaceActivityRepository;
     }
 
@@ -204,7 +201,6 @@ public class MetarService {
         String rawPayload = null;
 
         ResponseEntity<String> response = restTemplate.exchange(baseUrl, HttpMethod.GET, entity, String.class);
-        LOGGER.info("Airspace request: " + baseUrl);
 
         // Log raw payload
         rawPayload = response.getBody();
@@ -228,6 +224,9 @@ public class MetarService {
                 .filter(aircraft -> aircraft.getLongitude() > -80.35 && aircraft.getLongitude() < -80.014)
                 .filter(aircraft -> aircraft.getGroundSpeed() > 40)
                 .collect(Collectors.toList());
+
+        LOGGER.info(aircrafts.size() + " aircrafts in the FXE area: " + aircrafts.stream().map(Aircraft::getRegistration).filter(Objects::nonNull)
+                .collect(Collectors.joining(",")));
 
         // Save AirspaceActivity to the repository
         String aircraftsData = aircrafts.stream()

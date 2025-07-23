@@ -181,7 +181,6 @@ public class IndicationService {
         List<Indication> savedIndications = saveAll(indications);
         LOGGER.info("Saved {} aggregated measurements for the following interval: {} - {}. Aggregation period: {} {}.",
                 savedIndications.size(), startDate, endDate, amount, temporalUnit);
-        LOGGER.debug(savedIndications.toString());
     }
 
     public List<Indication> aggregateOnInterval(Integer amount, TemporalUnit temporalUnit, LocalDateTime startDate, LocalDateTime endDate) {
@@ -306,8 +305,7 @@ public class IndicationService {
             if (indicationV2 != null) {
                 indicationRepositoryV2.save(indicationV2);
             }
-            Indication savedIndication = indicationRepository.save(indicationToSave);
-            LOGGER.debug("Saved indication {}", savedIndication);
+            indicationRepository.save(indicationToSave);
         } else {
             LOGGER.debug("Skipping of saving indication {}", indicationToSave);
         }
