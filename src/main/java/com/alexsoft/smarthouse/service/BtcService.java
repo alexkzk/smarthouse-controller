@@ -24,7 +24,7 @@ public class BtcService {
     private final BtcRepository btcRepository;
     private final IndicationService indicationService;
 
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 60000)
     public void getBtcRate() {
         try {
             Double btcPrice = webClient.get()
