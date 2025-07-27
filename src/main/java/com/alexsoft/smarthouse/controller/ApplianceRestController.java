@@ -45,53 +45,44 @@ public class ApplianceRestController {
         }
         return applianceService.getApplianceByCode(code).map(appliance -> {
             updates.forEach((key, value) -> {
-                logger.debug("Processing update for field: '{}'", key); // Log which field is being processed
 
                 switch (key) {
                     case "description":
-                        logger.debug("Updating 'description' from '{}' to '{}'", appliance.getDescription(), value);
                         appliance.setDescription((String) value);
                         break;
                     case "state":
                         ApplianceState newState = ApplianceState.valueOf((String) value);
-                        logger.debug("Updating 'state' from '{}' to '{}'", appliance.getState(), newState);
                         appliance.setState(newState, LocalDateTime.now());
                         break;
                     case "consumptionKwh":
-                        logger.debug("Updating 'consumptionKwh' from '{}' to '{}'", appliance.getConsumptionKwh(), value);
                         appliance.setConsumptionKwh(Double.valueOf(value.toString()));
                         break;
                     case "locked":
                         Boolean locked = (Boolean) value;
-                        logger.debug("Updating 'locked' field to: '{}'", locked);
                         appliance.setLocked(locked);
                         break;
                     case "lockedUntil":
                         String lockedUntil = (String) value;
-                        logger.debug("Updating 'lockedUntil' field to: '{}'", lockedUntil);
                         if (lockedUntil.equals("null")) {
-                            appliance.setLockedUntil(null);
+                            appliance.setLockedUntilUtc(null);
                         } else {
                             LocalDateTime localDateTime1 = LocalDateTime.parse(lockedUntil, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
-                            if (appliance.getLockedUntil() == null) {
-                                appliance.setLockedUntil(localDateTime1);
+                            if (appliance.getLockedUntilUtc() == null) {
+                                appliance.setLockedUntilUtc(localDateTime1);
                             } else {
                                 Duration duration = Duration.between(LocalDateTime.now(), localDateTime1);
-                                appliance.setLockedUntil(appliance.getLockedUntil().plus(duration));
+                                appliance.setLockedUntilUtc(appliance.getLockedUntilUtc().plus(duration));
                             }
 
                         }
                         break;
                     case "setting":
-                        logger.debug("Updating 'setting' from '{}' to '{}'", appliance.getSetting(), value);
                         appliance.setSetting(Double.valueOf(value.toString()));
                         break;
                     case "hysteresis":
-                        logger.debug("Updating 'hysteresis' from '{}' to '{}'", appliance.getHysteresis(), value);
                         appliance.setHysteresis(Double.valueOf(value.toString()));
                         break;
                     case "referenceSensors":
-                        logger.debug("Updating 'referenceSensors' to: '{}'", value);
                         appliance.setReferenceSensors((List<String>) value);
                         break;
                     default:
@@ -102,7 +93,6 @@ public class ApplianceRestController {
             });
 
             Appliance updatedAppliance = applianceService.saveOrUpdateAppliance(appliance);
-            logger.info("Successfully updated appliance with code '{}': {}", code, updatedAppliance);
             applianceService.powerControl();
 
             return ResponseEntity.ok(updatedAppliance);

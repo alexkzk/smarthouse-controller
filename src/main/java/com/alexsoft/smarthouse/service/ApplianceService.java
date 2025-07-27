@@ -5,7 +5,6 @@ import com.alexsoft.smarthouse.repository.IndicationRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.entity.*;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
-import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
@@ -133,7 +132,7 @@ public class ApplianceService {
                             "Locked",
                             String.valueOf(appliance.isLocked()),
                             "Locked Until",
-                            String.valueOf(appliance.getLockedUntil()),
+                            String.valueOf(appliance.getLockedUntilUtc()),
                             "ON minutes",
                             appliance.getDurationOnMinutes() != null
                                     ? String.format("%.0f", appliance.getDurationOnMinutes())
@@ -173,6 +172,8 @@ public class ApplianceService {
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
     public void powerControl() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        LocalDateTime utcLocalDateTime = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
+
         String applianceCode = "AC";
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
         if (appliance.getActual() == null) {
@@ -185,9 +186,9 @@ public class ApplianceService {
                 LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
                         ah, appliance.getSetting(), appliance.getHysteresis());
 
-                if (appliance.getLockedUntil() != null && localDateTime.isAfter(appliance.getLockedUntil())) {
+                if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
                     appliance.setLocked(false);
-                    appliance.setLockedUntil(null);
+                    appliance.setLockedUntilUtc(null);
                     LOGGER.info("Appliance '{}' was unlocked", appliance.getDescription());
                 }
 
@@ -198,8 +199,8 @@ public class ApplianceService {
                         appliance.setState(OFF, localDateTime);
                     }
                 } else {
-                    LOGGER.info("Appliance {} is locked {}", appliance.getDescription(), appliance.getLockedUntil() == null ?
-                            "indefinitely" : "until " + appliance.getLockedUntil());
+                    LOGGER.info("Appliance {} is locked {}", appliance.getDescription(), appliance.getLockedUntilUtc() == null ?
+                            "indefinitely" : "until " + appliance.getLockedUntilUtc());
                 }
 
             } catch (NoSuchElementException e) {
@@ -232,37 +233,6 @@ public class ApplianceService {
     // Save or update an appliance
     public Appliance saveOrUpdateAppliance(Appliance appliance) {
         return applianceRepository.save(appliance);
-    }
-
-    // Delete an appliance by code
-    public void deleteAppliance(String code) {
-        applianceRepository.deleteById(code);
-    }
-
-    // Update the state of an appliance
-    public Appliance updateApplianceState(String code, ApplianceState state, LocalDateTime timestamp) {
-        return applianceRepository.findById(code).map(appliance -> {
-            appliance.setState(state, timestamp);
-            return applianceRepository.save(appliance);
-        }).orElseThrow(() -> new IllegalArgumentException("Appliance with code " + code + " not found"));
-    }
-
-    // Lock an appliance
-    public Appliance lockAppliance(String code) {
-        return applianceRepository.findById(code).map(appliance -> {
-            appliance.setLocked(true);
-            appliance.setLockedUntil(LocalDateTime.now());
-            return applianceRepository.save(appliance);
-        }).orElseThrow(() -> new IllegalArgumentException("Appliance with code " + code + " not found"));
-    }
-
-    // Unlock an appliance
-    public Appliance unlockAppliance(String code) {
-        return applianceRepository.findById(code).map(appliance -> {
-            appliance.setLocked(false);
-            appliance.setLockedUntil(null);
-            return applianceRepository.save(appliance);
-        }).orElseThrow(() -> new IllegalArgumentException("Appliance with code " + code + " not found"));
     }
 
     private void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
