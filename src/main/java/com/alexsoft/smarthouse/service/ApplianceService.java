@@ -59,7 +59,7 @@ public class ApplianceService {
     }
 
     @Scheduled(cron = "*/3 * * * * *")
-    public void updateTemp() {
+    public void updateDisplayStatus() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         LocalDateTime averagingStartDateTime = localDateTime.minus(AVERAGING_PERIOD);
         Appliance appliance = applianceRepository.findById("AC").orElseThrow();
@@ -113,60 +113,62 @@ public class ApplianceService {
                     ? (humMasterBed + humBed) / 2
                     : (humMasterBed != null ? humMasterBed : (humBed != null ? humBed : null));
 
-            appliance.setActual(average);
-
-            appliance.setDisplayStatus(
-                    Map.of(
-                            "Actual AVG humidity",
-                            appliance.getActual() != null
-                                    ? String.format("%.2f", calculateRelativeHumidityV2(24.0, appliance.getActual())) + "%"
-                                    : "N/A",
-                            "Target humidity",
-                            appliance.getSetting() != null
-                                    ? String.format("%.2f", calculateRelativeHumidityV2(24.0, appliance.getSetting())) + "%"
-                                    : "N/A",
-                            "Hysteresis",
-                            appliance.getHysteresis() != null
-                                    ? String.format("%.2f", calculateRelativeHumidityV2(24.0, appliance.getHysteresis())) + "%"
-                                    : "N/A",
-                            "Locked",
-                            String.valueOf(appliance.isLocked()),
-                            "Locked Until",
-                            String.valueOf(appliance.getLockedUntilUtc()),
-                            "ON minutes",
-                            appliance.getDurationOnMinutes() != null
-                                    ? String.format("%.0f", appliance.getDurationOnMinutes())
-                                    : "N/A",
-                            "OFF minutes",
-                            appliance.getDurationOffMinutes() != null
-                                    ? String.format("%.0f", appliance.getDurationOffMinutes())
-                                    : "N/A",
-                            "Reference sensors",
-                            appliance.getReferenceSensors() != null
-                                    ? String.valueOf(appliance.getReferenceSensors())
-                                    : "N/A",
-                            "Master Bedroom",
-                            (tMasterBed != null
-                                    ? String.format("%.2f°C", tMasterBed)
-                                    : "N/A") + "/" +
-                                    (humMasterBed != null
-                                            ? String.format("%.2f%%", calculateRelativeHumidityV2(24.0, humMasterBed))
-                                            : "N/A"),
-                            "Small Bedroom",
-                            (tBed != null
-                                    ? String.format("%.2f°C", tBed)
-                                    : "N/A") + "/" +
-                                    (humBed != null
-                                            ? String.format("%.2f%%", calculateRelativeHumidityV2(24.0, humBed))
-                                            : "N/A")
-                    )
+            Map<String, String> statusMap = Map.of(
+                    "Relative Humidity",
+                    appliance.getActual() != null ? String.format("%.2f", calculateRelativeHumidityV2(24.0, appliance.getActual())) + "%" : "N/A",
+                    "Target humidity",
+                    appliance.getSetting() != null ? String.format("%.2f", calculateRelativeHumidityV2(24.0, appliance.getSetting())) + "%" : "N/A",
+                    "Hysteresis",
+                    appliance.getHysteresis() != null ? String.format("%.2f g/m3", appliance.getHysteresis()) : "N/A",
+                    "Locked",
+                    String.valueOf(appliance.isLocked()),
+                    "Locked Until",
+                    String.valueOf(appliance.getLockedUntilUtc()),
+                    "ON minutes",
+                    appliance.getDurationOnMinutes() != null ? String.format("%.0f", appliance.getDurationOnMinutes()) : "N/A",
+                    "OFF minutes",
+                    appliance.getDurationOffMinutes() != null ? String.format("%.0f", appliance.getDurationOffMinutes()) : "N/A",
+                    "Reference sensors",
+                    appliance.getReferenceSensors() != null ? String.valueOf(appliance.getReferenceSensors()) : "N/A",
+                    "Master Bedroom",
+                    (tMasterBed != null ? String.format("%.2f°C", tMasterBed) : "N/A") + "/" + (humMasterBed != null ? String.format("%.2f%%",
+                            calculateRelativeHumidityV2(24.0, humMasterBed)) : "N/A"),
+                    "Small Bedroom",
+                    (tBed != null ? String.format("%.2f°C", tBed) : "N/A") + "/" + (humBed != null ? String.format("%.2f%%",
+                            calculateRelativeHumidityV2(24.0, humBed)) : "N/A")
             );
+            Map<String, String> displayStatus = new HashMap<>(statusMap);
+            displayStatus.put("Absolute Humidity",  String.format("%.2f g/m3", appliance.getActual()));
+
+            appliance.setActual(average);
+            appliance.setDisplayStatus(displayStatus);
+
+            if (msgSavingEnabled) {
+                try {
+                    applianceRepository.save(appliance);
+                } catch (ObjectOptimisticLockingFailureException e) {
+                    Appliance updatedAppliance = applianceRepository.findById("AC").orElseThrow();
+                    updatedAppliance.setActual(average);
+                    updatedAppliance.setDisplayStatus(displayStatus);
+                    applianceRepository.save(updatedAppliance);
+                    LOGGER.info("OptimisticLockException handled");
+                }
+            }
         } else {
             appliance.setActual(null);
+            if (msgSavingEnabled) {
+                try {
+                    applianceRepository.save(appliance);
+                } catch (ObjectOptimisticLockingFailureException e) {
+                    Appliance updatedAppliance = applianceRepository.findById("AC").orElseThrow();
+                    updatedAppliance.setActual(null);
+                    applianceRepository.save(updatedAppliance);
+                    LOGGER.info("OptimisticLockException handled");
+                }
+            }
         }
-        if (msgSavingEnabled) {
-            applianceRepository.save(appliance);
-        }
+
+
     }
 
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
@@ -232,7 +234,15 @@ public class ApplianceService {
 
     // Save or update an appliance
     public Appliance saveOrUpdateAppliance(Appliance appliance) {
-        return applianceRepository.save(appliance);
+        Appliance save = null;
+        try {
+            save = applianceRepository.save(appliance);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            Appliance updatedAppliance = applianceRepository.findById(appliance.getCode()).orElseThrow();
+            applianceRepository.save(updatedAppliance);
+            LOGGER.info("OptimisticLockException handled");
+        };
+        return save;
     }
 
     private void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
