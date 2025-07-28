@@ -42,7 +42,7 @@ public class IndicationRepositoryCustom {
                 "LEFT JOIN main.air_pressure_indication ap ON ap.id = a.pressure_id " +
                 "LEFT JOIN main.air_wind_indication w ON w.id = a.wind_id ";
 
-        String whereBase = "WHERE aggregation_period LIKE :period ";
+        String whereBase = "WHERE aggregation_period LIKE :period AND indication_place <> 'BTC' ";
 
         if (places != null && !places.isEmpty()) {
             whereBase += "AND indication_place = ANY(:places) ";

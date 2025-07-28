@@ -405,6 +405,10 @@ public class IndicationService {
     }
 
     public String getColorForPlace(String place){
+        if (place.length() < 4) {
+            place = place + "A";
+            // the below algorithm doesn't work with strings less than 4 chars
+        }
         int i = place.hashCode();
         if (smarthouseConfiguration.getColors() != null) {
             String s = smarthouseConfiguration.getColors().get(place);
