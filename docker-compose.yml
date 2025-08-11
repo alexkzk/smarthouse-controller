@@ -11,6 +11,7 @@ services:
     ports:
       - '24867:24867'
     environment:
+      - JAVA_OPTS=-XX:-UseContainerSupport
       - SPRING_DATASOURCE_URL=jdbc:postgresql://smarthouse-db:5432/smarthouse
       - SPRING_DATASOURCE_USERNAME=smarthouse
       - SPRING_DATASOURCE_PASSWORD=smarthouse
