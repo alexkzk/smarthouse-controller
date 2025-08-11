@@ -11,9 +11,6 @@ services:
     ports:
       - '24867:24867'
     environment:
-      - MANAGEMENT_METRICS_ENABLE_PROCESSORS=false
-      - MANAGEMENT_METRICS_ENABLE_SYSTEM=false
-      - MANAGEMENT_METRICS_ENABLE_JVM=false
       - JAVA_OPTS=-XX:-UseContainerSupport
       - SPRING_DATASOURCE_URL=jdbc:postgresql://smarthouse-db:5432/smarthouse
       - SPRING_DATASOURCE_USERNAME=smarthouse
