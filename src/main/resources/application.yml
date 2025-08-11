@@ -3,6 +3,13 @@ server:
   servlet:
     context-path: /smarthouse
 
+management:
+  metrics:
+    binders:
+      jvm: false         # Disable metrics for the JVM
+      system: false      # Disable metrics for the system
+      process: false     # Disable process metrics
+
 spring:
   jackson:
     default-property-inclusion: non_null
