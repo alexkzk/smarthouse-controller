@@ -66,11 +66,11 @@ public class ApplianceService {
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(),
                 averagingStartDateTime);
         if (CollectionUtils.isNotEmpty(indications)) {
-            Double humMasterBed = null;
-            Double tMasterBed = null;
-            Double humBed = null;
-            Double tBed = null;
-            try {
+//            Double humMasterBed = null;
+//            Double tMasterBed = null;
+//            Double humBed = null;
+//            Double tBed = null;
+            /*try {
                 humMasterBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
                                 .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
                                 .filter(i -> i.getIndicationPlace().equals("APT2107S-MB"))
@@ -107,9 +107,9 @@ public class ApplianceService {
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
             } catch (Exception e) {
 
-            }
-
+            }*/
             Double average = null;
+            /*
             try {
                 average = (humMasterBed != null && humBed != null)
                         ? (humMasterBed + humBed) / 2
@@ -117,7 +117,7 @@ public class ApplianceService {
 
             } catch (Exception e) {
                 LOGGER.error("Error during calculating average temperature and absolute humidity", e);
-            }
+            }*/
 
             Map<String, String> statusMap = Map.of(
                     "Relative Humidity",
@@ -135,13 +135,13 @@ public class ApplianceService {
                     "OFF minutes",
                     appliance.getDurationOffMinutes() != null ? String.format("%.0f", appliance.getDurationOffMinutes()) : "N/A",
                     "Reference sensors",
-                    appliance.getReferenceSensors() != null ? String.valueOf(appliance.getReferenceSensors()) : "N/A",
-                    "Master Bedroom",
+                    appliance.getReferenceSensors() != null ? String.valueOf(appliance.getReferenceSensors()) : "N/A"
+                    /*"Master Bedroom",
                     (tMasterBed != null ? String.format("%.2f°C", tMasterBed) : "N/A") + "/" + (humMasterBed != null ? String.format("%.2f%%",
                             calculateRelativeHumidityV2(24.0, humMasterBed)) : "N/A"),
                     "Small Bedroom",
                     (tBed != null ? String.format("%.2f°C", tBed) : "N/A") + "/" + (humBed != null ? String.format("%.2f%%",
-                            calculateRelativeHumidityV2(24.0, humBed)) : "N/A")
+                            calculateRelativeHumidityV2(24.0, humBed)) : "N/A")*/
             );
             Map<String, String> displayStatus = new HashMap<>(statusMap);
             displayStatus.put("Absolute Humidity",  String.format("%.2f g/m3", appliance.getActual()));

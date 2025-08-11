@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${SMARTHOUSE_DB_HOST:localhost}:24870/smarthouse
+    url: jdbc:postgresql://192.168.1.77:24870/smarthouse
 
 logging:
   filepath: ./log
