@@ -123,5 +123,11 @@
             <artifactId>spring-webflux</artifactId>
             <version>6.2.9</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.micrometer/micrometer-core -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <version>1.15.2</version>
+        </dependency>
     </dependencies>
 </project>
