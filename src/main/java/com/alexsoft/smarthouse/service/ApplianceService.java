@@ -109,9 +109,15 @@ public class ApplianceService {
 
             }
 
-            Double average = (humMasterBed != null && humBed != null)
-                    ? (humMasterBed + humBed) / 2
-                    : (humMasterBed != null ? humMasterBed : (humBed != null ? humBed : null));
+            Double average = null;
+            try {
+                average = (humMasterBed != null && humBed != null)
+                        ? (humMasterBed + humBed) / 2
+                        : (humMasterBed != null ? humMasterBed : (humBed != null ? humBed : null));
+
+            } catch (Exception e) {
+                LOGGER.error("Error during calculating average temperature and absolute humidity", e);
+            }
 
             Map<String, String> statusMap = Map.of(
                     "Relative Humidity",
