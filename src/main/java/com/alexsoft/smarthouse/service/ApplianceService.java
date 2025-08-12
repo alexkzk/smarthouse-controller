@@ -68,8 +68,8 @@ public class ApplianceService {
         if (CollectionUtils.isNotEmpty(indications)) {
             Double humMasterBed = null;
             Double tMasterBed = null;
-            Double humBed = null;
-            Double tBed = null;
+            Double humLr = null;
+            Double tLr = null;
             try {
                 humMasterBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
                                 .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
@@ -90,9 +90,9 @@ public class ApplianceService {
             }
 
             try {
-                humBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                humLr = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
                                 .filter(i -> i.getAbsoluteHumidity() != null && i.getAbsoluteHumidity().getValue() != null)
-                                .filter(i -> i.getIndicationPlace().equals("HOME-B"))   // todo remove hardcoded indication place
+                                .filter(i -> i.getIndicationPlace().equals("HOME-LR"))   // todo remove hardcoded indication place
                                 .mapToDouble(i -> i.getAbsoluteHumidity().getValue()).average().orElseThrow())
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
             } catch (Exception e) {
@@ -100,9 +100,9 @@ public class ApplianceService {
             }
 
             try {
-                tBed = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
+                tLr = BigDecimal.valueOf(indications.stream().filter(Objects::nonNull)
                                 .filter(i -> i.getTemperature() != null && i.getTemperature().getValue() != null)
-                                .filter(i -> i.getIndicationPlace().equals("HOME-B"))
+                                .filter(i -> i.getIndicationPlace().equals("HOME-LR"))
                                 .mapToDouble(i -> i.getTemperature().getValue()).average().orElseThrow())
                         .setScale(2, RoundingMode.HALF_UP).doubleValue();
             } catch (Exception e) {
@@ -110,9 +110,9 @@ public class ApplianceService {
             }
             Double average = null;
             try {
-                average = (humMasterBed != null && humBed != null)
-                        ? (humMasterBed + humBed) / 2
-                        : (humMasterBed != null ? humMasterBed : (humBed != null ? humBed : null));
+                average = (humMasterBed != null && humLr != null)
+                        ? (humMasterBed + humLr) / 2
+                        : (humMasterBed != null ? humMasterBed : (humLr != null ? humLr : null));
 
             } catch (Exception e) {
                 LOGGER.error("Error during calculating average temperature and absolute humidity", e);
@@ -139,8 +139,8 @@ public class ApplianceService {
                     (tMasterBed != null ? String.format("%.2f°C", tMasterBed) : "N/A") + "/" + (humMasterBed != null ? String.format("%.2f%%",
                             calculateRelativeHumidityV2(24.0, humMasterBed)) : "N/A"),
                     "Small Bedroom",
-                    (tBed != null ? String.format("%.2f°C", tBed) : "N/A") + "/" + (humBed != null ? String.format("%.2f%%",
-                            calculateRelativeHumidityV2(24.0, humBed)) : "N/A")
+                    (tLr != null ? String.format("%.2f°C", tLr) : "N/A") + "/" + (humLr != null ? String.format("%.2f%%",
+                            calculateRelativeHumidityV2(24.0, humLr)) : "N/A")
             );
             Map<String, String> displayStatus = new HashMap<>(statusMap);
             displayStatus.put("Absolute Humidity",  String.format("%.2f g/m3", appliance.getActual()));
