@@ -21,6 +21,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -404,25 +407,28 @@ public class IndicationService {
 
     }
 
-    public String getColorForPlace(String place){
-        if (place.length() < 4) {
-            place = place + "A";
-            // the below algorithm doesn't work with strings less than 4 chars
-        }
-        int i = place.hashCode();
-        if (smarthouseConfiguration.getColors() != null) {
-            String s = smarthouseConfiguration.getColors().get(place);
-            if (StringUtils.isNotBlank(s)) {
-                return s;
-            }
-        }
+    public String getColorForPlace(String place) {
+        try {
+            // Generate a SHA-256 hash for the given place
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(place.getBytes(StandardCharsets.UTF_8));
 
-        String color = Integer.toHexString(((i >> 24) & 0xFF)) +
-                Integer.toHexString(((i >> 16) & 0xFF)) +
-                Integer.toHexString(((i >> 8) & 0xFF)) +
-                Integer.toHexString((i & 0xFF));
-        return "#" + color.substring(0, Math.min(color.length(), 6));
+            // Convert the first 3 bytes of the hash to an RGB color
+            StringBuilder color = new StringBuilder("#");
+            for (int i = 0; i < 3; i++) { // Use first 3 bytes for R, G, and B
+                String hex = Integer.toHexString(0xff & hash[i]);
+                if (hex.length() == 1) {
+                    color.append('0'); // Pad with leading zero if needed
+                }
+                color.append(hex);
+            }
+
+            return color.toString(); // Return the color code
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not found!", e);
+        }
     }
+
 
     private void setAqis(final List<Map<String, Object>> aggregates, final ChartDto chartDto) {
 

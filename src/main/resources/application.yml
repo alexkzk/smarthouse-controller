@@ -75,8 +75,8 @@ smarthouse:
     password: ${smarthouse.ftp.username}@${smarthouse.ftp.hostname}
     remote-path: /G/backup/smarthouse
     upload-on-destroy: ${smarthouse.db.dump-on-destroy}
-  colors:
-    MIAMI: '#0BB0FF'
+#  colors:
+#    MIAMI: '#0BB0FF'
 
   short-status-null-string: N
 
