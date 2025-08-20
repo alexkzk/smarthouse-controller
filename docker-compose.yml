@@ -8,6 +8,7 @@ services:
     depends_on:
       - smarthouse-db
       - smarthouse-mqtt-broker
+      - influxdb
     ports:
       - '24867:24867'
     environment:
@@ -27,7 +28,7 @@ services:
     ports:
       - '24870:5432'
     volumes:
-      #      - /home/akuzko/IdeaProjects/smarthouse-controller/db/smarthouse.sql:/docker-entrypoint-initdb.d/smarthouse.sql # restore db from local dump
+      # Database data directory
       - ./postgresql_data:/var/lib/postgresql/data
     restart: unless-stopped
 
@@ -41,6 +42,40 @@ services:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: unless-stopped
 
+  influxdb:
+    image: influxdb:2.0
+    container_name: influxdb
+    ports:
+      - "8086:8086"  # InfluxDB HTTP API
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
+      - DOCKER_INFLUXDB_INIT_ORG=Home
+      - DOCKER_INFLUXDB_INIT_BUCKET=HOME
+      - DOCKER_INFLUXDB_INIT_RETENTION=7d  # Optional data retention period
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=smarthouse_token
+    volumes:
+      - ./influxdb_data:/var/lib/influxdb2
+
+    restart: unless-stopped
+
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf
+    depends_on:
+      - influxdb
+      - smarthouse-mqtt-broker
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    environment:
+      - HOST_PROC=/rootfs/proc
+      - HOST_SYS=/rootfs/sys
+      - HOST_ETC=/rootfs/etc
+    restart: unless-stopped
+
 volumes:
   db:
+    driver: local
+  influxdb_data:
     driver: local
