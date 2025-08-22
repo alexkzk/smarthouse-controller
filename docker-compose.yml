@@ -72,7 +72,6 @@ services:
       - HOST_PROC=/rootfs/proc
       - HOST_SYS=/rootfs/sys
       - HOST_ETC=/rootfs/etc
-      - HOSTNAME=${HOSTNAME}  # Pass host machine name (computer name) dynamically to container
     restart: unless-stopped
 
 volumes:
