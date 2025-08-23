@@ -40,6 +40,7 @@ public class ApplianceService {
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
+    public static final String DEHUMIDIDFIER_CODE = "DEH";
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
     private final IndicationRepository indicationRepository;
@@ -52,7 +53,7 @@ public class ApplianceService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void sendLastState() {
-        Appliance appliance = applianceRepository.findById("AC").orElseThrow();
+        Appliance appliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
         LOGGER.info("Sending previous {} state", appliance.getDescription());
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         switchAppliance(appliance, localDateTime);
@@ -62,7 +63,7 @@ public class ApplianceService {
     public void updateDisplayStatus() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         LocalDateTime averagingStartDateTime = localDateTime.minus(AVERAGING_PERIOD);
-        Appliance appliance = applianceRepository.findById("AC").orElseThrow();
+        Appliance appliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(),
                 averagingStartDateTime);
         if (CollectionUtils.isNotEmpty(indications)) {
@@ -152,7 +153,7 @@ public class ApplianceService {
                 try {
                     applianceRepository.save(appliance);
                 } catch (ObjectOptimisticLockingFailureException e) {
-                    Appliance updatedAppliance = applianceRepository.findById("AC").orElseThrow();
+                    Appliance updatedAppliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
                     updatedAppliance.setActual(average);
                     updatedAppliance.setDisplayStatus(displayStatus);
                     applianceRepository.save(updatedAppliance);
@@ -165,7 +166,7 @@ public class ApplianceService {
                 try {
                     applianceRepository.save(appliance);
                 } catch (ObjectOptimisticLockingFailureException e) {
-                    Appliance updatedAppliance = applianceRepository.findById("AC").orElseThrow();
+                    Appliance updatedAppliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
                     updatedAppliance.setActual(null);
                     applianceRepository.save(updatedAppliance);
                     LOGGER.info("OptimisticLockException handled");
@@ -181,7 +182,7 @@ public class ApplianceService {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         LocalDateTime utcLocalDateTime = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
 
-        String applianceCode = "AC";
+        String applianceCode = DEHUMIDIDFIER_CODE;
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
         if (appliance.getActual() == null) {
             appliance.setState(OFF, localDateTime);
