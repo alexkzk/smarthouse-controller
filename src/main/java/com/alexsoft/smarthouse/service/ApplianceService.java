@@ -53,17 +53,26 @@ public class ApplianceService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void sendLastState() {
-        Appliance appliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
-        LOGGER.info("Sending previous {} state", appliance.getDescription());
+        Optional<Appliance> appliance = applianceRepository.findById(DEHUMIDIDFIER_CODE);
+        if (appliance.isEmpty()) {
+            LOGGER.error("Appliance {} was not found", DEHUMIDIDFIER_CODE);
+            return;
+        }
+        LOGGER.info("Sending previous {} state", appliance.get().getDescription());
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-        switchAppliance(appliance, localDateTime);
+        switchAppliance(appliance.orElse(null), localDateTime);
     }
 
     @Scheduled(cron = "*/3 * * * * *")
     public void updateDisplayStatus() {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         LocalDateTime averagingStartDateTime = localDateTime.minus(AVERAGING_PERIOD);
-        Appliance appliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
+        Optional<Appliance> applianceOptional = applianceRepository.findById(DEHUMIDIDFIER_CODE);
+        if (applianceOptional.isEmpty()) {
+           LOGGER.error("Appliance {} was not found", DEHUMIDIDFIER_CODE);
+           return;
+        }
+        Appliance appliance = applianceOptional.get();
         List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(appliance.getReferenceSensors(),
                 averagingStartDateTime);
         if (CollectionUtils.isNotEmpty(indications)) {
