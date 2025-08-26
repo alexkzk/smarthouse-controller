@@ -102,7 +102,7 @@ public class MqttConfiguration {
             String payload = null;
             try {
                 payload = (String) message.getPayload();
-                LOGGER.info("Received an MQTT message: {}", payload);
+//                LOGGER.info("Received an MQTT message: {}", payload); // todo refactor to log only summary (number of messages e.g. per minute)
                 Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
                 indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
                 indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));

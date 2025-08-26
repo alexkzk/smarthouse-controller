@@ -315,7 +315,11 @@ public class ApplianceService {
         if (msgSendingEnabled) {
             mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                     .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+            mqttService.sendMessage(measurementTopic,
+                    "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
+                            appliance.getCode(), appliance.getState() == ON ? 1 : 0));
         }
+
     }
 
     private void saveAuxApplianceMeasurement(Appliance appliance, LocalDateTime localDateTime) {
