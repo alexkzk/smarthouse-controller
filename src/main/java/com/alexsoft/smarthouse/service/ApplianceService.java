@@ -128,6 +128,19 @@ public class ApplianceService {
                 LOGGER.error("Error during calculating average temperature and absolute humidity", e);
             }
 
+            try {
+                Optional<Appliance> ac = applianceRepository.findById("AC");
+                if (!ac.isEmpty()) {
+                    List<String> referenceSensors = ac.get().getReferenceSensors();
+                    Double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature().getValue().doubleValue()).average().orElseThrow();
+                    ac.get().setActual(averageTemp);
+                    applianceRepository.save(ac.get());
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error during updating AC actual", e);
+            }
+
+
             Map<String, String> statusMap = Map.of(
                     "Relative Humidity",
                     appliance.getActual() != null ? String.format("%.2f", calculateRelativeHumidityV2(24.0, appliance.getActual())) + "%" : "N/A",
@@ -191,8 +204,30 @@ public class ApplianceService {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
         LocalDateTime utcLocalDateTime = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
 
-        String applianceCode = DEHUMIDIDFIER_CODE;
-        Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
+        Appliance dehumidifier = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
+        Appliance ac = applianceRepository.findById("AC").orElseThrow();
+
+        controlPower(dehumidifier, localDateTime, utcLocalDateTime);
+        controlPower(ac, localDateTime, utcLocalDateTime);
+
+        save(dehumidifier, localDateTime);
+        save(ac, localDateTime);
+        switchAppliance(dehumidifier, localDateTime);
+        switchAppliance(ac, localDateTime);
+    }
+
+    private void save(Appliance dehumidifier, LocalDateTime localDateTime) {
+        try {
+            applianceRepository.save(dehumidifier);
+        } catch (ObjectOptimisticLockingFailureException e) {
+            Appliance updatedAppliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
+            updatedAppliance.setState(dehumidifier.getState(), localDateTime);
+            applianceRepository.save(updatedAppliance);
+            LOGGER.info("OptimisticLockException handled");
+        }
+    }
+
+    private static void controlPower(Appliance appliance, LocalDateTime localDateTime, LocalDateTime utcLocalDateTime) {
         if (appliance.getActual() == null) {
             appliance.setState(OFF, localDateTime);
             appliance.setActual(null);
@@ -200,8 +235,8 @@ public class ApplianceService {
         } else {
             try {
                 Double ah = appliance.getActual();
-                LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the appliance's setting: {}, hysteresis: {}",
-                        ah, appliance.getSetting(), appliance.getHysteresis());
+                LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
+                        appliance.getDescription(), ah, appliance.getSetting(), appliance.getHysteresis());
 
                 if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
                     appliance.setLocked(false);
@@ -226,15 +261,6 @@ public class ApplianceService {
                 LOGGER.error("Error during calculating average absolute humidity", e);
             }
         }
-        try {
-            applianceRepository.save(appliance);
-        } catch (ObjectOptimisticLockingFailureException e) {
-            Appliance updatedAppliance = applianceRepository.findById(applianceCode).orElseThrow();
-            updatedAppliance.setState(appliance.getState(), localDateTime);
-            applianceRepository.save(updatedAppliance);
-            LOGGER.info("OptimisticLockException handled");
-        }
-        switchAppliance(appliance, localDateTime);
     }
 
     // Fetch all appliances
