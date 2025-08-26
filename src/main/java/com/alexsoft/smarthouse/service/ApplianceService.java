@@ -49,7 +49,13 @@ public class ApplianceService {
     private final ApplianceRepository applianceRepository;
 
     @Value("${mqtt.msgSavingEnabled}")
-    private Boolean msgSavingEnabled;
+    private boolean msgSavingEnabled;
+
+    @Value("${mqtt.msgSavingEnabled}")
+    private String measurementTopic;
+
+    @Value("${mqtt.msgSendingEnabled}")
+    private boolean msgSendingEnabled;
 
     @EventListener(ApplicationReadyEvent.class)
     public void sendLastState() {
@@ -118,14 +124,14 @@ public class ApplianceService {
             } catch (Exception e) {
 
             }
-            Double average = null;
+            Double averageAh = null;
             try {
-                average = (humMasterBed != null && humLr != null)
+                averageAh = (humMasterBed != null && humLr != null)
                         ? (humMasterBed + humLr) / 2
                         : (humMasterBed != null ? humMasterBed : (humLr != null ? humLr : null));
 
             } catch (Exception e) {
-                LOGGER.error("Error during calculating average temperature and absolute humidity", e);
+                LOGGER.error("Error during calculating averageAh temperature and absolute humidity", e);
             }
 
             try {
@@ -135,6 +141,12 @@ public class ApplianceService {
                     Double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature().getValue().doubleValue()).average().orElseThrow();
                     ac.get().setActual(averageTemp);
                     applianceRepository.save(ac.get());
+
+                    if (msgSendingEnabled) {
+                        mqttService.sendMessage(measurementTopic,
+                                "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f\n, \"ah\": %.2f\n}}}".formatted(
+                                        averageTemp, averageAh));
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error("Error during updating AC actual", e);
@@ -168,7 +180,7 @@ public class ApplianceService {
             Map<String, String> displayStatus = new HashMap<>(statusMap);
             displayStatus.put("Absolute Humidity",  String.format("%.2f g/m3", appliance.getActual()));
 
-            appliance.setActual(average);
+            appliance.setActual(averageAh);
             appliance.setDisplayStatus(displayStatus);
 
             if (msgSavingEnabled) {
@@ -176,7 +188,7 @@ public class ApplianceService {
                     applianceRepository.save(appliance);
                 } catch (ObjectOptimisticLockingFailureException e) {
                     Appliance updatedAppliance = applianceRepository.findById(DEHUMIDIDFIER_CODE).orElseThrow();
-                    updatedAppliance.setActual(average);
+                    updatedAppliance.setActual(averageAh);
                     updatedAppliance.setDisplayStatus(displayStatus);
                     applianceRepository.save(updatedAppliance);
                     LOGGER.info("OptimisticLockException handled");
@@ -234,9 +246,9 @@ public class ApplianceService {
             LOGGER.info("Power control method executed, indications were empty");
         } else {
             try {
-                Double ah = appliance.getActual();
-                LOGGER.info("Power control method executed, ah was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
-                        appliance.getDescription(), ah, appliance.getSetting(), appliance.getHysteresis());
+                Double actual = appliance.getActual();
+                LOGGER.info("Power control method executed, actual was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
+                        appliance.getDescription(), actual, appliance.getSetting(), appliance.getHysteresis());
 
                 if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
                     appliance.setLocked(false);
@@ -245,9 +257,9 @@ public class ApplianceService {
                 }
 
                 if (!appliance.isLocked()) {
-                    if (ah > appliance.getSetting() + appliance.getHysteresis()) {
+                    if (actual > appliance.getSetting() + appliance.getHysteresis()) {
                         appliance.setState(ON, localDateTime);
-                    } else if (ah < appliance.getSetting() - appliance.getHysteresis()) {
+                    } else if (actual < appliance.getSetting() - appliance.getHysteresis()) {
                         appliance.setState(OFF, localDateTime);
                     }
                 } else {
@@ -296,10 +308,13 @@ public class ApplianceService {
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
         if (msgSavingEnabled) {
-            mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
 
             saveAuxApplianceMeasurement(appliance, localDateTime);
+        }
+
+        if (msgSendingEnabled) {
+            mqttService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         }
     }
 
