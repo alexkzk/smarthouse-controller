@@ -36,7 +36,7 @@ public class ApplianceService {
 
     public static final String POWER_CHECK_FREQUENCY_MINUTES = "1";
     public static final String POWER_CHECK_CRON_EXPRESSION = "0 0/" + POWER_CHECK_FREQUENCY_MINUTES + " * * * ?";
-    public static final Duration AVERAGING_PERIOD = Duration.ofMinutes(5);
+    public static final Duration AVERAGING_PERIOD = Duration.ofMinutes(1);
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
