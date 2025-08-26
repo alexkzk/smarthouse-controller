@@ -180,9 +180,9 @@ public class MetarService {
             metar = this.restTemplate.getForObject(url, Metar.class);
         } catch (HttpClientErrorException e) {
             // TODO just return null in this case and not to check on the metar's expirity the URL should be changed to onfail=error
-            LOGGER.warn(e.getMessage(), e);
+            LOGGER.warn("Couldn't read metar: {}",  e.getMessage());
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            LOGGER.error("Couldn't read metar: {}",  e.getMessage());
         }
         return metar;
     }
@@ -199,8 +199,14 @@ public class MetarService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         String rawPayload = null;
+        ResponseEntity<String> response;
 
-        ResponseEntity<String> response = restTemplate.exchange(baseUrl, HttpMethod.GET, entity, String.class);
+        try {
+            response = restTemplate.exchange(baseUrl, HttpMethod.GET, entity, String.class);
+        } catch (Exception e) {
+            LOGGER.warn("Couldn't readAircraftNumber: {}",  e.getMessage());
+            return;
+        }
 
         // Log raw payload
         rawPayload = response.getBody();

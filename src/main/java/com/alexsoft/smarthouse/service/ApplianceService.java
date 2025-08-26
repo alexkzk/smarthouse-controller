@@ -317,7 +317,7 @@ public class ApplianceService {
                     .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
             mqttService.sendMessage(measurementTopic,
                     "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
-                            appliance.getCode(), appliance.getState() == ON ? 1 : 0));
+                            appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
         }
 
     }
