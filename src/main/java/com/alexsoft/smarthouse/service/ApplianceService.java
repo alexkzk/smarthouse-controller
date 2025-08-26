@@ -138,21 +138,8 @@ public class ApplianceService {
                 Optional<Appliance> ac = applianceRepository.findById("AC");
                 if (!ac.isEmpty()) {
                     List<String> referenceSensors = ac.get().getReferenceSensors();
-                    List<IndicationV2> averages = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(
-                            List.of("HOME-AVG"), averagingStartDateTime);
-                    Comparator<IndicationV2> comparator = Comparator.comparing(IndicationV2::getLocalTime);
-                    Double temperatureTrend = null;
-                    Double ahTrend = null;
-
-                    try {
-                        temperatureTrend = averages.stream().sorted(comparator.reversed()).findFirst().get().getTemperature().getValue() - averages.stream().sorted(
-                                comparator).findFirst().get().getTemperature().getValue();
-                    } catch (Exception e) {}
-
-                    try {
-                        ahTrend = averages.stream().sorted(comparator.reversed()).findFirst().get().getAbsoluteHumidity().getValue() - averages.stream().sorted(
-                                comparator).findFirst().get().getAbsoluteHumidity().getValue();
-                    } catch (Exception e) {}
+                    calculateAndSendTrend(localDateTime, 1);
+                    calculateAndSendTrend(localDateTime, 5);
 
                     Double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature().getValue().doubleValue()).average().orElseThrow();
                     ac.get().setActual(averageTemp);
@@ -162,11 +149,6 @@ public class ApplianceService {
                         mqttService.sendMessage(measurementTopic,
                                 "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f, \"ah\": %.2f}}}".formatted(
                                         averageTemp, averageAh));
-                        if (temperatureTrend != null || ahTrend != null) {
-                            mqttService.sendMessage(measurementTopic,
-                                    "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f, \"ah\": %.2f}}}".formatted(
-                                            temperatureTrend, ahTrend));
-                        }
                     }
                 }
             } catch (Exception e) {
@@ -230,6 +212,34 @@ public class ApplianceService {
         }
 
 
+    }
+
+    private void calculateAndSendTrend(LocalDateTime localDateTime, int minutes) {
+        Comparator<IndicationV2> comparator = Comparator.comparing(IndicationV2::getLocalTime);
+        Double temperatureTrend = null;
+        Double ahTrend = null;
+
+        List<IndicationV2> averages = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(
+                List.of("HOME-AVG"), localDateTime.minusMinutes(minutes));
+        try {
+
+            temperatureTrend = averages.stream().sorted(comparator.reversed()).findFirst().get().getTemperature().getValue() - averages.stream().sorted(
+                    comparator).findFirst().get().getTemperature().getValue();
+        } catch (Exception e) {}
+
+        try {
+            ahTrend = averages.stream().sorted(comparator.reversed()).findFirst().get().getAbsoluteHumidity().getValue() - averages.stream().sorted(
+                    comparator).findFirst().get().getAbsoluteHumidity().getValue();
+        } catch (Exception e) {}
+
+        if (msgSendingEnabled) {
+            if (temperatureTrend != null || ahTrend != null) {
+                mqttService.sendMessage(measurementTopic,
+                        "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f, \"ah\": %.2f}}}".formatted(minutes,
+                                temperatureTrend, ahTrend));
+            }
+
+        }
     }
 
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
