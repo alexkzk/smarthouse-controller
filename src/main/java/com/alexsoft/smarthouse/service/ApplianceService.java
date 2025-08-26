@@ -51,7 +51,7 @@ public class ApplianceService {
     @Value("${mqtt.msgSavingEnabled}")
     private boolean msgSavingEnabled;
 
-    @Value("${mqtt.msgSavingEnabled}")
+    @Value("${mqtt.topic}")
     private String measurementTopic;
 
     @Value("${mqtt.msgSendingEnabled}")
@@ -144,7 +144,7 @@ public class ApplianceService {
 
                     if (msgSendingEnabled) {
                         mqttService.sendMessage(measurementTopic,
-                                "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f\n, \"ah\": %.2f\n}}}".formatted(
+                                "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f, \"ah\": %.2f}}}".formatted(
                                         averageTemp, averageAh));
                     }
                 }
