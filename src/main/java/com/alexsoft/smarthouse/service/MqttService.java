@@ -23,7 +23,7 @@ public class MqttService {
         if (!msgSendingEnabled) {
             return;
         }
-        LOGGER.info("Sending MQTT message: topic={}, payload={}", topic, messagePayload);
+//        LOGGER.info("Sending MQTT message: topic={}, payload={}", topic, messagePayload); // todo
         mqttOutboundFlow.getInputChannel().send(MessageBuilder.withPayload(messagePayload).setHeader("mqtt_topic", topic).build());
     }
 
