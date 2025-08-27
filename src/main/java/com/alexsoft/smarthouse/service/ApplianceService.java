@@ -225,7 +225,7 @@ public class ApplianceService {
             Optional<IndicationV2> first = averages.stream().sorted(comparator.reversed()).findFirst();
             Optional<IndicationV2> second = averages.stream().sorted(comparator).findFirst();
             long secondsDifference = Duration.between(second.get().getLocalTime(), first.get().getLocalTime()).toSeconds();
-            if (secondsDifference > ((long) minutes * 60)) {
+            if (secondsDifference < ((long) minutes * 60 * 0.85)) {
                 return;
             }
             temperatureTrend = (first.get().getTemperature().getValue() - second.get().getTemperature().getValue()) / secondsDifference * 3600;
