@@ -36,7 +36,7 @@ public class TempUtils {
         ah = ah * pressureHpa / 1013.25; // Scale based on actual pressure
 
         // Round the result to 1 decimal
-        return Math.round(ah * 10) / 10.0F;
+        return Math.round(ah * 100) / 100.0F;
     }
 
 

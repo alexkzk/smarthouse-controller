@@ -4,6 +4,8 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import jakarta.persistence.Embeddable;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Embeddable
 @Getter
@@ -23,9 +25,18 @@ public class Measurement {
         this.max = max;
     }
 
+    private Double roundToTwoDecimals(Double number) {
+        if (number == null) {
+            return null;
+        }
+        return BigDecimal.valueOf(number)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
     public Measurement setValue(Double value) {
         if (value != null && value > -100) {
-            this.value = Math.round(value * 10.0) / 10.0;
+            this.value = roundToTwoDecimals(value);
         } else {
             this.value = null;
         }
@@ -34,7 +45,7 @@ public class Measurement {
 
     public Measurement setValue(Integer value) {
         if (value != null && value > -100) {
-            this.value = Math.round(value * 10.0) / 10.0;
+            this.value = roundToTwoDecimals(value.doubleValue());
         } else {
             this.value = null;
         }
@@ -43,7 +54,7 @@ public class Measurement {
 
     public Measurement setMin(Double min) {
         if (min != null && min > -100) {
-            this.min = Math.round(min * 10.0) / 10.0;
+            this.min = roundToTwoDecimals(min);
         } else {
             this.min = null;
         }
@@ -52,12 +63,10 @@ public class Measurement {
 
     public Measurement setMax(Double max) {
         if (max != null && max > -100) {
-            this.max = Math.round(max * 10.0) / 10.0;
+            this.max = roundToTwoDecimals(max);
         } else {
             this.max = null;
         }
         return this;
     }
-
-
 }
