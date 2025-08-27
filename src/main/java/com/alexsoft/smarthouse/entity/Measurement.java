@@ -26,12 +26,7 @@ public class Measurement {
     }
 
     private Double roundToTwoDecimals(Double number) {
-        if (number == null) {
-            return null;
-        }
-        return BigDecimal.valueOf(number)
-                .setScale(2, RoundingMode.HALF_UP)
-                .doubleValue();
+        return number;  //todo remove this method
     }
 
     public Measurement setValue(Double value) {
