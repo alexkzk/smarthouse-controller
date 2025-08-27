@@ -147,7 +147,7 @@ public class ApplianceService {
 
                     if (msgSendingEnabled) {
                         mqttService.sendMessage(measurementTopic,
-                                "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f, \"ah\": %.2f}}}".formatted(
+                                "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f, \"ah\": %.3f}}}".formatted(
                                         averageTemp, averageAh));
                     }
                 }
@@ -235,7 +235,7 @@ public class ApplianceService {
         if (msgSendingEnabled) {
             if (temperatureTrend != null || ahTrend != null) {
                 mqttService.sendMessage(measurementTopic,
-                        "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.2f, \"ah\": %.2f}}}".formatted(minutes,
+                        "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f, \"ah\": %.3f}}}".formatted(minutes,
                                 temperatureTrend, ahTrend));
             }
 
