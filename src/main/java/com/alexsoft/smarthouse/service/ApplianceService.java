@@ -222,14 +222,11 @@ public class ApplianceService {
         List<IndicationV2> averages = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(
                 List.of("HOME-AVG"), localDateTime.minusMinutes(minutes));
         try {
-
-            temperatureTrend = averages.stream().sorted(comparator.reversed()).findFirst().get().getTemperature().getValue() - averages.stream().sorted(
-                    comparator).findFirst().get().getTemperature().getValue();
-        } catch (Exception e) {}
-
-        try {
-            ahTrend = averages.stream().sorted(comparator.reversed()).findFirst().get().getAbsoluteHumidity().getValue() - averages.stream().sorted(
-                    comparator).findFirst().get().getAbsoluteHumidity().getValue();
+            Optional<IndicationV2> first = averages.stream().sorted(comparator.reversed()).findFirst();
+            Optional<IndicationV2> second = averages.stream().sorted(comparator).findFirst();
+            long secondsDifference = Duration.between(second.get().getLocalTime(), first.get().getLocalTime()).toSeconds();
+            temperatureTrend = (first.get().getTemperature().getValue() - second.get().getTemperature().getValue()) / secondsDifference * 3600;
+            ahTrend = (first.get().getAbsoluteHumidity().getValue() - second.get().getAbsoluteHumidity().getValue()) / secondsDifference * 3600;
         } catch (Exception e) {}
 
         if (msgSendingEnabled) {
