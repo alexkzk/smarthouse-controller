@@ -40,6 +40,7 @@ public class Appliance {
 
     private Double setting;
     private Double actual;
+    private String metricType;
     private String units;
 
     private Double hysteresis;
