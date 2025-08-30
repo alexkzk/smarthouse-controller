@@ -677,7 +677,7 @@ public class IndicationService {
     private void normalizeTempAndHumidValues(Indication indication) {
         if (indication.getAir() != null && indication.getAir().getTemp() != null) {
             if (indication.getAir().getTemp().normalize()) {
-                LOGGER.warn("Out of range temp measurements observed");
+                LOGGER.warn("Out of range temp measurements observed for {}", indication.getIndicationPlace());
             }
         }
     }
