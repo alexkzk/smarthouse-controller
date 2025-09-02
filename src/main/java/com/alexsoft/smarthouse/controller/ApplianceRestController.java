@@ -38,7 +38,7 @@ public class ApplianceRestController {
 
     @PatchMapping("/{code}")
     public ResponseEntity<Appliance> partiallyUpdateAppliance(@PathVariable String code, @RequestBody Map<String, Object> updates) {
-        LocalDateTime localDateTime = dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
+        ZonedDateTime utc = ZonedDateTime.now(ZoneId.of("UTC"));
         if(code.contains("test")) {
             logger.info("Received test update for appliance with code '{}', updates: {}", code, updates);
             return ResponseEntity.ok().build();
@@ -53,6 +53,8 @@ public class ApplianceRestController {
                     case "state":
                         ApplianceState newState = ApplianceState.valueOf((String) value);
                         appliance.setState(newState, LocalDateTime.now());
+                        appliance.setLockedUntilUtc(utc.toLocalDateTime().plusMinutes(5));
+                        appliance.setLocked(true);
                         break;
                     case "consumptionKwh":
                         appliance.setConsumptionKwh(Double.valueOf(value.toString()));
@@ -66,18 +68,24 @@ public class ApplianceRestController {
                         if (lockedUntil.equals("null")) {
                             appliance.setLockedUntilUtc(null);
                         } else {
-                            LocalDateTime localDateTime1 = LocalDateTime.parse(lockedUntil, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
+                            LocalDateTime selectedLockedUntil = LocalDateTime.parse(lockedUntil, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
                             if (appliance.getLockedUntilUtc() == null) {
-                                appliance.setLockedUntilUtc(localDateTime1);
+                                appliance.setLockedUntilUtc(selectedLockedUntil);
                             } else {
-                                Duration duration = Duration.between(LocalDateTime.now(), localDateTime1);
+                                Duration duration = Duration.between(LocalDateTime.now(), selectedLockedUntil);
                                 appliance.setLockedUntilUtc(appliance.getLockedUntilUtc().plus(duration));
                             }
 
                         }
                         break;
                     case "setting":
-                        appliance.setSetting(Double.valueOf(value.toString()));
+                        if (value.equals("+")) {
+                            appliance.setSetting(appliance.getSetting() + appliance.getHysteresis());
+                        } else if(value.equals("-")) {
+                            appliance.setSetting(appliance.getSetting() - appliance.getHysteresis());
+                        } else {
+                            appliance.setSetting(Double.valueOf(value.toString()));
+                        }
                         break;
                     case "hysteresis":
                         appliance.setHysteresis(Double.valueOf(value.toString()));
