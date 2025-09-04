@@ -11,6 +11,8 @@ import lombok.ToString;
 import jakarta.persistence.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +56,24 @@ public class Appliance {
     private Double durationOnMinutes;
 
     private Double durationOffMinutes;
+
+    @Convert(converter = MapToJsonConverter.class)
+    @Column(length = 2048)
+    private Map<String, String> schedule;
+
+    public Double getSetting() {
+        if (schedule != null) {
+            try {
+                String getScheduleTemp = schedule.get(String.valueOf(ZonedDateTime.now(ZoneId.of("America/New_York")).getHour()));
+                if (getScheduleTemp != null) {
+                    return Double.parseDouble(getScheduleTemp);
+                }
+            } catch (Exception e) {
+                return setting;
+            }
+        }
+        return setting;
+    }
 
     @Version
     private Integer version;
