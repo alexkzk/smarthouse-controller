@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Converter
-public class MapToJsonConverter implements AttributeConverter<Map<String, String>, String> {
+public class MapToJsonConverter implements AttributeConverter<Map<String, Object>, String> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public String convertToDatabaseColumn(Map<String, String> attribute) {
+    public String convertToDatabaseColumn(Map<String, Object> attribute) {
         try {
             // Convert Map to JSON string
             return objectMapper.writeValueAsString(attribute);
@@ -25,13 +25,13 @@ public class MapToJsonConverter implements AttributeConverter<Map<String, String
     }
 
     @Override
-    public Map<String, String> convertToEntityAttribute(String dbData) {
+    public Map<String, Object> convertToEntityAttribute(String dbData) {
         if (dbData == null) {
             return new HashMap<>();
         }
         try {
             // Convert JSON string back to Map
-            return objectMapper.readValue(dbData, new TypeReference<Map<String, String>>() {});
+            return objectMapper.readValue(dbData, new TypeReference<Map<String, Object>>() {});
         } catch (IOException e) {
             throw new IllegalArgumentException("Error converting JSON string to map", e);
         }

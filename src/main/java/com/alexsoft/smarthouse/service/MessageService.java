@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class MqttService {
+public class MessageService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageService.class);
 
     @Value("${mqtt.msgSendingEnabled}")
     private Boolean msgSendingEnabled;
@@ -23,7 +23,7 @@ public class MqttService {
         if (!msgSendingEnabled) {
             return;
         }
-//        LOGGER.info("Sending MQTT message: topic={}, payload={}", topic, messagePayload); // todo
+        LOGGER.info("Sending MQTT message: topic={}, payload={}", topic, messagePayload);
         mqttOutboundFlow.getInputChannel().send(MessageBuilder.withPayload(messagePayload).setHeader("mqtt_topic", topic).build());
     }
 

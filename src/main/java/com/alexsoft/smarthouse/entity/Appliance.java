@@ -15,6 +15,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -59,14 +60,62 @@ public class Appliance {
 
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
-    private Map<String, String> schedule;
+    private Map<String, Object> schedule;
+
+    public Double getHysteresis() {
+        if (schedule != null) {
+            try {
+                ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of("America/New_York"));
+                int hour = zonedDateTime.getHour();
+                String day = zonedDateTime.getDayOfWeek().toString().substring(0, 3);
+                Map<String, Object> value = (Map<String, Object>) schedule.get(day);
+                if (value == null) {
+                    value = (Map<String, Object>) schedule.get("*");
+                }
+                if (value == null) {
+                    return hysteresis;
+                } else {
+                    Object value2 = value.get(String.valueOf(hour));
+                    if (value2 == null) {
+                        value2 = value.get("*");
+                    }
+                    if (value2 == null) {
+                        return hysteresis;
+                    } else {
+                        double v = Double.parseDouble(((String) value2).split("/")[1]);
+                        return v;
+                    }
+                }
+            } catch (Exception e) {
+                return hysteresis;
+            }
+        }
+        return hysteresis;
+    }
 
     public Double getSetting() {
         if (schedule != null) {
             try {
-                String getScheduleTemp = schedule.get(String.valueOf(ZonedDateTime.now(ZoneId.of("America/New_York")).getHour()));
-                if (getScheduleTemp != null) {
-                    return Double.parseDouble(getScheduleTemp);
+                ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of("America/New_York"));
+                int hour = zonedDateTime.getHour();
+                String day = zonedDateTime.getDayOfWeek().toString().substring(0, 3);
+                Map<String, Object> value = (Map<String, Object>) schedule.get(day);
+                if (value == null) {
+                    value = (Map<String, Object>) schedule.get("*");
+                }
+                if (value == null) {
+                    return setting;
+                } else {
+                    Object value2 = value.get(String.valueOf(hour));
+                    if (value2 == null) {
+                        value2 = value.get("*");
+                    }
+                    if (value2 == null) {
+                        return setting;
+                    } else {
+                        double v = Double.parseDouble(((String) value2).split("/")[0]);
+                        return v;
+                    }
                 }
             } catch (Exception e) {
                 return setting;
