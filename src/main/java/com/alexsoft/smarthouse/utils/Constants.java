@@ -11,4 +11,6 @@ public class Constants {
     public static final String SIAQ = "SIAQ ";
     public static final String GR = "GR ";
     public static final String S_OCEAN_DR_HOLLYWOOD = "1201S-OCEAN-DR";
+    public static final String APPLICATION_OPERATION_TIMEZONE = "America/New_York";
+
 }
