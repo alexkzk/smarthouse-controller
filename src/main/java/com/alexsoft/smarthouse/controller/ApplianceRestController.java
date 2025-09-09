@@ -31,7 +31,6 @@ public class ApplianceRestController {
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances() {
-        messageService.sendMessage("mqtt.smarthouse/control", "{\"command\":\"REALTIME_DATA_REQUESTED\",\"duration\":30}");
         List<Appliance> appliances = applianceService.getAllAppliances();
         return ResponseEntity.ok(appliances);
     }
