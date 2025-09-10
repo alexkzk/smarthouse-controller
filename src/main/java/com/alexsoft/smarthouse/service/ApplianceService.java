@@ -20,10 +20,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -227,6 +224,11 @@ public class ApplianceService {
                 }
 
                 if (!appliance.isLocked()) {
+                    Double scheduledSetting = appliance.determineScheduledSetting();
+                    if (!Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
+                        appliance.setScheduledSetting(scheduledSetting);
+                        appliance.setSetting(scheduledSetting);
+                    }
                     if (actual > appliance.getSetting() + appliance.getHysteresis()) {
                         appliance.setState(ON, localDateTime);
                     } else if (actual < appliance.getSetting() - appliance.getHysteresis()) {

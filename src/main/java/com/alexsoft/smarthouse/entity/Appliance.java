@@ -42,6 +42,7 @@ public class Appliance {
     private LocalDateTime lockedUntilUtc;
 
     private Double setting;
+    private Double scheduledSetting;
     private Double actual;
     private String metricType;
     private String units;
@@ -62,13 +63,7 @@ public class Appliance {
     @Column(length = 2048)
     private Map<String, Object> schedule;
 
-    public Double getHysteresis() {
-        return getScheduledOrCurrentSetting(1, hysteresis);
-    }
 
-    public Double getSetting() {
-        return getScheduledOrCurrentSetting(0, setting);
-    }
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {
@@ -93,7 +88,15 @@ public class Appliance {
         return "\u001B[" + color + "m%s\u001B[0m".formatted(getState());
     }
 
-    private Double getScheduledOrCurrentSetting(int settingIndex, Double defaultValue) {
+    public Double getScheduledHysteresis() {
+        return getScheduledOrCurrentSetting(1);
+    }
+
+    public Double determineScheduledSetting() {
+        return getScheduledOrCurrentSetting(0);
+    }
+
+    private Double getScheduledOrCurrentSetting(int settingIndex) {
         if (schedule != null) {
             try {
                 ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of(APPLICATION_OPERATION_TIMEZONE));
@@ -102,20 +105,20 @@ public class Appliance {
 
                 Map<String, Object> daySchedule = getDailySchedule(day);
                 if (daySchedule == null) {
-                    return defaultValue;
+                    return null;
                 }
 
                 String value = getDayAndHourSetting(daySchedule, hour);
                 if (value == null) {
-                    return defaultValue;
+                    return null;
                 }
 
                 return Double.parseDouble(value.split("/")[settingIndex]);
             } catch (Exception e) {
-                return defaultValue;
+                return null;
             }
         }
-        return defaultValue;
+        return null;
     }
 
     @SuppressWarnings("unchecked")
