@@ -88,15 +88,15 @@ public class Appliance {
         return "\u001B[" + color + "m%s\u001B[0m".formatted(getState());
     }
 
-    public Double getScheduledHysteresis() {
-        return getScheduledOrCurrentSetting(1);
+    public Double getHysteresis() {
+        return getScheduledOrCurrentSetting(1, hysteresis);
     }
 
     public Double determineScheduledSetting() {
-        return getScheduledOrCurrentSetting(0);
+        return getScheduledOrCurrentSetting(0, null);
     }
 
-    private Double getScheduledOrCurrentSetting(int settingIndex) {
+    private Double getScheduledOrCurrentSetting(int settingIndex, Double defaultValue) {
         if (schedule != null) {
             try {
                 ZonedDateTime zonedDateTime = ZonedDateTime.now(ZoneId.of(APPLICATION_OPERATION_TIMEZONE));
@@ -105,20 +105,20 @@ public class Appliance {
 
                 Map<String, Object> daySchedule = getDailySchedule(day);
                 if (daySchedule == null) {
-                    return null;
+                    return defaultValue;
                 }
 
                 String value = getDayAndHourSetting(daySchedule, hour);
                 if (value == null) {
-                    return null;
+                    return defaultValue;
                 }
 
                 return Double.parseDouble(value.split("/")[settingIndex]);
             } catch (Exception e) {
-                return null;
+                return defaultValue;
             }
         }
-        return null;
+        return defaultValue;
     }
 
     @SuppressWarnings("unchecked")
