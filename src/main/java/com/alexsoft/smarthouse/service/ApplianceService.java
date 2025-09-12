@@ -225,7 +225,7 @@ public class ApplianceService {
 
                 if (!appliance.isLocked()) {
                     Double scheduledSetting = appliance.determineScheduledSetting();
-                    if (!Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
+                    if (scheduledSetting != null && !Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
                         appliance.setScheduledSetting(scheduledSetting);
                         appliance.setSetting(scheduledSetting);
                     }
