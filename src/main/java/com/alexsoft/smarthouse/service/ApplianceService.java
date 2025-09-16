@@ -100,7 +100,6 @@ public class ApplianceService {
             Double actual = appliance.getActual(average.get());
             LOGGER.info("Power control method executed, actual was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                     appliance.getDescription(), actual, appliance.getSetting(), appliance.getHysteresis());
-            appliance.setActual(actual);
             if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
                 appliance.setLocked(false);
                 appliance.setLockedUntilUtc(null);

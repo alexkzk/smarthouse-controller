@@ -1,6 +1,7 @@
 package com.alexsoft.smarthouse.controller;
 
 import com.alexsoft.smarthouse.entity.IndicationV2;
+import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.service.ApplianceService;
 import com.alexsoft.smarthouse.service.MessageService;
@@ -10,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,6 +27,7 @@ public class ScheduledService {
     private final DateUtils dateUtils;
     private final MessageService messageService;
     private final IndicationRepositoryV2 indicationRepositoryV2;
+    private final ApplianceRepository applianceRepository;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -43,6 +47,8 @@ public class ScheduledService {
                 .getValue().doubleValue()).average().orElseThrow();
         Double averageAh = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getAbsoluteHumidity()
                 .getValue().doubleValue()).average().orElseThrow();
+        applianceRepository.updateActualByCode("AC", BigDecimal.valueOf(averageTemp).setScale(3, RoundingMode.HALF_UP).doubleValue());
+        applianceRepository.updateActualByCode("DEH", BigDecimal.valueOf(averageAh).setScale(3, RoundingMode.HALF_UP).doubleValue());
         messageService.sendMessage(measurementTopic,
                 ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f,"
                         + " \"ah\": %.3f}}}").formatted(averageTemp, averageAh));
