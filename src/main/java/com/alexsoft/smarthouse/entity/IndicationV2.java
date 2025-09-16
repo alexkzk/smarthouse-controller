@@ -14,7 +14,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(schema = "main", name = "indication_v2")
+@Table(schema = "main", name = "indication_v2",
+        indexes = {
+                @Index(name = "idx_indication_place", columnList = "indicationPlace"),
+                @Index(name = "idx_local_time", columnList = "localTime"),
+                @Index(name = "idx_indication_place_local_time", columnList = "indicationPlace, localTime")
+        }
+)
 public class IndicationV2 {
 
     @Id
