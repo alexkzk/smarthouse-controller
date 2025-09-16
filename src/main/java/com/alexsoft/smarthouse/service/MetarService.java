@@ -57,6 +57,8 @@ public class MetarService {
 
     @Value("${avwx.metarSubUri}")
     private String metarSubUri;
+    @Value("${mqtt.topic}")
+    private String measurementTopic;
 
     private final MetarLocationsConfig metarLocationsConfig;
     private final RestTemplate restTemplate;
@@ -64,14 +66,17 @@ public class MetarService {
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
     private final AirspaceActivityRepository airspaceActivityRepository;
+    private final MessageService messageService;
+
 
     public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
-            AirspaceActivityRepository airspaceActivityRepository) {
+            AirspaceActivityRepository airspaceActivityRepository, MessageService messageService) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
         this.dateUtils = dateUtils;
         this.airspaceActivityRepository = airspaceActivityRepository;
+        this.messageService = messageService;
     }
 
     @Scheduled(cron = "0 0 */1 * * *")
@@ -128,6 +133,12 @@ public class MetarService {
                         LOGGER.error("Error during setting wind speed and wind direction", e);
                     }
                     indicationService.save(indication, indicationV2, true, AggregationPeriod.INSTANT);
+
+                    Air air = indication.getAir();
+                    messageService.sendMessage(measurementTopic,
+                            ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"OUT\", \"air\": {\"temp\": {\"celsius\": %.3f,"
+                                    + " \"ah\": %.3f}}, \"pressure\": {\"mmHg\": %.2f}}").formatted(key, air.getTemp().getCelsius(), air.getTemp().getAh(),
+                                    air.getPressure().getMmHg()));
                 } else {
                     LOGGER.info("Metar is expired: {}", metar);
                 }

@@ -43,7 +43,7 @@ public class Appliance {
 
     private Double setting;
     private Double scheduledSetting;
-    private Double actual;
+//    private Double actual;
     private String metricType;
     private String units;
 
@@ -59,11 +59,19 @@ public class Appliance {
 
     private Double durationOffMinutes;
 
+    private Boolean sensorControlled;
+
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
     private Map<String, Object> schedule;
 
-
+    public Double getActual(IndicationV2 indicationV2) {
+        if (code.equalsIgnoreCase("DEH")) {
+            return indicationV2.getAbsoluteHumidity().getValue();
+        } else {
+            return indicationV2.getTemperature().getValue();
+        }
+    }
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {

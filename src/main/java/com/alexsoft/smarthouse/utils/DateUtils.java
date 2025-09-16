@@ -53,6 +53,14 @@ public class DateUtils {
         return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(userTimezone).toLocalDateTime();
     }
 
+    public LocalDateTime getLocalDateTime() {
+        return ZonedDateTime.now(userTimezone).toLocalDateTime();
+    }
+
+    public LocalDateTime getUtcLocalDateTime() {
+        return ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
+    }
+
     public LocalDateTime toLocalDateTimeAtZone(LocalDateTime ts, Optional<String> timeZone) {
         if (timeZone.isEmpty()) {
             return toLocalDateTime(ts);

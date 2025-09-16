@@ -298,7 +298,6 @@ public class IndicationService {
         if (msgSavingEnabled) {
             if (normalize) {
                 indicationToSave.setAggregationPeriod(aggregationPeriod);
-                normalizeTempAndHumidValues(indicationToSave);
                 calculateAbsoluteHumidity(indicationToSave);
                 setInOut(indicationToSave);
                 resetTempAndHumidForPlace("TERRACE", indicationToSave);
@@ -673,104 +672,4 @@ public class IndicationService {
             indication.getAir().getTemp().setAh(aH.doubleValue());
         }
     }
-
-    private void normalizeTempAndHumidValues(Indication indication) {
-        if (indication.getAir() != null && indication.getAir().getTemp() != null) {
-            if (indication.getAir().getTemp().normalize()) {
-                LOGGER.warn("Out of range temp measurements observed for {}", indication.getIndicationPlace());
-            }
-        }
-    }
-
-
-    /*public boolean uploadToFtp() {
-        FTPClient ftpClient = new FTPClient();
-        try {
-            ftpClient.connect(ftpHostname, 21);
-            ftpClient.login(ftpUsername, ftpPassword);
-            ftpClient.enterLocalPassiveMode();
-            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-            File LocalFile = new File(dbDumpFilePath + dbDumpFilename);
-            String[] split = dbDumpFilePath.split("/");
-            String remoteFileName = split[split.length - 1];
-            String remoteFile = ftpRemotePath + "/" + remoteFileName;
-            InputStream inputStream = new FileInputStream(LocalFile);
-            boolean done = ftpClient.storeFile(remoteFile, inputStream);
-            inputStream.close();
-            if (done) {
-                return true;
-            }
-        } catch (IOException ex) {
-            LOGGER.error("Uploading db dump to FTP failed", ex);
-        } finally {
-            try {
-                if (ftpClient.isConnected()) {
-                    ftpClient.logout();
-                    ftpClient.disconnect();
-                }
-            } catch (IOException ex) {
-                LOGGER.error("Closing connection to FTP failed", ex);
-            }
-        }
-        return false;
-    }*/
-
-    /*public String downloadFromFtp() {
-
-        FTPClient ftpClient = new FTPClient();
-        try {
-
-            ftpClient.connect(ftpHostname, 21);
-            ftpClient.login(ftpUsername, ftpPassword);
-            ftpClient.enterLocalPassiveMode();
-            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
-
-            long start = System.currentTimeMillis();
-            File downloadedDump = new File(dbDumpFilePath + dbDumpFilename);
-            downloadedDump.createNewFile();
-            OutputStream outputStream2 = new BufferedOutputStream(new FileOutputStream(downloadedDump));
-            String ftpFilePath = "G/backup/smarthouse/" + dbDumpFilename;
-            InputStream inputStream = ftpClient.retrieveFileStream(ftpFilePath);
-            LOGGER.info("Downloading {} from ftp {}", ftpFilePath, ftpHostname);
-            byte[] bytesArray = new byte[4096];
-            int bytesRead = -1;
-            if (inputStream == null) {
-                LOGGER.warn("DB dump was not found on the FTP server");
-                return null;
-            }
-            while ((bytesRead = inputStream.read(bytesArray)) != -1) {
-                outputStream2.write(bytesArray, 0, bytesRead);
-            }
-
-            if (ftpClient.completePendingCommand()) {
-                Path path = Paths.get(dbDumpFilePath + dbDumpFilename);
-                Long mb = null;
-                try {
-                    mb = Files.size(path) / 1024 / 1024;
-                } catch (Exception e) {
-                    LOGGER.error("Error during calculating the downloaded file size {}", downloadedDump);
-                    return null;
-                }
-
-                LOGGER.info("{} downloaded, time: {} ms, size: {} MB", dbDumpFilePath + dbDumpFilename, System.currentTimeMillis() - start, mb);
-            }
-            outputStream2.close();
-            inputStream.close();
-            return dbDumpFilePath + dbDumpFilename;
-
-        } catch (IOException ex) {
-            LOGGER.error("Downloading db dump failed", ex);
-            return null;
-        } finally {
-            try {
-                if (ftpClient.isConnected()) {
-                    ftpClient.logout();
-                    ftpClient.disconnect();
-                }
-            } catch (IOException ex) {
-                LOGGER.error("Closing FTP connection failed");
-                return null;
-            }
-        }
-    }*/
 }

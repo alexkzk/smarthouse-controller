@@ -15,7 +15,7 @@ public class MessageService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageService.class);
 
     @Value("${mqtt.msgSendingEnabled}")
-    private Boolean msgSendingEnabled;
+    private boolean msgSendingEnabled;
 
     private final IntegrationFlow mqttOutboundFlow;
 
