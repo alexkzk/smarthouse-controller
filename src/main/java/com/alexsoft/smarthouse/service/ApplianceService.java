@@ -1,26 +1,24 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.entity.*;
-import com.alexsoft.smarthouse.enums.AggregationPeriod;
-import com.alexsoft.smarthouse.enums.InOut;
+import com.alexsoft.smarthouse.entity.Appliance;
+import com.alexsoft.smarthouse.entity.IndicationV2;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
-import com.alexsoft.smarthouse.repository.IndicationRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -44,28 +42,8 @@ public class ApplianceService {
     @Value("${mqtt.topic}")
     private String measurementTopic;
 
-    @Scheduled(cron = "*/3 * * * * *")
-    public void calculateAverages() {
-        List<String> referenceSensors = List.of("HOME-MB","HOME-LR","HOME-B");
-        LocalDateTime averagingStartDateTime = dateUtils.getLocalDateTime().minus(AVERAGING_PERIOD);
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(referenceSensors, averagingStartDateTime);
-        Double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature()
-                .getValue().doubleValue()).average().orElseThrow();
-        Double averageAh = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getAbsoluteHumidity()
-                .getValue().doubleValue()).average().orElseThrow();
-        messageService.sendMessage(measurementTopic,
-                ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f,"
-                        + " \"ah\": %.3f}}}").formatted(averageTemp, averageAh));
-    }
 
-    @Scheduled(cron = "*/3 * * * * *")
-    public void calculateTrends() {
-        calculateTrendAndSend(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()), 1);
-        calculateTrendAndSend(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()), 5);
-    }
-
-
-    private void calculateTrendAndSend(LocalDateTime localDateTime, int minutes) {
+    public void calculateTrendAndSend(LocalDateTime localDateTime, int minutes) {
         Comparator<IndicationV2> comparator = Comparator.comparing(IndicationV2::getLocalTime);
         Double temperatureTrend;
         Double ahTrend;
@@ -74,6 +52,10 @@ public class ApplianceService {
                 List.of("HOME-AVG"), localDateTime.minusMinutes(minutes));
         Optional<IndicationV2> first = averages.stream().sorted(comparator.reversed()).findFirst();
         Optional<IndicationV2> second = averages.stream().sorted(comparator).findFirst();
+        if (!first.isPresent() || !second.isPresent()) {
+            LOGGER.info("No trend calculated, no averages found");
+            return;
+        }
         long secondsDifference = Duration.between(second.get().getLocalTime(), first.get().getLocalTime()).toSeconds();
         if (secondsDifference < ((long) minutes * 60 * 0.85)) {
             return;
@@ -88,12 +70,7 @@ public class ApplianceService {
         }
     }
 
-    @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
-    public void powerControlAcAndDehumidifier() {
-        powerControl("AC");
-        powerControl("DEH");
-    }
-
+    @Transactional
     public void powerControl(String applianceCode) {
         LocalDateTime utcLocalDateTime = dateUtils.getUtcLocalDateTime();
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(utcLocalDateTime);

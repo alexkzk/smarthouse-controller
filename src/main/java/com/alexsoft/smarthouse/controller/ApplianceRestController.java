@@ -3,14 +3,13 @@ package com.alexsoft.smarthouse.controller;
 import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.MessageService;
-import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,11 +22,9 @@ import java.util.Map;
 @RequestMapping("/appliances")
 @RequiredArgsConstructor
 public class ApplianceRestController {
-    Logger logger = LoggerFactory.getLogger(ApplianceRestController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ApplianceRestController.class);
 
     private final ApplianceService applianceService;
-    private final DateUtils dateUtils;
-    private final MessageService messageService;
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances() {
@@ -36,6 +33,7 @@ public class ApplianceRestController {
     }
 
     @PatchMapping("/{code}")
+    @Transactional
     public ResponseEntity<Appliance> partiallyUpdateAppliance(@PathVariable String code, @RequestBody Map<String, Object> updates) {
         ZonedDateTime utc = ZonedDateTime.now(ZoneId.of("UTC"));
         if(code.contains("test")) {
