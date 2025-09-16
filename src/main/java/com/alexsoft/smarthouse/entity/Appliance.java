@@ -43,7 +43,7 @@ public class Appliance {
 
     private Double setting;
     private Double scheduledSetting;
-//    private Double actual;
+    private Double actual;
     private String metricType;
     private String units;
 
