@@ -75,29 +75,12 @@ public class ApplianceService {
         LocalDateTime utcLocalDateTime = dateUtils.getUtcLocalDateTime();
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(utcLocalDateTime);
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
-        controlPower(appliance, localDateTime, utcLocalDateTime);
-        save(appliance, localDateTime);
-        switchAppliance(appliance, localDateTime);
-    }
 
-    private void save(Appliance appliance, LocalDateTime localDateTime) {
-        try {
-            applianceRepository.save(appliance);
-        } catch (ObjectOptimisticLockingFailureException e) {
-            Appliance updatedAppliance = applianceRepository.findById(appliance.getCode()).orElseThrow();
-            updatedAppliance.setState(appliance.getState(), localDateTime);
-            applianceRepository.save(updatedAppliance);
-            LOGGER.info("OptimisticLockException handled");
-        }
-    }
-
-    private void controlPower(Appliance appliance, LocalDateTime localDateTime, LocalDateTime utcLocalDateTime) {
         Optional<IndicationV2> average = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(
-                List.of("HOME-AVG"), localDateTime.minus(AVERAGING_PERIOD)).stream().sorted(
-                Comparator.comparing(IndicationV2::getLocalTime)).findFirst();
+                List.of("HOME-AVG"), localDateTime.minus(AVERAGING_PERIOD)).stream().min(Comparator.comparing(IndicationV2::getLocalTime));
 
         if (average.isPresent()) {
-            Double actual = appliance.getActual(average.get());
+            Double actual = appliance.getActual(average.get()); //  todo refactor to get rid of appliance.getActual method
             LOGGER.info("Power control method executed, actual was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                     appliance.getDescription(), actual, appliance.getSetting(), appliance.getHysteresis());
             if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
@@ -127,30 +110,7 @@ public class ApplianceService {
             appliance.setState(OFF, localDateTime);
             LOGGER.info("Power control method executed, indications were empty");
         }
-
-    }
-
-    public List<Appliance> getAllAppliances() {
-        return applianceRepository.findAll();
-    }
-
-    public Optional<Appliance> getApplianceByCode(String code) {
-        return applianceRepository.findById(code);
-    }
-
-    public Appliance saveOrUpdateAppliance(Appliance appliance) {
-        Appliance save = null;
-        try {
-            save = applianceRepository.save(appliance);
-        } catch (ObjectOptimisticLockingFailureException e) {
-            Appliance updatedAppliance = applianceRepository.findById(appliance.getCode()).orElseThrow();
-            applianceRepository.save(updatedAppliance);
-            LOGGER.info("OptimisticLockException handled");
-        }
-        return save;
-    }
-
-    private void switchAppliance(Appliance appliance, LocalDateTime localDateTime) {
+        save(appliance, localDateTime);
         Long durationInMinutes = null;
 
         if (appliance.getSwitched() != null) {
@@ -164,7 +124,22 @@ public class ApplianceService {
         messageService.sendMessage(measurementTopic,
                 "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
                         appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
+    }
 
+    public List<Appliance> getAllAppliances() {
+        return applianceRepository.findAll();
+    }
+
+    public Optional<Appliance> getApplianceByCode(String code) {
+        return applianceRepository.findById(code);
+    }
+
+    public Appliance saveOrUpdateAppliance(Appliance appliance) {
+        return applianceRepository.save(appliance);
+    }
+
+    private void save(Appliance appliance, LocalDateTime localDateTime) {
+        applianceRepository.save(appliance);
     }
 
 }

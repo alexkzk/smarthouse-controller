@@ -38,8 +38,11 @@ public class MqttConfiguration {
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
 
-    @Value("tcp://${mqtt.server}:${mqtt.port}")
-    private String mqttUrl;
+    @Value("tcp://${mqtt.server-in}:${mqtt.port}")
+    private String mqttUrlIn;
+
+    @Value("tcp://${mqtt.server-out}:${mqtt.port}")
+    private String mqttUrlOut;
 
     @Value("${mqtt.topic}")
     private String mqttTopic;
@@ -82,7 +85,7 @@ public class MqttConfiguration {
     @Bean
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(mqttUrl, mqttSubscriber + "-" + UUID.randomUUID(), mqttTopic);
+                new MqttPahoMessageDrivenChannelAdapter(mqttUrlIn, mqttSubscriber + "-" + UUID.randomUUID(), mqttTopic);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
@@ -92,7 +95,7 @@ public class MqttConfiguration {
 
     @Bean
     public IntegrationFlow mqttOutboundFlow() {
-        return f -> f.handle(new MqttPahoMessageHandler(mqttUrl, mqttSubscriber));
+        return f -> f.handle(new MqttPahoMessageHandler(mqttUrlOut, mqttSubscriber));
     }
 
     @Bean
@@ -106,7 +109,7 @@ public class MqttConfiguration {
                 Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
                 indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
                 indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
-                indicationService.save(indication, MetarService.toIndicationV2(indication), true, AggregationPeriod.INSTANT);
+                indicationService.save(indication, MetarService.toIndicationV2(indication), AggregationPeriod.INSTANT);
             } catch (Exception e) {
                 LOGGER.error("Error processing MQTT message: {}", payload, e);
             }

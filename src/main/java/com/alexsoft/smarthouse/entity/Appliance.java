@@ -146,9 +146,6 @@ public class Appliance {
         return value != null ? value.toString() : null;
     }
 
-    @Version
-    private Integer version;
-
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
     private Map<String, String> displayStatus;

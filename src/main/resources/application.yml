@@ -38,7 +38,8 @@ logging:
     com.alexsoft.smarthouse: debug
 
 mqtt:
-  server: smarthouse-mqtt-broker
+  server-in: smarthouse-mqtt-broker
+  server-out: smarthouse-mqtt-broker
   port: 1883
   topic: mqtt.smarthouse
   subscriber: smarthouse-controller
@@ -51,7 +52,7 @@ avwx:
   baseUri: https://avwx.rest/api
   metarSubUri: /metar/{ICAO}?options=&airport=true&reporting=true&format=json&onfail=cache
   token: ${AVWX_TOKEN:your-avwx-token-here}
-  metar-receiving-cron: 0 */30 * * * *
+  metar-receiving-cron: 0 */1 * * * *
 
 flightradar24:
   baseUri: https://fr24api.flightradar24.com

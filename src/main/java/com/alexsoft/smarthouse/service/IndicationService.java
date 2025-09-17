@@ -294,22 +294,16 @@ public class IndicationService {
         }
     }
 
-    public void save(Indication indicationToSave, IndicationV2 indicationV2, boolean normalize, AggregationPeriod aggregationPeriod) {
+    public void save(Indication indicationToSave, IndicationV2 indicationV2, AggregationPeriod aggregationPeriod) {
+        calculateAbsoluteHumidity(indicationToSave);
+        indicationToSave.setAggregationPeriod(aggregationPeriod);
+        setEmptyMeasurementsToNull(indicationToSave);
+
         if (msgSavingEnabled) {
-            if (normalize) {
-                indicationToSave.setAggregationPeriod(aggregationPeriod);
-                calculateAbsoluteHumidity(indicationToSave);
-                setInOut(indicationToSave);
-                resetTempAndHumidForPlace("TERRACE", indicationToSave);
-                setEmptyMeasurementsToNull(indicationToSave);
-                convertPressureToMmHg(indicationToSave);
-            }
             if (indicationV2 != null) {
                 indicationRepositoryV2.save(indicationV2);
             }
             indicationRepository.save(indicationToSave);
-        } else {
-            LOGGER.debug("Skipping of saving indication {}", indicationToSave);
         }
     }
 
@@ -641,25 +635,6 @@ public class IndicationService {
         if (indication.getAir().getPressure() != null && indication.getAir().getPressure().isEmpty()) {
             LOGGER.debug("Indication's Pressure is empty, setting it as NULL\n{}", indication);
             indication.getAir().setPressure(null);
-        }
-    }
-
-    private void resetTempAndHumidForPlace(String place, Indication indication) {
-        if (indication.getIndicationPlace().equals(place) && indication.getInOut() == InOut.OUT) {
-            // TODO temporary disabled due to sensor malfunction
-            indication.getAir().getTemp().setAh(null);
-            indication.getAir().getTemp().setRh(null);
-        }
-    }
-
-    private void setInOut(Indication indication) {
-        //  todo temporary, remove after changing the msg format on publishers
-        if (indication.getIndicationPlace().startsWith(IN_PREFIX)) {
-            indication.setInOut(InOut.IN);
-            indication.setIndicationPlace(indication.getIndicationPlace().replace(IN_PREFIX, ""));
-        } else if (indication.getIndicationPlace().startsWith(OUT_PREFIX)) {
-            indication.setInOut(InOut.OUT);
-            indication.setIndicationPlace(indication.getIndicationPlace().replace(OUT_PREFIX, ""));
         }
     }
 

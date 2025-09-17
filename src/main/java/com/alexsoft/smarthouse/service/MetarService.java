@@ -103,13 +103,10 @@ public class MetarService {
         indicationService.createAverageMeasurement(1, ChronoUnit.MONTHS);
     }
 
-
-
     @Scheduled(cron = "${flightradar24.aircraft-reading-cron}")
     public void retrieveAndProcessAircraftNumber() {
         readAircraftNumber();
     }
-
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void retrieveAndProcessMetarData() {
@@ -132,13 +129,19 @@ public class MetarService {
                     } catch (Exception e) {
                         LOGGER.error("Error during setting wind speed and wind direction", e);
                     }
-                    indicationService.save(indication, indicationV2, true, AggregationPeriod.INSTANT);
+//                    indicationService.save(indication, indicationV2, AggregationPeriod.INSTANT);
 
                     Air air = indication.getAir();
-                    messageService.sendMessage(measurementTopic,
-                            ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"OUT\", \"air\": {\"temp\": {\"celsius\": %.3f,"
-                                    + " \"ah\": %.3f}}, \"pressure\": {\"mmHg\": %.2f}}").formatted(key, air.getTemp().getCelsius(), air.getTemp().getAh(),
-                                    air.getPressure().getMmHg()));
+                    if (air != null) {
+                        Temp temp = air.getTemp();
+                        messageService.sendMessage(measurementTopic,
+                                ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f,"
+                                        + " \"ah\": %.3f}}}").formatted(key,
+                                        temp == null ? null : temp.getCelsius(),
+                                        temp == null ? null : temp.getAh())
+                        );
+
+                    }
                 } else {
                     LOGGER.info("Metar is expired: {}", metar);
                 }
