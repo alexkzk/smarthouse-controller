@@ -135,7 +135,7 @@ public class MetarService {
                     if (air != null) {
                         Temp temp = air.getTemp();
                         messageService.sendMessage(measurementTopic,
-                                ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f,"
+                                ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"OUT\", \"air\": {\"temp\": {\"celsius\": %.3f,"
                                         + " \"ah\": %.3f}}}").formatted(key,
                                         temp == null ? null : temp.getCelsius(),
                                         temp == null ? null : temp.getAh())
