@@ -1,10 +1,10 @@
 package com.alexsoft.smarthouse.configuration;
 
 import com.alexsoft.smarthouse.entity.Indication;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
-import com.alexsoft.smarthouse.service.MetarService;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.service.IndicationService;
+import com.alexsoft.smarthouse.service.MetarService;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +25,7 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Configuration
@@ -85,7 +84,7 @@ public class MqttConfiguration {
     @Bean
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(mqttUrlIn, mqttSubscriber + "-" + UUID.randomUUID(), mqttTopic);
+                new MqttPahoMessageDrivenChannelAdapter(mqttUrlIn, mqttSubscriber + "-" + UUID.randomUUID(), new String[]{mqttTopic, "zigbee2mqtt/#"});
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
@@ -102,14 +101,26 @@ public class MqttConfiguration {
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler messageHandler() {
         return message -> {
-            String payload = null;
+            if (message.getPayload() == null || message.getHeaders().get("mqtt_receivedTopic") == null) {
+                return;
+            }
+            String payload = (String) message.getPayload();
+            String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
             try {
-                payload = (String) message.getPayload();
                 LOGGER.info("Received an MQTT message: {}", payload);
-                Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
-                indication.setReceivedUtc(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime());
-                indication.setReceivedLocal(dateUtils.toLocalDateTime(ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime()));
-                indicationService.save(indication, MetarService.toIndicationV2(indication), AggregationPeriod.INSTANT);
+                if (mqttTopic.equals(topic)) {
+                    Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
+                    LocalDateTime utcLocalDateTime = dateUtils.getUtcLocalDateTime();
+                    indication.setReceivedUtc(utcLocalDateTime);
+                    indication.setReceivedLocal(dateUtils.toLocalDateTime(utcLocalDateTime));
+                    if (indication.getAggregationPeriod() == null) {
+                        indication.setAggregationPeriod(AggregationPeriod.INSTANT);
+                    }
+                    indicationService.save(indication, MetarService.toIndicationV2(indication));
+                } else if (!topic.startsWith("zigbee2mqtt/bridge")) {
+                    System.out.println();
+
+                }
             } catch (Exception e) {
                 LOGGER.error("Error processing MQTT message: {}", payload, e);
             }

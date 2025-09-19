@@ -294,9 +294,8 @@ public class IndicationService {
         }
     }
 
-    public void save(Indication indicationToSave, IndicationV2 indicationV2, AggregationPeriod aggregationPeriod) {
+    public void save(Indication indicationToSave, IndicationV2 indicationV2) {
         calculateAbsoluteHumidity(indicationToSave);
-        indicationToSave.setAggregationPeriod(aggregationPeriod);
         setEmptyMeasurementsToNull(indicationToSave);
 
         if (msgSavingEnabled) {
