@@ -74,7 +74,7 @@ public class ScheduledService {
     }
 
 
-    @Scheduled(cron = "*/3 * * * * *")
+    @Scheduled(cron = "*/15 * * * * *")
     @Transactional(readOnly = false)
     public void averageCalculator() {
         List<String> referenceSensors = List.of("HOME-MB","HOME-LR","HOME-B");
@@ -96,13 +96,13 @@ public class ScheduledService {
         Appliance ac = applianceRepository.findById("AC").get();
         if (ac.getSetting() != null && ac.getHysteresis() != null) {
             if (averageTemp > ac.getSetting() + ac.getHysteresis()) {
-                if (ac.getState() == ApplianceState.OFF) {
+//                if (ac.getState() == ApplianceState.OFF) {
                     eventPublisher.publishEvent(new ApplianceSwitchEvent("AC", ApplianceState.ON));
-                }
+//                }
             } else if (averageTemp < ac.getSetting() - ac.getHysteresis()) {
-                if (ac.getState() == ApplianceState.ON) {
+//                if (ac.getState() == ApplianceState.ON) {
                     eventPublisher.publishEvent(new ApplianceSwitchEvent("AC", ApplianceState.OFF));
-                }
+//                }
             }
         }
         messageService.sendMessage(measurementTopic,
