@@ -91,7 +91,7 @@ public class ApplianceRestController {
             });
 
             Appliance updatedAppliance = applianceService.saveOrUpdateAppliance(appliance);
-            applianceService.powerControl(updatedAppliance.getCode());
+//            applianceService.powerControl(updatedAppliance.getCode());
 
             return ResponseEntity.ok(updatedAppliance);
         }).orElse(ResponseEntity.notFound().build());
