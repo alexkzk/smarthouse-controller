@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -294,6 +295,7 @@ public class IndicationService {
         }
     }
 
+    @Transactional
     public void save(Indication indicationToSave, IndicationV2 indicationV2) {
         calculateAbsoluteHumidity(indicationToSave);
         setEmptyMeasurementsToNull(indicationToSave);
