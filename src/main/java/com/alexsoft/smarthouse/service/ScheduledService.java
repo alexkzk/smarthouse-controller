@@ -1,16 +1,15 @@
-package com.alexsoft.smarthouse.controller;
+package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.IndicationV2;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.MessageService;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -33,12 +32,14 @@ public class ScheduledService {
     private String measurementTopic;
 
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
+    @Transactional
     public void powerControlAcAndDehumidifier() {
         applianceService.powerControl("AC");
         applianceService.powerControl("DEH");
     }
 
     @Scheduled(cron = "*/3 * * * * *")
+    @Transactional
     public void calculateAverages() {
         List<String> referenceSensors = List.of("HOME-MB","HOME-LR","HOME-B");
         LocalDateTime averagingStartDateTime = dateUtils.getLocalDateTime().minus(AVERAGING_PERIOD);
@@ -58,6 +59,7 @@ public class ScheduledService {
     }
 
     @Scheduled(cron = "*/3 * * * * *")
+    @Transactional
     public void calculateTrends() {
         applianceService.calculateTrendAndSend(dateUtils.getLocalDateTime(), 1);
         applianceService.calculateTrendAndSend(dateUtils.getLocalDateTime(), 5);
