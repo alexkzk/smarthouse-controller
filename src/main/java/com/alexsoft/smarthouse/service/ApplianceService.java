@@ -33,6 +33,8 @@ public class ApplianceService {
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
+    public static final int MIN_ON_CYCLE_MINUTES = 10;
+    private static final int MIN_OFF_CYCLE_MINUTES = 5;
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
     private final MessageService messageService;
@@ -98,8 +100,10 @@ public class ApplianceService {
                 if (appliance.getSetting() != null) {
                     if (actual > appliance.getSetting() + appliance.getHysteresis()) {
                         appliance.setState(ON, localDateTime);
+                        appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(MIN_ON_CYCLE_MINUTES));
                     } else if (actual < appliance.getSetting() - appliance.getHysteresis()) {
                         appliance.setState(OFF, localDateTime);
+                        appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(MIN_OFF_CYCLE_MINUTES));
                     }
                 }
             } else {
