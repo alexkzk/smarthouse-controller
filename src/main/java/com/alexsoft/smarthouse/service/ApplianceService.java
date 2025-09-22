@@ -100,9 +100,11 @@ public class ApplianceService {
                 if (appliance.getSetting() != null) {
                     if (actual > appliance.getSetting() + appliance.getHysteresis()) {
                         appliance.setState(ON, localDateTime);
+                        appliance.setLocked(true);
                         appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(MIN_ON_CYCLE_MINUTES));
                     } else if (actual < appliance.getSetting() - appliance.getHysteresis()) {
                         appliance.setState(OFF, localDateTime);
+                        appliance.setLocked(true);
                         appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(MIN_OFF_CYCLE_MINUTES));
                     }
                 }
