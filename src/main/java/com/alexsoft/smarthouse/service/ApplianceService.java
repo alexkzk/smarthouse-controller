@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -33,8 +32,8 @@ public class ApplianceService {
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
-    public static final int MIN_ON_CYCLE_MINUTES = 10;
-    private static final int MIN_OFF_CYCLE_MINUTES = 5;
+    public static final int MIN_ON_CYCLE_MINUTES = 15;
+    private static final int MIN_OFF_CYCLE_MINUTES = 10;
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
     private final MessageService messageService;
