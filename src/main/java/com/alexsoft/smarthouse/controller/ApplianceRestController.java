@@ -70,9 +70,9 @@ public class ApplianceRestController {
                         break;
                     case "setting":
                         if (value.equals("+")) {
-                            appliance.setSetting(appliance.getSetting() + appliance.getHysteresis());
-                        } else if(value.equals("-")) {
-                            appliance.setSetting(appliance.getSetting() - appliance.getHysteresis());
+                            appliance.setSetting(increaseTemperature(appliance.getSetting()));
+                        } else if (value.equals("-")) {
+                            appliance.setSetting(decreaseTemperature(appliance.getSetting()));
                         } else {
                             appliance.setSetting(Double.valueOf(value.toString()));
                         }
@@ -96,5 +96,23 @@ public class ApplianceRestController {
             return ResponseEntity.ok(updatedAppliance);
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    public static Double increaseTemperature(Double currentTemperature) {
+        return roundToNearestHalf(currentTemperature) + 0.5;
+    }
+
+    public static Double decreaseTemperature(Double currentTemperature) {
+        double roundedTemperature = roundToNearestHalf(currentTemperature);
+        if (currentTemperature > roundedTemperature) {
+            return roundedTemperature;
+        }
+        return roundedTemperature - 0.5;
+    }
+
+    private static double roundToNearestHalf(double value) {
+        return Math.round(value * 2) / 2.0;
+    }
+
+
 
 }

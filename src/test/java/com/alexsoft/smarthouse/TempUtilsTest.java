@@ -1,10 +1,12 @@
 package com.alexsoft.smarthouse;
 
+import com.alexsoft.smarthouse.controller.ApplianceRestController;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class TempUtilsTest {
@@ -60,6 +62,17 @@ public class TempUtilsTest {
     @Test
     public void calculateAbsoluteHumidityNullRh_shouldReturnNullTest() {
         assertNull(tempUtils.calculateAbsoluteHumidity(23.0F, null));
+    }
+
+    @Test
+    public void increaseDecreaseTempTest() {
+        assertEquals(24.5, ApplianceRestController.increaseTemperature(24.2));
+        assertEquals(24.5, ApplianceRestController.increaseTemperature(24.00001));
+        assertEquals(25.0, ApplianceRestController.increaseTemperature(24.5));
+        assertEquals(24.0, ApplianceRestController.decreaseTemperature(24.5));
+        assertEquals(24.0, ApplianceRestController.decreaseTemperature(24.1));
+        assertEquals(24.0, ApplianceRestController.decreaseTemperature(24.001));
+        assertEquals(23.0, ApplianceRestController.decreaseTemperature(23.31));
     }
 
 }
