@@ -2,6 +2,7 @@ package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
 import com.alexsoft.smarthouse.configuration.SmarthouseConfiguration;
+import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.repository.IndicationRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryCustom;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
@@ -55,7 +56,7 @@ public class IndicationService {
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
     private final MetarLocationsConfig metarLocationsConfig;
-    private final SmarthouseConfiguration smarthouseConfiguration;
+    private final IndicationServiceV3 indicationServiceV3;
 
     @Value("${mqtt.msgSavingEnabled}")
     private Boolean msgSavingEnabled;
@@ -299,8 +300,35 @@ public class IndicationService {
     public void save(Indication indicationToSave, IndicationV2 indicationV2) {
         calculateAbsoluteHumidity(indicationToSave);
         setEmptyMeasurementsToNull(indicationToSave);
+        List<IndicationV3> indicationV3List = new ArrayList<>();
+        String deviceId = indicationToSave.getIndicationPlace().toLowerCase();
+        IndicationV3Builder indicationV3Builder = IndicationV3.builder()
+                .utcTime(indicationToSave.getReceivedUtc())
+                .localTime(indicationToSave.getReceivedLocal())
+                .deviceId(deviceId);
+        if (indicationToSave.getAir() != null) {
+            if (indicationToSave.getAir().getPressure() != null) {
+                indicationV3List.add(
+                        indicationV3Builder.measurementType("pressure").unit("mmHg").value(indicationToSave.getAir().getPressure().getMmHg()).build());
+            }
+            if (indicationToSave.getAir().getTemp().getCelsius() != null) {
+                boolean btc = "btc".equals(deviceId);
+                indicationV3List.add(indicationV3Builder.measurementType(btc ? "money" : "temp").unit(btc ? "usd" : "c")
+                        .value(indicationToSave.getAir().getTemp().getCelsius()).build());
+            }
+
+            if (indicationToSave.getAir().getTemp().getRh() != null) {
+                indicationV3List.add(
+                        indicationV3Builder.measurementType("rh").unit("%").value(indicationToSave.getAir().getTemp().getRh().doubleValue()).build());
+
+            }
+            if (indicationToSave.getAir().getTemp().getAh() != null) {
+                indicationV3List.add(indicationV3Builder.measurementType("ah").unit("g/m3").value(indicationToSave.getAir().getTemp().getAh()).build());
+            }
+        }
 
         if (msgSavingEnabled) {
+            indicationServiceV3.saveAll(indicationV3List);
             if (indicationV2 != null) {
                 indicationRepositoryV2.save(indicationV2);
             }
