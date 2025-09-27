@@ -1,6 +1,8 @@
 package com.alexsoft.smarthouse.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -21,8 +23,6 @@ import java.util.Objects;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 public class IndicationV3 {
 
     @Id

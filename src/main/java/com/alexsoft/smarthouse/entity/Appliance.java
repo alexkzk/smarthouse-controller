@@ -51,12 +51,6 @@ public class Appliance {
 
     @Convert(converter = StringListConverter.class)
     private List<String> referenceSensors;
-    private String measurementType;
-    private Integer averagePeriodMinutes;
-    private Boolean inverted;
-    private Integer minimumOnCycleMinutes;
-    private Integer minimumOffCycleMinutes;
-    private String zigbee2MqttTopic;
     private LocalDateTime switched;
     private LocalDateTime switchedOn;
     private LocalDateTime switchedOff;

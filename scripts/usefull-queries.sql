@@ -35,20 +35,3 @@ GROUP BY
     interval_start, airspace
 ORDER BY
     interval_start desc;
-
-
-
--- Get avg luminance
-SELECT
-    date_trunc('minute', local_time) -
-    interval '1 minute' * (EXTRACT(MINUTE FROM local_time)::int % 1) AS truncated_time,
-    ROUND(AVG(value))::int AS avg_value
-
-FROM
-    indication_v3
-where measurement_type = 'illuminance'
-GROUP BY
-    truncated_time
-ORDER BY
-    truncated_time desc ;
-

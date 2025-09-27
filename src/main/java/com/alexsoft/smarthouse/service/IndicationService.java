@@ -301,7 +301,7 @@ public class IndicationService {
         calculateAbsoluteHumidity(indicationToSave);
         setEmptyMeasurementsToNull(indicationToSave);
         List<IndicationV3> indicationV3List = new ArrayList<>();
-        String deviceId = indicationToSave.getIndicationPlace();
+        String deviceId = indicationToSave.getIndicationPlace().toLowerCase();
         IndicationV3Builder indicationV3Builder = IndicationV3.builder()
                 .utcTime(indicationToSave.getReceivedUtc())
                 .localTime(indicationToSave.getReceivedLocal())
