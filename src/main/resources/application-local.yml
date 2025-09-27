@@ -1,5 +1,4 @@
 spring:
-
   datasource:
     url: jdbc:postgresql://localhost:24870/smarthouse
     driver-class-name: org.postgresql.Driver

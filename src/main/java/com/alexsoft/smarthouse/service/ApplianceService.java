@@ -2,10 +2,13 @@ package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.entity.IndicationV2;
+import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,10 +17,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -39,6 +39,7 @@ public class ApplianceService {
     private final MessageService messageService;
     private final DateUtils dateUtils;
     private final ApplianceRepository applianceRepository;
+    private final IndicationRepositoryV3 indicationRepositoryV3;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -77,55 +78,67 @@ public class ApplianceService {
         LocalDateTime localDateTime = dateUtils.toLocalDateTime(utcLocalDateTime);
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
 
-        Optional<IndicationV2> average = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(
-                List.of("HOME-AVG"), localDateTime.minus(AVERAGING_PERIOD)).stream().min(Comparator.comparing(IndicationV2::getLocalTime));
-
-        if (average.isPresent()) {
-            Double actual = appliance.getActual(average.get()); //  todo refactor to get rid of appliance.getActual method
-            LOGGER.info("Power control method executed, actual was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
-                    appliance.getDescription(), actual, appliance.getSetting(), appliance.getHysteresis());
-            if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
-                appliance.setLocked(false);
-                appliance.setLockedUntilUtc(null);
-                LOGGER.info("Appliance '{}' was unlocked", appliance.getDescription());
-            }
-
-            if (!appliance.isLocked()) {
-                Double scheduledSetting = appliance.determineScheduledSetting();
-                if (scheduledSetting != null && !Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
-                    appliance.setScheduledSetting(scheduledSetting);
-                    appliance.setSetting(scheduledSetting);
+        if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
+            OptionalDouble average = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
+                            utcLocalDateTime.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes())), appliance.getMeasurementType())
+                    .stream().mapToDouble(IndicationV3::getValue).average();
+            if (average.isPresent()) {
+                double actual = average.getAsDouble();
+                LOGGER.info("Power control method executed, actual was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
+                        appliance.getDescription(), actual, appliance.getSetting(), appliance.getHysteresis());
+                if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
+                    appliance.setLocked(false);
+                    appliance.setLockedUntilUtc(null);
+                    LOGGER.info("Appliance '{}' was unlocked", appliance.getDescription());
                 }
-                if (appliance.getSetting() != null) {
-                    if (actual > appliance.getSetting() + appliance.getHysteresis()) {
-                        appliance.setState(ON, localDateTime);
-                        appliance.setLocked(true);
-                        appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(MIN_ON_CYCLE_MINUTES));
-                    } else if (actual < appliance.getSetting() - appliance.getHysteresis()) {
-                        appliance.setState(OFF, localDateTime);
-                        appliance.setLocked(true);
-                        appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(MIN_OFF_CYCLE_MINUTES));
+
+                if (!appliance.isLocked()) {
+                    Double scheduledSetting = appliance.determineScheduledSetting();
+                    if (scheduledSetting != null && !Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
+                        appliance.setScheduledSetting(scheduledSetting);
+                        appliance.setSetting(scheduledSetting);
                     }
+                    if (appliance.getSetting() != null) {
+                        boolean onCondition = actual > appliance.getSetting() + appliance.getHysteresis();
+                        boolean offCondition = actual < appliance.getSetting() - appliance.getHysteresis();
+                        if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
+                            appliance.setState(ON, localDateTime);
+                            if (appliance.getMinimumOnCycleMinutes() != null) {
+                                appliance.setLocked(true);
+                                appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(appliance.getMinimumOnCycleMinutes()));
+                            }
+                        } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
+                            appliance.setState(OFF, localDateTime);
+                            if (appliance.getMinimumOffCycleMinutes() != null) {
+                                appliance.setLocked(true);
+                                appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(appliance.getMinimumOffCycleMinutes()));
+                            }
+                        }
+                    }
+                } else {
+                    LOGGER.info("Appliance {} is locked {}", appliance.getDescription(), appliance.getLockedUntilUtc() == null ?
+                            "indefinitely" : "until " + appliance.getLockedUntilUtc());
                 }
             } else {
-                LOGGER.info("Appliance {} is locked {}", appliance.getDescription(), appliance.getLockedUntilUtc() == null ?
-                        "indefinitely" : "until " + appliance.getLockedUntilUtc());
+                appliance.setState(OFF, localDateTime);
+                LOGGER.info("Power control method executed, indications were empty");
             }
-        } else {
-            appliance.setState(OFF, localDateTime);
-            LOGGER.info("Power control method executed, indications were empty");
         }
-        save(appliance, localDateTime);
-        Long durationInMinutes = null;
 
+        save(appliance);
+        Long durationInMinutes = null;
         if (appliance.getSwitched() != null) {
             durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), localDateTime).toMinutes());
         }
 
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
-        messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+        if (appliance.getZigbee2MqttTopic() == null) {
+            messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+        } else {
+            messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"state\": \"%s\"}".formatted(appliance.getState() == ON ? "on" : "off"));
+        }
         messageService.sendMessage(measurementTopic,
                 "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
                         appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
@@ -143,7 +156,7 @@ public class ApplianceService {
         return applianceRepository.save(appliance);
     }
 
-    private void save(Appliance appliance, LocalDateTime localDateTime) {
+    private void save(Appliance appliance) {
         applianceRepository.save(appliance);
     }
 
