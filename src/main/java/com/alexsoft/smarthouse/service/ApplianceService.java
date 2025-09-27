@@ -127,12 +127,12 @@ public class ApplianceService {
 
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
-        if (appliance.getZigbee2MqttTopic() == null) {
-            messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
-        } else {
+        if (appliance.getZigbee2MqttTopic() != null) {
             messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\"}".formatted(appliance.getState() == ON ? "on" : "off"));
         }
+        messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+
         messageService.sendMessage(measurementTopic,
                 "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
                         appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
