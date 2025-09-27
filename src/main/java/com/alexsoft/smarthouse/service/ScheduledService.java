@@ -33,9 +33,8 @@ public class ScheduledService {
 
     @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
     @Transactional
-    public void powerControlAcAndDehumidifier() {
-        applianceService.powerControl("AC");
-        applianceService.powerControl("DEH");
+    public void powerControl() {
+        applianceService.getAllAppliances().forEach(app -> applianceService.powerControl(app.getCode()));
     }
 
     @Scheduled(cron = "*/3 * * * * *")
