@@ -12,16 +12,15 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static com.alexsoft.smarthouse.service.ApplianceService.AVERAGING_PERIOD;
-import static com.alexsoft.smarthouse.service.ApplianceService.POWER_CHECK_CRON_EXPRESSION;
 
 @Service
 @RequiredArgsConstructor
 public class ScheduledService {
 
+    public static final Duration AVG_DURATION_MINUTES = Duration.ofMinutes(1);
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;
     private final MessageService messageService;
@@ -31,7 +30,7 @@ public class ScheduledService {
     @Value("${mqtt.topic}")
     private String measurementTopic;
 
-    @Scheduled(cron = POWER_CHECK_CRON_EXPRESSION)
+    @Scheduled(cron = "0 0/1 * * * ?")
     @Transactional
     public void powerControl() {
         applianceService.getAllAppliances().forEach(app -> applianceService.powerControl(app.getCode()));
@@ -41,14 +40,14 @@ public class ScheduledService {
     @Transactional
     public void calculateAverages() {
         List<String> referenceSensors = List.of("HOME-MB","HOME-LR","HOME-B");
-        LocalDateTime averagingStartDateTime = dateUtils.getLocalDateTime().minus(AVERAGING_PERIOD);
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(referenceSensors, averagingStartDateTime);
+        LocalDateTime averagingStartDateTime = dateUtils.getUtcLocalDateTime().minus(AVG_DURATION_MINUTES);
+        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndUtcTimeAfter(referenceSensors, averagingStartDateTime);
         if (indications.isEmpty()){
             return;
         }
-        Double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature()
+        double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature()
                 .getValue().doubleValue()).average().orElseThrow();
-        Double averageAh = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getAbsoluteHumidity()
+        double averageAh = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getAbsoluteHumidity()
                 .getValue().doubleValue()).average().orElseThrow();
         applianceRepository.updateActualByCode("AC", BigDecimal.valueOf(averageTemp).setScale(3, RoundingMode.HALF_UP).doubleValue());
         applianceRepository.updateActualByCode("DEH", BigDecimal.valueOf(averageAh).setScale(3, RoundingMode.HALF_UP).doubleValue());
@@ -60,8 +59,9 @@ public class ScheduledService {
     @Scheduled(cron = "*/3 * * * * *")
     @Transactional
     public void calculateTrends() {
-        applianceService.calculateTrendAndSend(dateUtils.getLocalDateTime(), 1);
-        applianceService.calculateTrendAndSend(dateUtils.getLocalDateTime(), 5);
+        LocalDateTime utcDateTime = dateUtils.getUtcLocalDateTime();
+        applianceService.calculateTrendAndSend(utcDateTime, 1);
+        applianceService.calculateTrendAndSend(utcDateTime, 5);
     }
 
 }

@@ -26,14 +26,9 @@ import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 @RequiredArgsConstructor
 public class ApplianceService {
 
-    public static final String POWER_CHECK_FREQUENCY_MINUTES = "1";
-    public static final String POWER_CHECK_CRON_EXPRESSION = "0 0/" + POWER_CHECK_FREQUENCY_MINUTES + " * * * ?";
-    public static final Duration AVERAGING_PERIOD = Duration.ofMinutes(1);
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
-    public static final int MIN_ON_CYCLE_MINUTES = 15;
-    private static final int MIN_OFF_CYCLE_MINUTES = 10;
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
     private final MessageService messageService;
@@ -50,7 +45,7 @@ public class ApplianceService {
         Double temperatureTrend;
         Double ahTrend;
 
-        List<IndicationV2> averages = indicationRepositoryV2.findByIndicationPlaceInAndLocalTimeIsAfter(
+        List<IndicationV2> averages = indicationRepositoryV2.findByIndicationPlaceInAndUtcTimeAfter(
                 List.of("HOME-AVG"), localDateTime.minusMinutes(minutes));
         Optional<IndicationV2> first = averages.stream().sorted(comparator.reversed()).findFirst();
         Optional<IndicationV2> second = averages.stream().sorted(comparator).findFirst();
@@ -75,7 +70,6 @@ public class ApplianceService {
     @Transactional
     public void powerControl(String applianceCode) {
         LocalDateTime utcLocalDateTime = dateUtils.getUtcLocalDateTime();
-        LocalDateTime localDateTime = dateUtils.toLocalDateTime(utcLocalDateTime);
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
 
         if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
@@ -102,13 +96,13 @@ public class ApplianceService {
                         boolean onCondition = actual > appliance.getSetting() + appliance.getHysteresis();
                         boolean offCondition = actual < appliance.getSetting() - appliance.getHysteresis();
                         if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
-                            appliance.setState(ON, localDateTime);
+                            appliance.setState(ON, utcLocalDateTime);
                             if (appliance.getMinimumOnCycleMinutes() != null) {
                                 appliance.setLocked(true);
                                 appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(appliance.getMinimumOnCycleMinutes()));
                             }
                         } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
-                            appliance.setState(OFF, localDateTime);
+                            appliance.setState(OFF, utcLocalDateTime);
                             if (appliance.getMinimumOffCycleMinutes() != null) {
                                 appliance.setLocked(true);
                                 appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(appliance.getMinimumOffCycleMinutes()));
@@ -120,7 +114,7 @@ public class ApplianceService {
                             "indefinitely" : "until " + appliance.getLockedUntilUtc());
                 }
             } else {
-                appliance.setState(OFF, localDateTime);
+                appliance.setState(OFF, utcLocalDateTime);
                 LOGGER.info("Power control method executed, indications were empty");
             }
         }
@@ -128,7 +122,7 @@ public class ApplianceService {
         save(appliance);
         Long durationInMinutes = null;
         if (appliance.getSwitched() != null) {
-            durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), localDateTime).toMinutes());
+            durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), utcLocalDateTime).toMinutes());
         }
 
         LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);

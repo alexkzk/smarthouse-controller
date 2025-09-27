@@ -9,5 +9,5 @@ import java.util.List;
 public interface IndicationRepositoryV2 extends JpaRepository<IndicationV2, Integer> {
     List<IndicationV2> findByIdGreaterThan(Integer id);
     List<IndicationV2> findByAggregationPeriod(String aggregationPeriod);
-    List<IndicationV2> findByIndicationPlaceInAndLocalTimeIsAfter(List<String> indicationPlace, LocalDateTime localTime);
+    List<IndicationV2> findByIndicationPlaceInAndUtcTimeAfter(List<String> indicationPlace, LocalDateTime utc);
 }
