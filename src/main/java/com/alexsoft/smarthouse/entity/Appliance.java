@@ -29,26 +29,17 @@ public class Appliance {
 
     @Id
     private String code;
-
     private String description;
-
     @Enumerated(EnumType.STRING)
     private ApplianceState state;
-
     private Double consumptionKwh;
-
     private boolean locked = false;
-
     private LocalDateTime lockedUntilUtc;
-
     private Double setting;
     private Double scheduledSetting;
-    private Double actual;
     private String metricType;
     private String units;
-
     private Double hysteresis;
-
     @Convert(converter = StringListConverter.class)
     private List<String> referenceSensors;
     private String measurementType;
@@ -60,24 +51,12 @@ public class Appliance {
     private LocalDateTime switched;
     private LocalDateTime switchedOn;
     private LocalDateTime switchedOff;
-
     private Double durationOnMinutes;
-
     private Double durationOffMinutes;
-
     private Boolean sensorControlled;
-
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
     private Map<String, Object> schedule;
-
-    public Double getActual(IndicationV2 indicationV2) {
-        if (code.equalsIgnoreCase("DEH")) {
-            return indicationV2.getAbsoluteHumidity().getValue();
-        } else {
-            return indicationV2.getTemperature().getValue();
-        }
-    }
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {

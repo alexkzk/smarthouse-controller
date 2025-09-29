@@ -44,7 +44,9 @@ public class ApplianceRestController {
                     case "state":
                         ApplianceState newState = ApplianceState.valueOf((String) value);
                         appliance.setState(newState, LocalDateTime.now());
-                        appliance.setLockedUntilUtc(dateUtils.getUtcLocalDateTime().plusMinutes(5));
+                        if (applianceCode.equals("DEH") || applianceCode.equals("AC")) {
+                            appliance.setLockedUntilUtc(dateUtils.getUtcLocalDateTime().plusMinutes(5));
+                        }
                         appliance.setLocked(true);
                         break;
                     case "consumptionKwh":
