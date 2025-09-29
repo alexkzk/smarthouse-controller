@@ -16,11 +16,6 @@ public interface ApplianceRepository extends JpaRepository<Appliance, String> {
     @Query("SELECT a FROM Appliance a WHERE a.code = :code")
     Optional<Appliance> findById(@Param("code") String code);
 
-    @Transactional
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Appliance a SET a.actual = :actual WHERE a.code = :code")
-    void updateActualByCode(@Param("code") String code, @Param("actual") Double actual);
-
 
 
 }

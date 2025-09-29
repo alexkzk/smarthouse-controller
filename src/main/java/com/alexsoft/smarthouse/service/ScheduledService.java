@@ -53,8 +53,6 @@ public class ScheduledService {
                 .getValue().doubleValue()).average().orElseThrow();
         double averageAh = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getAbsoluteHumidity()
                 .getValue().doubleValue()).average().orElseThrow();
-        applianceRepository.updateActualByCode("AC", BigDecimal.valueOf(averageTemp).setScale(3, RoundingMode.HALF_UP).doubleValue());
-        applianceRepository.updateActualByCode("DEH", BigDecimal.valueOf(averageAh).setScale(3, RoundingMode.HALF_UP).doubleValue());
         messageService.sendMessage(measurementTopic,
                 ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f,"
                         + " \"ah\": %.3f}}}").formatted(averageTemp, averageAh));
