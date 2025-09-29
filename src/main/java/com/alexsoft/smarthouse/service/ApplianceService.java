@@ -113,29 +113,33 @@ public class ApplianceService {
                     LOGGER.info("Appliance {} is locked {}", appliance.getDescription(), appliance.getLockedUntilUtc() == null ?
                             "indefinitely" : "until " + appliance.getLockedUntilUtc());
                 }
+
+                save(appliance);
+                Long durationInMinutes = null;
+                if (appliance.getSwitched() != null) {
+                    durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), utcLocalDateTime).toMinutes());
+                }
+
+                LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
+
+                if (appliance.getZigbee2MqttTopic() != null) {
+                    messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\"}".formatted(appliance.getState() == ON ? "on" : "off"));
+                }
+                messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                        .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
             } else {
                 appliance.setState(OFF, utcLocalDateTime);
                 LOGGER.info("Power control method executed, indications were empty");
             }
+
+            if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
+                messageService.sendMessage(measurementTopic,
+                        "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
+                                appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
+            }
+        } else {
+            LOGGER.info("Reference sensors list is empty, skipping power control");
         }
-
-        save(appliance);
-        Long durationInMinutes = null;
-        if (appliance.getSwitched() != null) {
-            durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), utcLocalDateTime).toMinutes());
-        }
-
-        LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
-
-        if (appliance.getZigbee2MqttTopic() != null) {
-            messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\"}".formatted(appliance.getState() == ON ? "on" : "off"));
-        }
-        messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
-
-        messageService.sendMessage(measurementTopic,
-                "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
-                        appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
     }
 
     public List<Appliance> getAllAppliances() {
