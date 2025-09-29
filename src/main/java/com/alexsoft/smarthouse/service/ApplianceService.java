@@ -100,7 +100,7 @@ public class ApplianceService {
 
                 LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
-                sendState(appliance);
+                sendState(appliance, average);
             } else {
                 LOGGER.info("Power control method executed, indications were empty");
             }
@@ -109,9 +109,11 @@ public class ApplianceService {
         }
     }
 
-    public void sendState(Appliance appliance) {
+    public void sendState(Appliance appliance, double average) {
         if (appliance.getZigbee2MqttTopic() != null) {
-            messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\"}".formatted(appliance.getState() == ON ? "on" : "off"));
+            int brightness = average > 10 ? 255 : 160;
+            String brightnessString = appliance.getState() == ON ? ", \"brightness\": %d".formatted(brightness) : "";
+            messageService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightnessString + "}").formatted(appliance.getState() == ON ? "on" : "off", 255));
         }
         messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
