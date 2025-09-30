@@ -104,17 +104,20 @@ public class ApplianceRestController {
     }
 
     public LocalDateTime sevenAm() {
-        ZoneId newYorkZone = ZoneId.of("America/New_York");
-        ZonedDateTime nowInNewYork = ZonedDateTime.now(newYorkZone);
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
 
-        ZonedDateTime next7AM = nowInNewYork.withHour(7).withMinute(0).withSecond(0).withNano(0);
-        if (nowInNewYork.getHour() >= 7) {
-            next7AM = next7AM.plusDays(1);
+        // Set target time to 6:30 AM
+        ZonedDateTime sixThirtyAm = now.withHour(6).withMinute(30).withSecond(0).withNano(0);
+        if (now.getHour() > 6 || (now.getHour() == 6 && now.getMinute() >= 30)) {
+            // If current time is past 6:30 AM, move to the next day
+            sixThirtyAm = sixThirtyAm.plusDays(1);
         }
 
-        ZonedDateTime next7AMUtc = next7AM.withZoneSameInstant(ZoneId.of("UTC"));
+        // Convert to UTC
+        ZonedDateTime next6_30AMUtc = sixThirtyAm.withZoneSameInstant(ZoneId.of("UTC"));
 
-        return next7AMUtc.toLocalDateTime();
+        return next6_30AMUtc.toLocalDateTime();
+
     }
 
 
