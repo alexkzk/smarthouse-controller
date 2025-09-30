@@ -97,11 +97,17 @@ public class ApplianceRestController {
             });
 
             Appliance updatedAppliance = applianceService.saveOrUpdateAppliance(appliance);
-            applianceService.powerControl(updatedAppliance.getCode());
-
+            postCommitPowerControl(applianceCode);
             return ResponseEntity.ok(updatedAppliance);
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    // Non-Transactional Method to Invoke Power Control
+    private void postCommitPowerControl(String applianceCode) {
+        // Ensure that this method is called after the transaction from the main method has been committed
+        applianceService.powerControl(applianceCode);
+    }
+
 
     public LocalDateTime sevenAm() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
