@@ -51,9 +51,9 @@ public class ApplianceService {
             OptionalDouble averageOptional = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             utcLocalDateTime.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes())), appliance.getMeasurementType())
                     .stream().mapToDouble(IndicationV3::getValue).average();
-
+            Double average = null;
             if (averageOptional.isPresent()) {
-                double average = averageOptional.getAsDouble();
+                average = averageOptional.getAsDouble();
                 appliance.setActual(average);
                 LOGGER.info("Power control method executed, average was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                         appliance.getDescription(), average, appliance.getSetting(), appliance.getHysteresis());
@@ -101,19 +101,19 @@ public class ApplianceService {
 
                 LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
 
-                sendState(appliance, average);
             } else {
                 LOGGER.info("Power control method executed, indications were empty");
             }
+            sendState(appliance, average);
         } else {
             LOGGER.info("Reference sensors list is empty, skipping power control");
         }
     }
 
-    public void sendState(Appliance appliance, double average) {
+    public void sendState(Appliance appliance, Double average) {
         if (appliance.getZigbee2MqttTopic() != null) {
-            int brightness = average > 10 ? 255 : 160;
-            String brightnessString = appliance.getState() == ON ? ", \"brightness\": %d".formatted(brightness) : "";
+            Integer brightness = average == null ? null : average > 10 ? 255 : 160;
+            String brightnessString = appliance.getState() == ON && average != null ? ", \"brightness\": %d".formatted(brightness) : "";
             messageService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightnessString + "}").formatted(appliance.getState() == ON ? "on" : "off", 255));
         }
         messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
