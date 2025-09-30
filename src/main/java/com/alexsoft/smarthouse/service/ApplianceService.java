@@ -54,6 +54,7 @@ public class ApplianceService {
 
             if (averageOptional.isPresent()) {
                 double average = averageOptional.getAsDouble();
+                appliance.setActual(average);
                 LOGGER.info("Power control method executed, average was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                         appliance.getDescription(), average, appliance.getSetting(), appliance.getHysteresis());
 

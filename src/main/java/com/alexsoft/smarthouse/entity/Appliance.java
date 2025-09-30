@@ -37,6 +37,7 @@ public class Appliance {
     private LocalDateTime lockedUntilUtc;
     private Double setting;
     private Double scheduledSetting;
+    private Double actual;
     private String metricType;
     private String units;
     private Double hysteresis;
