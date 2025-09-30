@@ -48,7 +48,7 @@ public class ApplianceRestController {
                         appliance.setState(newState, LocalDateTime.now());
                         if (applianceCode.equals("DEH") || applianceCode.equals("AC")) {
                             appliance.setLockedUntilUtc(dateUtils.getUtcLocalDateTime().plusMinutes(5));
-                        } else {
+                        } else if (applianceCode.equals("LR-LUTV")){
                             appliance.setLockedUntilUtc(sevenAm());
                         }
                         appliance.setLocked(true);
