@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,8 @@ public class ApplianceRestController {
                         appliance.setState(newState, LocalDateTime.now());
                         if (applianceCode.equals("DEH") || applianceCode.equals("AC")) {
                             appliance.setLockedUntilUtc(dateUtils.getUtcLocalDateTime().plusMinutes(5));
+                        } else {
+                            appliance.setLockedUntilUtc(sevenAm());
                         }
                         appliance.setLocked(true);
                         break;
@@ -98,6 +102,21 @@ public class ApplianceRestController {
             return ResponseEntity.ok(updatedAppliance);
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    public LocalDateTime sevenAm() {
+        ZoneId newYorkZone = ZoneId.of("America/New_York");
+        ZonedDateTime nowInNewYork = ZonedDateTime.now(newYorkZone);
+
+        ZonedDateTime next7AM = nowInNewYork.withHour(7).withMinute(0).withSecond(0).withNano(0);
+        if (nowInNewYork.getHour() >= 7) {
+            next7AM = next7AM.plusDays(1);
+        }
+
+        ZonedDateTime next7AMUtc = next7AM.withZoneSameInstant(ZoneId.of("UTC"));
+
+        return next7AMUtc.toLocalDateTime();
+    }
+
 
     public static Double increaseTemperature(Double currentTemperature) {
         return roundToNearestHalf(currentTemperature) + 0.5;
