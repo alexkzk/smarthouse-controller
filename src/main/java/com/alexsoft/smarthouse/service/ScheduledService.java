@@ -34,7 +34,7 @@ public class ScheduledService {
     @Value("${mqtt.topic}")
     private String measurementTopic;
 
-    @Scheduled(cron = "0 0/1 * * * ?")
+    @Scheduled(cron = "0/10 * * * * ?")
     @Transactional
     public void powerControl() {
         applianceService.getAllAppliances().forEach(app -> applianceService.powerControl(app.getCode()));

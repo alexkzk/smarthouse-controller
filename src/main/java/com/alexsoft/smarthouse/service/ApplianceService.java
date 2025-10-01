@@ -116,8 +116,8 @@ public class ApplianceService {
 
     private void sendAvgMessage(Appliance appliance, Double average) {
         String metricType = appliance.getMetricType();
-        if (metricType.equals("temp") || metricType.equals("ah")) {
-            String type = metricType.equals("ah") ? "ah" : "celsius";
+        if (metricType.equals("temp") || metricType.equals("humidity")) {
+            String type = metricType.equals("humidity") ? "ah" : "celsius";
             messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
                     + " \"air\": {\"temp\": {\"" + type + "\": %.3f}}}").formatted(average));
         }
