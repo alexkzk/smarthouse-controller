@@ -42,24 +42,6 @@ public class ScheduledService {
 
     @Scheduled(cron = "*/3 * * * * *")
     @Transactional
-    public void calculateAverages() {
-        List<String> referenceSensors = List.of("HOME-MB","HOME-LR","HOME-B");
-        LocalDateTime averagingStartDateTime = dateUtils.getUtcLocalDateTime().minus(AVG_DURATION_MINUTES);
-        List<IndicationV2> indications = indicationRepositoryV2.findByIndicationPlaceInAndUtcTimeAfter(referenceSensors, averagingStartDateTime);
-        if (indications.isEmpty()){
-            return;
-        }
-        double averageTemp = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getTemperature()
-                .getValue().doubleValue()).average().orElseThrow();
-        double averageAh = indications.stream().filter(ind -> referenceSensors.contains(ind.getIndicationPlace())).mapToDouble(i -> i.getAbsoluteHumidity()
-                .getValue().doubleValue()).average().orElseThrow();
-        messageService.sendMessage(measurementTopic,
-                ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %.3f,"
-                        + " \"ah\": %.3f}}}").formatted(averageTemp, averageAh));
-    }
-
-    @Scheduled(cron = "*/3 * * * * *")
-    @Transactional
     public void calculateTrends() {
         LocalDateTime utcDateTime = dateUtils.getUtcLocalDateTime();
         calculateTrendAndSend(utcDateTime, 1);

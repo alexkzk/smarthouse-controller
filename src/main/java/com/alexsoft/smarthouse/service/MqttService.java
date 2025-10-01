@@ -1,14 +1,12 @@
-package com.alexsoft.smarthouse.configuration;
+package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Indication;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
-import com.alexsoft.smarthouse.service.IndicationService;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
-import com.alexsoft.smarthouse.service.MetarService;
 import com.alexsoft.smarthouse.utils.DateUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -37,11 +35,12 @@ import java.util.UUID;
 
 @Configuration
 @RequiredArgsConstructor
-public class MqttConfiguration {
+public class MqttService {
 
     public static final List<String> MEASUREMENT_TYPES = List.of("energy", "power", "state", "voltage");
     public static final Map<String, String> UNITS_MAP = Map.of("energy", "kWh", "power", "W", "voltage", "V", "illuminance", "lux");
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttConfiguration.class);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MqttService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final IndicationRepositoryV2 indicationRepositoryV2;
@@ -58,15 +57,6 @@ public class MqttConfiguration {
     @Value("${mqtt.subscriber}")
     private String mqttSubscriber;
 
-    @Value("${mqtt.msgSavingEnabled}")
-    private Boolean msgSavingEnabled;
-
-//    @Value("${mqtt.user}")
-//    private String mqttUser;
-
-//    @Value("${mqtt.password}")
-//    private String mqttPassword;
-
     private final DateUtils dateUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
@@ -78,9 +68,6 @@ public class MqttConfiguration {
         options.setCleanSession(true);
         options.setConnectionTimeout(30);
         options.setKeepAliveInterval(60);
-//        options.setUserName("mqttUser");
-//        options.setPassword("mqttPassword".toCharArray());
-
         DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
         factory.setConnectionOptions(options);
         return factory;
@@ -111,29 +98,21 @@ public class MqttConfiguration {
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler messageHandler() {
         return message -> {
-            if (message.getPayload() == null || message.getHeaders().get("mqtt_receivedTopic") == null) {
+            if (message.getHeaders().get("mqtt_receivedTopic") == null) {
                 return;
             }
             String payload = (String) message.getPayload();
             String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
             try {
                 LOGGER.info("Received an MQTT message: {}", payload);
-                LocalDateTime utcDateTime = dateUtils.getUtcLocalDateTime();
-                LocalDateTime localDateTime = utcDateTime;
                 if (mqttTopic.equals(topic)) {
-                    Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
-                    indication.setReceivedUtc(localDateTime);
-                    indication.setReceivedLocal(dateUtils.toLocalDateTime(localDateTime));
-                    if (indication.getAggregationPeriod() == null) {
-                        indication.setAggregationPeriod(AggregationPeriod.INSTANT);
-                    }
-                    indicationService.save(indication, MetarService.toIndicationV2(indication));
-                } else if (!topic.startsWith("zigbee2mqtt/bridge")) {
-                    Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {
-                    });
+                    indicationService.save(toIndication(payload));
+                } else if (topic != null && !topic.startsWith("zigbee2mqtt/bridge")) {
+                    Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
                     List<IndicationV3> indicationV3s = new ArrayList<>();
                     IndicationV3Builder indicationV3Builder = IndicationV3.builder().localTime(dateUtils.getLocalDateTime())
-                            .utcTime(utcDateTime).deviceId(topic.split("/")[1]);
+                            .utcTime(dateUtils.getUtcLocalDateTime()).deviceId(topic.split("/")[1]);
+
                     if (map.containsKey("power")) {
                         indicationV3Builder.deviceType("sp");
                         MEASUREMENT_TYPES.forEach(m -> indicationV3s.add(indicationV3Builder.measurementType(m).unit(UNITS_MAP.get(m))
@@ -142,9 +121,8 @@ public class MqttConfiguration {
                         indicationV3s.add(indicationV3Builder.deviceType("lis").measurementType("illuminance").unit("lux")
                                 .value(getValue(String.valueOf(map.get("illuminance")))).build());
                     }
-                    indicationServiceV3.saveAll(indicationV3s);
 
-//                    IndicationV3.builder().unit()
+                    indicationServiceV3.saveAll(indicationV3s);
 
                 }
             } catch (Exception e) {
@@ -153,7 +131,18 @@ public class MqttConfiguration {
         };
     }
 
-    public static Double getValue(String value) {
+    private Indication toIndication(String payload) throws JsonProcessingException {
+        LocalDateTime utc = dateUtils.getUtcLocalDateTime();
+        Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
+        indication.setReceivedUtc(utc);
+        indication.setReceivedLocal(dateUtils.toLocalDateTime(utc));
+        if (indication.getAggregationPeriod() == null) {
+            indication.setAggregationPeriod(AggregationPeriod.INSTANT);
+        }
+        return indication;
+    }
+
+    private Double getValue(String value) {
         try {
             return Double.valueOf(value);
         } catch (NumberFormatException e) {

@@ -297,7 +297,8 @@ public class IndicationService {
     }
 
     @Transactional
-    public void save(Indication indicationToSave, IndicationV2 indicationV2) {
+    public void save(Indication indicationToSave) {
+        IndicationV2 indicationV2 = MetarService.toIndicationV2(indicationToSave);
         calculateAbsoluteHumidity(indicationToSave);
         setEmptyMeasurementsToNull(indicationToSave);
         List<IndicationV3> indicationV3List = new ArrayList<>();

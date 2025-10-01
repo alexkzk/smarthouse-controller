@@ -3,7 +3,6 @@ package com.alexsoft.smarthouse.service;
 import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,6 @@ public class ApplianceService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
 
-    private final IndicationRepositoryV2 indicationRepositoryV2;
     private final MessageService messageService;
     private final DateUtils dateUtils;
     private final ApplianceRepository applianceRepository;
@@ -47,10 +45,10 @@ public class ApplianceService {
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
 
         if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
-            LocalDateTime utcLocalDateTime = dateUtils.getUtcLocalDateTime();
+            LocalDateTime utc = dateUtils.getUtcLocalDateTime();
+            LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
             OptionalDouble averageOptional = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
-                            utcLocalDateTime.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes())), appliance.getMeasurementType())
-                    .stream().mapToDouble(IndicationV3::getValue).average();
+                            averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
             Double average = null;
             if (averageOptional.isPresent()) {
                 average = averageOptional.getAsDouble();
@@ -58,12 +56,8 @@ public class ApplianceService {
                 LOGGER.info("Power control method executed, average was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                         appliance.getDescription(), average, appliance.getSetting(), appliance.getHysteresis());
 
-                //  Unlock if the lock is expired
-                if (appliance.getLockedUntilUtc() != null && utcLocalDateTime.isAfter(appliance.getLockedUntilUtc())) {
-                    appliance.setLocked(false);
-                    appliance.setLockedUntilUtc(null);
-                    LOGGER.info("Appliance '{}' was unlocked", appliance.getDescription());
-                }
+                sendAvgMessage(appliance, average);
+                checkLock(appliance, utc);
 
                 if (!appliance.isLocked()) {
                     Double scheduledSetting = appliance.determineScheduledSetting();
@@ -75,16 +69,16 @@ public class ApplianceService {
                         boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
                         boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
                         if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
-                            appliance.setState(ON, utcLocalDateTime);
+                            appliance.setState(ON, utc);
                             if (appliance.getMinimumOnCycleMinutes() != null) {
                                 appliance.setLocked(true);
-                                appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(appliance.getMinimumOnCycleMinutes()));
+                                appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOnCycleMinutes()));
                             }
                         } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
-                            appliance.setState(OFF, utcLocalDateTime);
+                            appliance.setState(OFF, utc);
                             if (appliance.getMinimumOffCycleMinutes() != null) {
                                 appliance.setLocked(true);
-                                appliance.setLockedUntilUtc(utcLocalDateTime.plusMinutes(appliance.getMinimumOffCycleMinutes()));
+                                appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOffCycleMinutes()));
                             }
                         }
                     }
@@ -94,19 +88,38 @@ public class ApplianceService {
                 }
 
                 applianceRepository.save(appliance);
-                Long durationInMinutes = null;
-                if (appliance.getSwitched() != null) {
-                    durationInMinutes = Math.abs(Duration.between(appliance.getSwitched(), utcLocalDateTime).toMinutes());
-                }
 
-                LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), durationInMinutes);
-
+                LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), calculateDurationSinceSwitch(appliance, utc));
             } else {
                 LOGGER.info("Power control method executed, indications were empty");
             }
             sendState(appliance, average);
         } else {
             LOGGER.info("Reference sensors list is empty, skipping power control");
+        }
+    }
+
+    private static Long calculateDurationSinceSwitch(Appliance appliance, LocalDateTime utc) {
+        if (appliance.getSwitched() != null) {
+            return Math.abs(Duration.between(appliance.getSwitched(), utc).toMinutes());
+        }
+        return null;
+    }
+
+    private static void checkLock(Appliance appliance, LocalDateTime utc) {
+        if (appliance.getLockedUntilUtc() != null && utc.isAfter(appliance.getLockedUntilUtc())) {
+            appliance.setLocked(false);
+            appliance.setLockedUntilUtc(null);
+            LOGGER.info("Appliance '{}' was unlocked", appliance.getDescription());
+        }
+    }
+
+    private void sendAvgMessage(Appliance appliance, Double average) {
+        String metricType = appliance.getMetricType();
+        if (metricType.equals("temp") || metricType.equals("ah")) {
+            String type = metricType.equals("ah") ? "ah" : "celsius";
+            messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
+                    + " \"air\": {\"temp\": {\"" + type + "\": %.3f}}}").formatted(average));
         }
     }
 
@@ -136,10 +149,6 @@ public class ApplianceService {
 
     public Appliance saveOrUpdateAppliance(Appliance appliance) {
         return applianceRepository.save(appliance);
-    }
-
-    private void save(Appliance appliance) {
-        applianceRepository.save(appliance);
     }
 
 }
