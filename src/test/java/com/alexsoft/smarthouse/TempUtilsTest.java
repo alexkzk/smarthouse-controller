@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.controller.ApplianceRestController;
+import com.alexsoft.smarthouse.controller.ApplianceController;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import org.junit.Test;
 
@@ -66,13 +66,13 @@ public class TempUtilsTest {
 
     @Test
     public void increaseDecreaseTempTest() {
-        assertEquals(24.5, ApplianceRestController.increaseTemperature(24.2));
-        assertEquals(24.5, ApplianceRestController.increaseTemperature(24.00001));
-        assertEquals(25.0, ApplianceRestController.increaseTemperature(24.5));
-        assertEquals(24.0, ApplianceRestController.decreaseTemperature(24.5));
-        assertEquals(24.0, ApplianceRestController.decreaseTemperature(24.1));
-        assertEquals(24.0, ApplianceRestController.decreaseTemperature(24.001));
-        assertEquals(23.0, ApplianceRestController.decreaseTemperature(23.31));
+        assertEquals(24.5, ApplianceController.increaseTemperature(24.2));
+        assertEquals(24.5, ApplianceController.increaseTemperature(24.00001));
+        assertEquals(25.0, ApplianceController.increaseTemperature(24.5));
+        assertEquals(24.0, ApplianceController.decreaseTemperature(24.5));
+        assertEquals(24.0, ApplianceController.decreaseTemperature(24.1));
+        assertEquals(24.0, ApplianceController.decreaseTemperature(24.001));
+        assertEquals(23.0, ApplianceController.decreaseTemperature(23.31));
     }
 
 }

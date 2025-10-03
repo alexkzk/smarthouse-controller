@@ -22,8 +22,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/appliances")
 @RequiredArgsConstructor
-public class ApplianceRestController {
-    private static final Logger logger = LoggerFactory.getLogger(ApplianceRestController.class);
+public class ApplianceController {
+    private static final Logger logger = LoggerFactory.getLogger(ApplianceController.class);
 
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;
@@ -48,7 +48,7 @@ public class ApplianceRestController {
                         appliance.setState(newState, LocalDateTime.now());
                         if (applianceCode.equals("DEH") || applianceCode.equals("AC")) {
                             appliance.setLockedUntilUtc(dateUtils.getUtcLocalDateTime().plusMinutes(5));
-                        } else if (applianceCode.equals("LR-LUTV")){
+                        } else if (List.of("LR-LUTV", "OUT-TERLIGHT").contains(applianceCode)) {
                             appliance.setLockedUntilUtc(sevenAm());
                         }
                         appliance.setLocked(true);

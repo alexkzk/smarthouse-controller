@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/indications")
 @AllArgsConstructor
-public class IndicationsRestController {
+public class IndicationsController {
 
     private final IndicationServiceV2 indicationServiceV2;
 
