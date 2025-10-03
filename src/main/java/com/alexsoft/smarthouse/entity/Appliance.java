@@ -30,6 +30,9 @@ public class Appliance {
     @Id
     private String code;
     private String description;
+    @OneToOne
+    @JoinColumn(name = "appliance_group_id")
+    private ApplianceGroup applianceGroup;
     @Enumerated(EnumType.STRING)
     private ApplianceState state;
     private Double consumptionKwh;
