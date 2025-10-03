@@ -1,8 +1,7 @@
 package com.alexsoft.smarthouse.service;
 
-import com.alexsoft.smarthouse.entity.IndicationV2;
-import com.alexsoft.smarthouse.repository.ApplianceRepository;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.entity.IndicationV3;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +10,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -24,12 +21,12 @@ import java.util.Optional;
 @Slf4j
 public class ScheduledService {
 
-    public static final Duration AVG_DURATION_MINUTES = Duration.ofMinutes(1);
+    public static final List<String> TREND_DEVICE_IDS = List.of("HOME-MB", "HOME-LR");
+    public static final List<String> TREND_MEASURE_TYPES = List.of("ah", "temp");
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;
     private final MessageService messageService;
-    private final IndicationRepositoryV2 indicationRepositoryV2;
-    private final ApplianceRepository applianceRepository;
+    private final IndicationRepositoryV3 indicationRepositoryV3;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -44,21 +41,20 @@ public class ScheduledService {
     @Transactional
     public void calculateTrends() {
         LocalDateTime utcDateTime = dateUtils.getUtcLocalDateTime();
-        calculateTrendAndSend(utcDateTime, 1);
-        calculateTrendAndSend(utcDateTime, 5);
+        TREND_MEASURE_TYPES.forEach(measurementType -> {
+            calculateTrendAndSend(utcDateTime, 1, measurementType, TREND_DEVICE_IDS);
+            calculateTrendAndSend(utcDateTime, 5, measurementType, TREND_DEVICE_IDS);
+        });
     }
 
 
-    public void calculateTrendAndSend(LocalDateTime localDateTime, int minutes) {
-        Comparator<IndicationV2> comparator = Comparator.comparing(IndicationV2::getLocalTime);
-        Double temperatureTrend;
-        Double ahTrend;
-
-        List<IndicationV2> averages = indicationRepositoryV2.findByIndicationPlaceInAndUtcTimeAfter(
-                List.of("HOME-AVG"), localDateTime.minusMinutes(minutes));
-        Optional<IndicationV2> first = averages.stream().sorted(comparator.reversed()).findFirst();
-        Optional<IndicationV2> second = averages.stream().sorted(comparator).findFirst();
-        if (!first.isPresent() || !second.isPresent()) {
+    public void calculateTrendAndSend(LocalDateTime utcDateTime, int minutes, String measurementType, List<String> deviceIds) {
+        Comparator<IndicationV3> comparator = Comparator.comparing(IndicationV3::getUtcTime);
+        List<IndicationV3> averages = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(
+                deviceIds, utcDateTime.minusMinutes(minutes), measurementType);
+        Optional<IndicationV3> first = averages.stream().max(comparator);
+        Optional<IndicationV3> second = averages.stream().min(comparator);
+        if (first.map(IndicationV3::getValue).isEmpty() || second.map(IndicationV3::getValue).isEmpty()) {
             log.info("No trend calculated, no averages found");
             return;
         }
@@ -66,14 +62,11 @@ public class ScheduledService {
         if (secondsDifference < ((long) minutes * 60 * 0.85)) {
             return;
         }
-        temperatureTrend = (first.get().getTemperature().getValue() - second.get().getTemperature().getValue()) / secondsDifference * 3600;
-        ahTrend = (first.get().getAbsoluteHumidity().getValue() - second.get().getAbsoluteHumidity().getValue()) / secondsDifference * 3600;
-
-        if (temperatureTrend != null || ahTrend != null) {
-            messageService.sendMessage(measurementTopic,
-                    ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\":"
-                            + " {\"temp\": {\"celsius\": %.3f, \"ah\": %.3f}}}").formatted(minutes, temperatureTrend, ahTrend));
-        }
+        Double trend = (first.get().getValue() - second.get().getValue()) / secondsDifference * 3600;
+        String celsius = measurementType.equals("ah") ? "ah" : "celsius";
+        messageService.sendMessage(measurementTopic,
+                ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\":"
+                        + " {\"temp\": {\"" + celsius + "\": %.3f}}}").formatted(minutes, trend));
     }
 
 }
