@@ -55,7 +55,6 @@ public class ScheduledService {
         Optional<IndicationV3> first = averages.stream().max(comparator);
         Optional<IndicationV3> second = averages.stream().min(comparator);
         if (first.map(IndicationV3::getValue).isEmpty() || second.map(IndicationV3::getValue).isEmpty()) {
-            log.info("No trend calculated, no averages found");
             return;
         }
         long secondsDifference = Duration.between(second.get().getLocalTime(), first.get().getLocalTime()).toSeconds();
