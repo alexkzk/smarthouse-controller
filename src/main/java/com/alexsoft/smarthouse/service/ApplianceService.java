@@ -33,6 +33,7 @@ public class ApplianceService {
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
+    public static final List<String> UNTIL_7AM_APPLIANCES = List.of("MB-LOTV", "MB-LOB", "LR-LUTV", "TER-LIGHTS");
 
     private final MessageService messageService;
     private final DateUtils dateUtils;
@@ -177,7 +178,7 @@ public class ApplianceService {
         appliance.setState(newState, LocalDateTime.now());
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             appliance.setLockedUntilUtc(utc.plusMinutes(5));
-        } else if (List.of("MB-LOTV", "MB-LOB", "LR-LUTV").contains(appliance.getCode())) {
+        } else if (UNTIL_7AM_APPLIANCES.contains(appliance.getCode())) {
             appliance.setLockedUntilUtc(sevenAm());
         }
         appliance.setLocked(true);
