@@ -111,7 +111,7 @@ public class MqttService {
                     Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
                     List<IndicationV3> indicationV3s = new ArrayList<>();
                     IndicationV3Builder indicationV3Builder = IndicationV3.builder().localTime(dateUtils.getLocalDateTime())
-                            .utcTime(dateUtils.getUtcLocalDateTime()).deviceId(topic.split("/")[1]);
+                            .utcTime(dateUtils.getUtc()).deviceId(topic.split("/")[1]);
 
                     if (map.containsKey("power")) {
                         indicationV3Builder.deviceType("sp");
@@ -132,7 +132,7 @@ public class MqttService {
     }
 
     private Indication toIndication(String payload) throws JsonProcessingException {
-        LocalDateTime utc = dateUtils.getUtcLocalDateTime();
+        LocalDateTime utc = dateUtils.getUtc();
         Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
         indication.setReceivedUtc(utc);
         indication.setReceivedLocal(dateUtils.toLocalDateTime(utc));

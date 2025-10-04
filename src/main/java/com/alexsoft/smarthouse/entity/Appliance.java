@@ -15,6 +15,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -30,7 +31,7 @@ public class Appliance {
     @Id
     private String code;
     private String description;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "appliance_group_id")
     private ApplianceGroup applianceGroup;
     @Enumerated(EnumType.STRING)
@@ -61,6 +62,10 @@ public class Appliance {
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
     private Map<String, Object> schedule;
+
+    public Optional<ApplianceGroup> getApplianceGroup() {
+        return applianceGroup == null ? Optional.empty() : Optional.of(applianceGroup);
+    }
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {

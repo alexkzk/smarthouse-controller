@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +43,7 @@ public class ApplianceController {
                         break;
                     case "state":
                         ApplianceState newState = ApplianceState.valueOf((String) value);
-                        appliance.setState(newState, LocalDateTime.now());
-                        if (applianceCode.equals("DEH") || applianceCode.equals("AC")) {
-                            appliance.setLockedUntilUtc(dateUtils.getUtcLocalDateTime().plusMinutes(5));
-                        } else if (List.of("LR-LUTV", "OUT-TERLIGHT").contains(applianceCode)) {
-                            appliance.setLockedUntilUtc(sevenAm());
-                        }
-                        appliance.setLocked(true);
+                        applianceService.toggleAppliance(appliance, newState, dateUtils.getUtc());
                         break;
                     case "consumptionKwh":
                         appliance.setConsumptionKwh(Double.valueOf(value.toString()));
@@ -106,24 +98,6 @@ public class ApplianceController {
     private void postCommitPowerControl(String applianceCode) {
         // Ensure that this method is called after the transaction from the main method has been committed
         applianceService.powerControl(applianceCode);
-    }
-
-
-    public LocalDateTime sevenAm() {
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
-
-        // Set target time to 6:30 AM
-        ZonedDateTime sixThirtyAm = now.withHour(6).withMinute(30).withSecond(0).withNano(0);
-        if (now.getHour() > 6 || (now.getHour() == 6 && now.getMinute() >= 30)) {
-            // If current time is past 6:30 AM, move to the next day
-            sixThirtyAm = sixThirtyAm.plusDays(1);
-        }
-
-        // Convert to UTC
-        ZonedDateTime next6_30AMUtc = sixThirtyAm.withZoneSameInstant(ZoneId.of("UTC"));
-
-        return next6_30AMUtc.toLocalDateTime();
-
     }
 
 

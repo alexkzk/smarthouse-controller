@@ -2,6 +2,9 @@ package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.entity.IndicationV3;
+import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.event.HourChangedEvent;
+import com.alexsoft.smarthouse.repository.ApplianceGroupRepository;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.utils.DateUtils;
@@ -10,15 +13,15 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalDouble;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -35,9 +38,28 @@ public class ApplianceService {
     private final DateUtils dateUtils;
     private final ApplianceRepository applianceRepository;
     private final IndicationRepositoryV3 indicationRepositoryV3;
+    private final ApplianceGroupRepository applianceGroupRepository;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
+
+    @EventListener
+    @Transactional
+    public void onHourChanged(HourChangedEvent event) {
+        LOGGER.info("Hour changed to: " + event.getHour());
+        LocalDateTime utc = dateUtils.getUtc();
+        applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group -> {
+            Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
+                if (Integer.parseInt(turnOffHour) == event.getHour()) {
+                    applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent()).forEach(app -> {
+                        toggleAppliance(app, ApplianceState.OFF, utc);
+                        applianceRepository.save(app);
+                        powerControl(app.getCode());
+                    });
+                }
+            });
+        });
+    }
 
     @Transactional
     public void powerControl(String applianceCode) {
@@ -45,7 +67,7 @@ public class ApplianceService {
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
 
         if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
-            LocalDateTime utc = dateUtils.getUtcLocalDateTime();
+            LocalDateTime utc = dateUtils.getUtc();
             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
             OptionalDouble averageOptional = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
@@ -149,6 +171,34 @@ public class ApplianceService {
 
     public Appliance saveOrUpdateAppliance(Appliance appliance) {
         return applianceRepository.save(appliance);
+    }
+
+    public void toggleAppliance(Appliance appliance, ApplianceState newState, LocalDateTime utc) {
+        appliance.setState(newState, LocalDateTime.now());
+        if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
+            appliance.setLockedUntilUtc(utc.plusMinutes(5));
+        } else if (List.of("MB-LOTV", "MB-LOB", "LR-LUTV").contains(appliance.getCode())) {
+            appliance.setLockedUntilUtc(sevenAm());
+        }
+        appliance.setLocked(true);
+    }
+
+
+    public LocalDateTime sevenAm() {
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
+
+        // Set target time to 6:30 AM
+        ZonedDateTime sixThirtyAm = now.withHour(6).withMinute(30).withSecond(0).withNano(0);
+        if (now.getHour() > 6 || (now.getHour() == 6 && now.getMinute() >= 30)) {
+            // If current time is past 6:30 AM, move to the next day
+            sixThirtyAm = sixThirtyAm.plusDays(1);
+        }
+
+        // Convert to UTC
+        ZonedDateTime next6_30AMUtc = sixThirtyAm.withZoneSameInstant(ZoneId.of("UTC"));
+
+        return next6_30AMUtc.toLocalDateTime();
+
     }
 
 }

@@ -40,7 +40,7 @@ public class ScheduledService {
     @Scheduled(cron = "*/3 * * * * *")
     @Transactional
     public void calculateTrends() {
-        LocalDateTime utcDateTime = dateUtils.getUtcLocalDateTime();
+        LocalDateTime utcDateTime = dateUtils.getUtc();
         TREND_MEASURE_TYPES.forEach(measurementType -> {
             calculateTrendAndSend(utcDateTime, 1, measurementType, TREND_DEVICE_IDS);
             calculateTrendAndSend(utcDateTime, 5, measurementType, TREND_DEVICE_IDS);

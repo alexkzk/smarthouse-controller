@@ -57,7 +57,7 @@ public class DateUtils {
         return ZonedDateTime.now(userTimezone).toLocalDateTime();
     }
 
-    public LocalDateTime getUtcLocalDateTime() {
+    public LocalDateTime getUtc() {
         return ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
     }
 
