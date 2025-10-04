@@ -33,7 +33,7 @@ public class ApplianceService {
     public static final String MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC = "mqtt.smarthouse.power.control";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
-    public static final List<String> UNTIL_7AM_APPLIANCES = List.of("MB-LOTV", "MB-LOB", "LR-LUTV", "TER-LIGHTS");
+    public static final List<String> UNTIL_7AM_APPLIANCES = List.of("LR-LUTV", "TER-LIGHTS");
 
     private final MessageService messageService;
     private final DateUtils dateUtils;
