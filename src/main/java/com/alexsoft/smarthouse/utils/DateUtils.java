@@ -86,7 +86,7 @@ public class DateUtils {
         return timestampToLocalDateTime(ts).format(dateTimeFormatter);
     }
 
-    public static LocalDateTime toLocalDateTime(Calendar calendar) {
+    public LocalDateTime toLocalDateTime(Calendar calendar) {
         return LocalDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId());
     }
 

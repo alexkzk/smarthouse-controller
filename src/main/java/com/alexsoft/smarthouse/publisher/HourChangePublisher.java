@@ -35,38 +35,37 @@ public class HourChangePublisher {
     private final DateUtils dateUtils;
     private final HourChangeTrackerRepository hourChangeTrackerRepository;
 
-    private int previousHour;
-    private int previousMinute = -1;
+    private int lastReportedNewHour;
+    private LocalDateTime lastSunsetReported;
 
     @EventListener(ApplicationReadyEvent.class)
     public void readLastHour() {
-        previousHour = hourChangeTrackerRepository.getPreviousHour();
+        lastReportedNewHour = hourChangeTrackerRepository.getPreviousHour();
+        Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
+        lastSunsetReported = lastSunsetEvent == null ? null : dateUtils.convertToLocalDateTime((Timestamp) lastSunsetEvent);
+    }
+
+    @Scheduled(fixedRate = 60 * 1000)
+    public void checkSunsetSunrise() {
+        LocalDateTime localDateTime = dateUtils.getLocalDateTime();
+        SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
+        LocalDateTime sunsetDateTime = dateUtils.toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance()));
+        if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
+            LOGGER.info("Sunset event");
+            eventPublisher.publishEvent(new SunsetEvent(this));
+            lastSunsetReported = localDateTime;
+            hourChangeTrackerRepository.updateLastSunsetEvent(dateUtils.convertToTimestamp(dateUtils.toUtc(localDateTime)), lastSunsetReported == null);
+        }
     }
 
     @Scheduled(fixedRate = 1000)
     public void detectHourChange() {
         LocalDateTime localDateTime = dateUtils.getLocalDateTime();
         int currentHour = localDateTime.getHour();
-        int currentMinute = localDateTime.getMinute();
-
-        if (previousMinute != currentMinute) {  //  check astro events
-            previousMinute = currentMinute;
-            SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
-            LocalDateTime sunsetDateTime = dateUtils.toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance()));
-            Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
-            LocalDateTime lastSunsetReported = lastSunsetEvent == null ? null : dateUtils.convertToLocalDateTime((Timestamp) lastSunsetEvent);
-            if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
-                LOGGER.info("Sunset event");
-                eventPublisher.publishEvent(new SunsetEvent(this));
-                hourChangeTrackerRepository.updateLastSunsetEvent(dateUtils.convertToTimestamp(dateUtils.toUtc(localDateTime)));
-            }
-
-        }
-
-        if (currentHour != previousHour) {  //  check new hour event
+        if (currentHour != lastReportedNewHour) {
             LOGGER.info("New hour event: {}", currentHour);
             hourChangeTrackerRepository.updatePreviousHour(currentHour);
-            previousHour = currentHour;
+            lastReportedNewHour = currentHour;
             HourChangedEvent event = new HourChangedEvent(this, currentHour);
             eventPublisher.publishEvent(event);
         }

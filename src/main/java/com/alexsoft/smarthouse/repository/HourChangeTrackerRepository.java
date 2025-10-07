@@ -29,9 +29,15 @@ public class HourChangeTrackerRepository {
     }
 
     @Transactional
-    public void updateLastSunsetEvent(Timestamp lastSunsetEvent) {
-        entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 2")
-                .setParameter("updated_at", lastSunsetEvent)
-                .executeUpdate();
+    public void updateLastSunsetEvent(Timestamp lastSunsetEvent, boolean upsert) {
+        if (upsert) {
+            entityManager.createNativeQuery("INSERT INTO main.hour_change_tracker (id, updated_at) values (2, :updated_at)")
+                    .setParameter("updated_at", lastSunsetEvent)
+                    .executeUpdate();
+        } else {
+            entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 2")
+                    .setParameter("updated_at", lastSunsetEvent)
+                    .executeUpdate();
+        }
     }
 }
