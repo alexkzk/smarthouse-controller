@@ -4,6 +4,7 @@ import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.event.HourChangedEvent;
+import com.alexsoft.smarthouse.event.SunsetEvent;
 import com.alexsoft.smarthouse.repository.ApplianceGroupRepository;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
@@ -43,6 +44,18 @@ public class ApplianceService {
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
+
+    @EventListener
+    @Transactional
+    public void onSunset(SunsetEvent sunsetEvent) {
+        LocalDateTime utc = dateUtils.getUtc();
+        applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent())
+                .forEach(app -> {
+                    toggleAppliance(app, ApplianceState.ON, utc);
+                    applianceRepository.save(app);
+                    powerControl(app.getCode());
+                });
+    }
 
     @EventListener
     @Transactional

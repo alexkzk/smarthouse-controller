@@ -43,6 +43,7 @@ public class HourChangePublisher {
         lastReportedNewHour = hourChangeTrackerRepository.getPreviousHour();
         Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
         lastSunsetReported = lastSunsetEvent == null ? null : dateUtils.convertToLocalDateTime((Timestamp) lastSunsetEvent);
+        eventPublisher.publishEvent(new SunsetEvent(this));
     }
 
     @Scheduled(fixedRate = 60 * 1000)
