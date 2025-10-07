@@ -58,7 +58,7 @@ public class HourChangePublisher {
             if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
                 LOGGER.info("Sunset event");
                 eventPublisher.publishEvent(new SunsetEvent(this));
-                hourChangeTrackerRepository.updateLastSunsetEvent(dateUtils.convertToTimestamp(localDateTime));
+                hourChangeTrackerRepository.updateLastSunsetEvent(dateUtils.convertToTimestamp(dateUtils.toUtc(localDateTime)));
             }
 
         }

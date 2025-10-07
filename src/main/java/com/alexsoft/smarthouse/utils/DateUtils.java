@@ -70,6 +70,10 @@ public class DateUtils {
         return ZonedDateTime.of(ts, ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of(timeZone.get())).toLocalDateTime();
     }
 
+    public LocalDateTime toUtc(LocalDateTime local) {
+        return ZonedDateTime.of(local, userTimezone).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+    }
+
     public LocalDateTime timestampToLocalDateTime(Timestamp ts) {
         return ts.toLocalDateTime();
     }
