@@ -66,6 +66,7 @@ public class HourChangePublisher {
         if (currentHour != previousHour) {  //  check new hour event
             LOGGER.info("New hour event: {}", currentHour);
             hourChangeTrackerRepository.updatePreviousHour(currentHour);
+            previousHour = currentHour;
             HourChangedEvent event = new HourChangedEvent(this, currentHour);
             eventPublisher.publishEvent(event);
         }
