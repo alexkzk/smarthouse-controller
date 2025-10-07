@@ -49,17 +49,28 @@ public class ApplianceService {
     public void onHourChanged(HourChangedEvent event) {
         LOGGER.info("Hour changed to: " + event.getHour());
         LocalDateTime utc = dateUtils.getUtc();
-        applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group -> {
-            Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
-                if (Integer.parseInt(turnOffHour) == event.getHour()) {
-                    applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent()).forEach(app -> {
-                        toggleAppliance(app, ApplianceState.OFF, utc);
-                        applianceRepository.save(app);
-                        powerControl(app.getCode());
-                    });
-                }
-            });
-        });
+        applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group ->
+                Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
+                    if (Integer.parseInt(turnOffHour) == event.getHour()) {
+                        applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
+                                .forEach(app -> {
+                                    toggleAppliance(app, ApplianceState.OFF, utc);
+                                    applianceRepository.save(app);
+                                    powerControl(app.getCode());
+                                });
+                    }
+                }));
+        applianceGroupRepository.findByTurnOnHoursIsNotNull().forEach(group ->
+                Arrays.stream(group.getTurnOnHours().split(",")).forEach(turnOnHour -> {
+                    if (Integer.parseInt(turnOnHour) == event.getHour()) {
+                        applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
+                                .forEach(app -> {
+                                    toggleAppliance(app, ApplianceState.ON, utc);
+                                    applianceRepository.save(app);
+                                    powerControl(app.getCode());
+                                });
+                    }
+                }));
     }
 
     @Transactional
@@ -148,9 +159,8 @@ public class ApplianceService {
 
     public void sendState(Appliance appliance, Double average) {
         if (appliance.getZigbee2MqttTopic() != null) {
-            Integer brightness = average == null ? null : average > 10 ? 255 : 160;
-            String brightnessString = appliance.getState() == ON && average != null ? ", \"brightness\": %d".formatted(brightness) : "";
-            messageService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightnessString + "}").formatted(appliance.getState() == ON ? "on" : "off", 255));
+            messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
+                    .formatted(appliance.getState() == ON ? "on" : "off", 160));
         }
         messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                 .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));

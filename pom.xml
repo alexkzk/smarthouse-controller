@@ -123,5 +123,10 @@
             <artifactId>spring-webflux</artifactId>
             <version>6.2.9</version>
         </dependency>
+        <dependency>
+            <groupId>com.luckycatlabs</groupId>
+            <artifactId>SunriseSunsetCalculator</artifactId>
+            <version>1.2</version>
+        </dependency>
     </dependencies>
 </project>

@@ -8,5 +8,6 @@ import java.util.List;
 public interface ApplianceGroupRepository extends JpaRepository<ApplianceGroup, Integer> {
 
     List<ApplianceGroup> findByTurnOffHoursIsNotNull();
+    List<ApplianceGroup> findByTurnOnHoursIsNotNull();
 
 }

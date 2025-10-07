@@ -8,6 +8,8 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -78,6 +80,26 @@ public class DateUtils {
 
     public String timestampToLocalDateTimeString(Timestamp ts, DateTimeFormatter dateTimeFormatter) {
         return timestampToLocalDateTime(ts).format(dateTimeFormatter);
+    }
+
+    public static LocalDateTime toLocalDateTime(Calendar calendar) {
+        return LocalDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId());
+    }
+
+    public Calendar toCalendar(LocalDateTime localDateTime) {   //  do not delete
+        ZonedDateTime zonedDateTime = localDateTime.atZone(userTimezone);
+        Date date = Date.from(zonedDateTime.toInstant());
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        return calendar;
+    }
+
+    public Timestamp convertToTimestamp(LocalDateTime localDateTime) {
+        return Timestamp.valueOf(localDateTime);
+    }
+
+    public LocalDateTime convertToLocalDateTime(Timestamp timestamp) {
+        return timestamp.toLocalDateTime();
     }
 
 
