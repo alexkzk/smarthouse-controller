@@ -104,7 +104,7 @@ public class MqttService {
             String payload = (String) message.getPayload();
             String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
             try {
-//                LOGGER.info("Received an MQTT message: {}", payload);
+                LOGGER.info("Received an MQTT message: {}", payload);
                 if (mqttTopic.equals(topic)) {
                     indicationService.save(toIndication(payload));
                 } else if (topic != null && !topic.startsWith("zigbee2mqtt/bridge")) {

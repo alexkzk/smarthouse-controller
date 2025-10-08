@@ -90,7 +90,7 @@ public class ApplianceService {
 
     @Transactional
     public void powerControl(String applianceCode) {
-        LOGGER.info("Power control method executed for {}", applianceCode);
+
         Appliance appliance = applianceRepository.findById(applianceCode).orElseThrow();
 
         if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
@@ -98,8 +98,9 @@ public class ApplianceService {
             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
             OptionalDouble averageOptional = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
+            Double average = null;
             if (averageOptional.isPresent()) {
-                Double average = averageOptional.getAsDouble();
+                average = averageOptional.getAsDouble();
                 appliance.setActual(average);
                 LOGGER.info("Power control method executed, average was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                         appliance.getDescription(), average, appliance.getSetting(), appliance.getHysteresis());
@@ -139,12 +140,12 @@ public class ApplianceService {
 
                 LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), calculateDurationSinceSwitch(appliance, utc));
             } else {
-                LOGGER.info("Average for {} was empty", appliance.getReferenceSensors());
+                LOGGER.info("Power control method executed, indications were empty");
             }
+            sendState(appliance, average);
         } else {
-            LOGGER.info("Reference sensors list is empty, sending last saved state {}", appliance.getState().toString());
+            LOGGER.info("Reference sensors list is empty, skipping power control");
         }
-        sendState(appliance);
     }
 
     private static Long calculateDurationSinceSwitch(Appliance appliance, LocalDateTime utc) {
@@ -171,7 +172,7 @@ public class ApplianceService {
         }
     }
 
-    public void sendState(Appliance appliance) {
+    public void sendState(Appliance appliance, Double average) {
         if (appliance.getZigbee2MqttTopic() != null) {
             messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
                     .formatted(appliance.getState() == ON ? "on" : "off", 160));
@@ -199,12 +200,11 @@ public class ApplianceService {
     }
 
     public void toggleAppliance(Appliance appliance, ApplianceState newState, LocalDateTime utc) {
-        appliance.setState(newState, utc);
+        appliance.setState(newState, LocalDateTime.now());
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             appliance.setLockedUntilUtc(utc.plusMinutes(5));
         } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-            LocalDateTime lockedUntil = newState == OFF ? sunUtils.getSunriseTime().plusHours(1) :
-                    dateUtils.getLocalDateTime().toLocalDate().plusDays(1).atTime(0,0,0);
+            LocalDateTime lockedUntil = newState == OFF ? sunUtils.getSunriseTime().plusHours(1) : sunUtils.getSunsetTime().minusHours(1);
             appliance.setLockedUntilUtc(dateUtils.toUtc(lockedUntil));
         }
         appliance.setLocked(true);
