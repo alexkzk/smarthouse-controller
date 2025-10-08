@@ -4,7 +4,7 @@ import com.alexsoft.smarthouse.event.HourChangedEvent;
 import com.alexsoft.smarthouse.event.SunsetEvent;
 import com.alexsoft.smarthouse.repository.HourChangeTrackerRepository;
 import com.alexsoft.smarthouse.utils.DateUtils;
-import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
+import com.alexsoft.smarthouse.utils.SunUtils;
 import com.luckycatlabs.sunrisesunset.dto.Location;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +19,6 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Calendar;
-
-import static com.alexsoft.smarthouse.utils.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 @Component
 @RequiredArgsConstructor
@@ -34,6 +31,7 @@ public class HourChangePublisher {
     private final ApplicationEventPublisher eventPublisher;
     private final DateUtils dateUtils;
     private final HourChangeTrackerRepository hourChangeTrackerRepository;
+    private final SunUtils sunUtils;
 
     private int lastReportedNewHour;
     private LocalDateTime lastSunsetReported;
@@ -47,10 +45,9 @@ public class HourChangePublisher {
     }
 
     @Scheduled(fixedRate = 60 * 1000)
-    public void checkSunsetSunrise() {
+    public void detectSunset() {
         LocalDateTime localDateTime = dateUtils.getLocalDateTime();
-        SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
-        LocalDateTime sunsetDateTime = dateUtils.toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance()));
+        LocalDateTime sunsetDateTime = sunUtils.getSunsetTime();
         if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
             LOGGER.info("Sunset event");
             eventPublisher.publishEvent(new SunsetEvent(this));

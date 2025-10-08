@@ -9,6 +9,7 @@ import com.alexsoft.smarthouse.repository.ApplianceGroupRepository;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.utils.DateUtils;
+import com.alexsoft.smarthouse.utils.SunUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -41,6 +42,7 @@ public class ApplianceService {
     private final ApplianceRepository applianceRepository;
     private final IndicationRepositoryV3 indicationRepositoryV3;
     private final ApplianceGroupRepository applianceGroupRepository;
+    private final SunUtils sunUtils;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -201,8 +203,8 @@ public class ApplianceService {
         appliance.setState(newState, LocalDateTime.now());
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             appliance.setLockedUntilUtc(utc.plusMinutes(5));
-        } else if (UNTIL_7AM_APPLIANCES.contains(appliance.getCode())) {
-            appliance.setLockedUntilUtc(sevenAm());
+        } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
+            appliance.setLockedUntilUtc(newState == OFF ? sunUtils.getSunriseTime().plusHours(1) : sunUtils.getSunsetTime().minusHours(1));
         }
         appliance.setLocked(true);
     }
