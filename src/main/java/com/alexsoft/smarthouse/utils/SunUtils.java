@@ -23,7 +23,11 @@ public class SunUtils {
 
     public LocalDateTime getSunriseTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
-        return dateUtils.toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance()));
+        LocalDateTime sunriseTime = dateUtils.toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance()));
+        if (dateUtils.getLocalDateTime().isAfter(sunriseTime)) {
+           sunriseTime = sunriseTime.plusDays(1);
+        }
+        return sunriseTime;
     }
 
 }
