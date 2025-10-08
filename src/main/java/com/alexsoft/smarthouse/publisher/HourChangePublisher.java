@@ -35,34 +35,41 @@ public class HourChangePublisher {
 
     private int lastReportedNewHour;
     private LocalDateTime lastSunsetReported;
+    private boolean appReady = false;
 
     @EventListener(ApplicationReadyEvent.class)
     public void readLastHour() {
         lastReportedNewHour = hourChangeTrackerRepository.getPreviousHour();
         Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
         lastSunsetReported = lastSunsetEvent == null ? null : dateUtils.convertToLocalDateTime((Timestamp) lastSunsetEvent);
-        eventPublisher.publishEvent(new SunsetEvent(this));
+        appReady = true;
     }
 
     @Scheduled(fixedRate = 60 * 1000)
     public void detectSunset() {
+        if (!appReady) {
+            return;
+        }
         LocalDateTime localDateTime = dateUtils.getLocalDateTime();
         LocalDateTime sunsetDateTime = sunUtils.getSunsetTime();
         if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
             LOGGER.info("Sunset event");
             eventPublisher.publishEvent(new SunsetEvent(this));
             lastSunsetReported = localDateTime;
-            hourChangeTrackerRepository.updateLastSunsetEvent(dateUtils.convertToTimestamp(dateUtils.toUtc(localDateTime)), lastSunsetReported == null);
+            hourChangeTrackerRepository.updateLastSunsetEvent(dateUtils.convertToTimestamp(localDateTime), lastSunsetReported == null);
         }
     }
 
     @Scheduled(fixedRate = 1000)
     public void detectHourChange() {
+        if (!appReady) {
+            return;
+        }
         LocalDateTime localDateTime = dateUtils.getLocalDateTime();
         int currentHour = localDateTime.getHour();
         if (currentHour != lastReportedNewHour) {
             LOGGER.info("New hour event: {}", currentHour);
-            hourChangeTrackerRepository.updatePreviousHour(currentHour);
+            hourChangeTrackerRepository.updatePreviousHour(currentHour, dateUtils.convertToTimestamp(localDateTime));
             lastReportedNewHour = currentHour;
             HourChangedEvent event = new HourChangedEvent(this, currentHour);
             eventPublisher.publishEvent(event);

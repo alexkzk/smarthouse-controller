@@ -22,9 +22,10 @@ public class HourChangeTrackerRepository {
     }
 
     @Transactional
-    public void updatePreviousHour(int currentHour) {
-        entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET previous_hour = :currentHour, updated_at = NOW() where id = 1")
+    public void updatePreviousHour(int currentHour, Timestamp updatedAt) {
+        entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET previous_hour = :currentHour, updated_at = :updated_at where id = 1")
                 .setParameter("currentHour", currentHour)
+                .setParameter("updated_at", updatedAt)
                 .executeUpdate();
     }
 
