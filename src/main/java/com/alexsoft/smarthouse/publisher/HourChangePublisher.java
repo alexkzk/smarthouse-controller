@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class HourChangePublisher {
     private final HourChangeTrackerRepository hourChangeTrackerRepository;
     private final SunUtils sunUtils;
 
-    private int lastReportedNewHour;
+    private Integer lastReportedNewHour;
     private LocalDateTime lastSunsetReported;
     private boolean appReady = false;
 
@@ -67,7 +68,7 @@ public class HourChangePublisher {
         }
         LocalDateTime localDateTime = dateUtils.getLocalDateTime();
         int currentHour = localDateTime.getHour();
-        if (currentHour != lastReportedNewHour) {
+        if (!Objects.equals(currentHour, lastReportedNewHour)) {
             LOGGER.info("New hour event: {}", currentHour);
             hourChangeTrackerRepository.updatePreviousHour(currentHour, dateUtils.convertToTimestamp(localDateTime));
             lastReportedNewHour = currentHour;
