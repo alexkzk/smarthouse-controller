@@ -1,6 +1,8 @@
 package com.alexsoft.smarthouse.repository;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +12,9 @@ import java.sql.Timestamp;
 @Repository
 @RequiredArgsConstructor
 public class HourChangeTrackerRepository {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HourChangeTrackerRepository.class);
+
 
     private final EntityManager entityManager;
 
@@ -36,9 +41,17 @@ public class HourChangeTrackerRepository {
                     .setParameter("updated_at", lastSunsetEvent)
                     .executeUpdate();
         } else {
-            entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 2")
-                    .setParameter("updated_at", lastSunsetEvent)
-                    .executeUpdate();
+            try {
+                entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 2")
+                        .setParameter("updated_at", lastSunsetEvent)
+                        .executeUpdate();
+
+            } catch (Exception e) {
+                LOGGER.error("Error updating last sunset event", e);
+                entityManager.createNativeQuery("INSERT INTO main.hour_change_tracker (id, updated_at) values (2, :updated_at)")
+                        .setParameter("updated_at", lastSunsetEvent)
+                        .executeUpdate();
+            }
         }
     }
 }
