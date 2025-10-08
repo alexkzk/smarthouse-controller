@@ -204,7 +204,8 @@ public class ApplianceService {
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             appliance.setLockedUntilUtc(utc.plusMinutes(5));
         } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-            appliance.setLockedUntilUtc(newState == OFF ? sunUtils.getSunriseTime().plusHours(1) : sunUtils.getSunsetTime().minusHours(1));
+            LocalDateTime lockedUntil = newState == OFF ? sunUtils.getSunriseTime().plusHours(1) : sunUtils.getSunsetTime().minusHours(1);
+            appliance.setLockedUntilUtc(dateUtils.toUtc(lockedUntil));
         }
         appliance.setLocked(true);
     }
