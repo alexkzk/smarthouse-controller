@@ -62,7 +62,7 @@ public class ApplianceService {
     @EventListener
     @Transactional
     public void onHourChanged(HourChangedEvent event) {
-        /*LOGGER.info("Hour changed to: " + event.getHour());
+        LOGGER.info("Hour changed to: " + event.getHour());
         LocalDateTime utc = dateUtils.getUtc();
         applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group ->
                 Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
@@ -75,7 +75,7 @@ public class ApplianceService {
                                 });
                     }
                 }));
-        applianceGroupRepository.findByTurnOnHoursIsNotNull().forEach(group ->
+        /*applianceGroupRepository.findByTurnOnHoursIsNotNull().forEach(group ->
                 Arrays.stream(group.getTurnOnHours().split(",")).forEach(turnOnHour -> {
                     if (Integer.parseInt(turnOnHour) == event.getHour()) {
                         applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
