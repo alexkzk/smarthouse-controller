@@ -18,12 +18,22 @@ public class HourChangeTrackerRepository {
 
     private final EntityManager entityManager;
 
-    public int getPreviousHour() {
-        return (int) entityManager.createNativeQuery("SELECT previous_hour FROM main.hour_change_tracker where id = 1 LIMIT 1").getSingleResult();
+    public Integer getPreviousHour() {
+        try {
+            return (int) entityManager.createNativeQuery("SELECT previous_hour FROM main.hour_change_tracker where id = 1 LIMIT 1").getSingleResult();
+        } catch (Exception e) {
+            LOGGER.error("Error getting previous hour", e);
+            return null;
+        }
     }
 
     public Object getLastSunsetEvent() {
-        return entityManager.createNativeQuery("SELECT updated_at FROM main.hour_change_tracker WHERE id = 2 LIMIT 1").getSingleResult();
+        try {
+            return entityManager.createNativeQuery("SELECT updated_at FROM main.hour_change_tracker WHERE id = 2 LIMIT 1").getSingleResult();
+        } catch (Exception e) {
+            LOGGER.error("Error getting last sunset event", e);
+            return null;
+        }
     }
 
     @Transactional
@@ -41,17 +51,9 @@ public class HourChangeTrackerRepository {
                     .setParameter("updated_at", lastSunsetEvent)
                     .executeUpdate();
         } else {
-            try {
-                entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 2")
-                        .setParameter("updated_at", lastSunsetEvent)
-                        .executeUpdate();
-
-            } catch (Exception e) {
-                LOGGER.error("Error updating last sunset event", e);
-                entityManager.createNativeQuery("INSERT INTO main.hour_change_tracker (id, updated_at) values (2, :updated_at)")
-                        .setParameter("updated_at", lastSunsetEvent)
-                        .executeUpdate();
-            }
+            entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 2")
+                    .setParameter("updated_at", lastSunsetEvent)
+                    .executeUpdate();
         }
     }
 }
