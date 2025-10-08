@@ -50,19 +50,19 @@ public class ApplianceService {
     @EventListener
     @Transactional
     public void onSunset(SunsetEvent sunsetEvent) {
-        LocalDateTime utc = dateUtils.getUtc();
+       /* LocalDateTime utc = dateUtils.getUtc();
         applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent())
                 .forEach(app -> {
                     toggleAppliance(app, ApplianceState.ON, utc);
                     applianceRepository.save(app);
                     powerControl(app.getCode());
-                });
+                });*/
     }
 
     @EventListener
     @Transactional
     public void onHourChanged(HourChangedEvent event) {
-        LOGGER.info("Hour changed to: " + event.getHour());
+        /*LOGGER.info("Hour changed to: " + event.getHour());
         LocalDateTime utc = dateUtils.getUtc();
         applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group ->
                 Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
@@ -85,7 +85,7 @@ public class ApplianceService {
                                     powerControl(app.getCode());
                                 });
                     }
-                }));
+                }));*/
     }
 
     @Transactional
@@ -200,18 +200,19 @@ public class ApplianceService {
     }
 
     public void toggleAppliance(Appliance appliance, ApplianceState newState, LocalDateTime utc) {
-        appliance.setState(newState, LocalDateTime.now());
+        appliance.setState(newState, dateUtils.getUtc());
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             appliance.setLockedUntilUtc(utc.plusMinutes(5));
+        } else if (appliance.getCode().equals("LR-LUTV")) {
+            appliance.setLockedUntilUtc(newState == OFF ? sixThirtyAm() : null);
         } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-            LocalDateTime lockedUntil = newState == OFF ? sunUtils.getSunriseTime().plusHours(1) : sunUtils.getSunsetTime().minusHours(1);
-            appliance.setLockedUntilUtc(dateUtils.toUtc(lockedUntil));
+            appliance.setLockedUntilUtc(newState == OFF ? dateUtils.toUtc(sunUtils.getSunriseTime().plusHours(1)) : null);
         }
         appliance.setLocked(true);
     }
 
 
-    public LocalDateTime sevenAm() {
+    public LocalDateTime sixThirtyAm() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
 
         // Set target time to 6:30 AM

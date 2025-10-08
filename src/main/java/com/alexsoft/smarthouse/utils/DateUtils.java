@@ -71,6 +71,9 @@ public class DateUtils {
     }
 
     public LocalDateTime toUtc(LocalDateTime local) {
+        if (local == null) {
+            return null;
+        }
         return ZonedDateTime.of(local, userTimezone).withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
     }
 
