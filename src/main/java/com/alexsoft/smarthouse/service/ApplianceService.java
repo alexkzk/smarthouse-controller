@@ -203,7 +203,7 @@ public class ApplianceService {
         appliance.setState(newState, dateUtils.getUtc());
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             appliance.setLockedUntilUtc(utc.plusMinutes(5));
-        } else if (appliance.getCode().equals("LR-LUTV")) {
+        } else if (appliance.getCode().equals("LR-LUTV") || appliance.getCode().equals("TER-LIGHTS")) {
             appliance.setLockedUntilUtc(newState == OFF ? sixThirtyAm() : null);
         } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
             appliance.setLockedUntilUtc(newState == OFF ? dateUtils.toUtc(sunUtils.getSunriseTime().plusHours(1)) : null);
