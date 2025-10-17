@@ -191,6 +191,7 @@ public class ApplianceService {
         return applianceRepository.findAll();
     }
 
+    @Transactional
     public Optional<Appliance> getApplianceByCode(String code) {
         return applianceRepository.findById(code);
     }

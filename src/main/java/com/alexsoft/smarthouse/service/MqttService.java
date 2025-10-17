@@ -1,10 +1,11 @@
 package com.alexsoft.smarthouse.service;
 
+import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.entity.Indication;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV2;
+import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -19,19 +20,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.core.MessageProducer;
-import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
-import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Configuration
 @RequiredArgsConstructor
@@ -43,7 +39,7 @@ public class MqttService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private final IndicationRepositoryV2 indicationRepositoryV2;
+    private final ApplianceService applianceService;
 
     @Value("tcp://${mqtt.server-in}:${mqtt.port}")
     private String mqttUrlIn;
@@ -90,11 +86,6 @@ public class MqttService {
     }
 
     @Bean
-    public IntegrationFlow mqttOutboundFlow() {
-        return f -> f.handle(new MqttPahoMessageHandler(mqttUrlOut, mqttSubscriber));
-    }
-
-    @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
     public MessageHandler messageHandler() {
         return message -> {
@@ -123,6 +114,18 @@ public class MqttService {
                     }
 
                     indicationServiceV3.saveAll(indicationV3s);
+
+                    String applianceCode = topic.split("/")[1];
+                    Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(applianceCode);
+                    if (applianceByCode.isPresent() && map.containsKey("state")) {
+                        String receivedState = (String) map.get("state");
+                        Appliance appliance = applianceByCode.get();
+                        if (!appliance.getState().name().equalsIgnoreCase(receivedState)) {
+                            applianceService.toggleAppliance(appliance, ApplianceState.valueOf(receivedState), dateUtils.getUtc());
+                            applianceService.saveOrUpdateAppliance(appliance);
+                            applianceService.powerControl(appliance.getCode());
+                        }
+                    }
 
                 }
             } catch (Exception e) {
