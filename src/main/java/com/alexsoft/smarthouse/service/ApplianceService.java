@@ -142,7 +142,7 @@ public class ApplianceService {
             } else {
                 LOGGER.info("Power control method executed, indications were empty");
             }
-            sendState(appliance, average);
+            sendState(appliance);
         } else {
             LOGGER.info("Reference sensors list is empty, skipping power control");
         }
@@ -172,13 +172,20 @@ public class ApplianceService {
         }
     }
 
-    public void sendState(Appliance appliance, Double average) {
+    public void sendState(Appliance appliance) {
+        LocalDateTime now = dateUtils.getLocalDateTime();
         if (appliance.getZigbee2MqttTopic() != null) {
-            messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
-                    .formatted(appliance.getState() == ON ? "on" : "off", 160));
+            if (appliance.getCode().equals("LR-LUTV") && (now.getHour() < 7 || now.getHour() > 21)) {
+                messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
+                        .formatted("on", appliance.getState() == ON ? 160 : 20));
+            } else {
+                messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
+                        .formatted(appliance.getState() == ON ? "on" : "off", 160));
+            }
+        } else {
+            messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         }
-        messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
 
         if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
             messageService.sendMessage(measurementTopic,
