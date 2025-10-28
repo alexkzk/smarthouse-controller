@@ -313,7 +313,7 @@ public class IndicationService {
                         indicationV3Builder.measurementType("pressure").unit("mmHg").value(indicationToSave.getAir().getPressure().getMmHg()).build());
             }
             if (indicationToSave.getAir().getTemp().getCelsius() != null) {
-                boolean btc = "btc".equals(deviceId);
+                boolean btc = "btc".equalsIgnoreCase(deviceId);
                 indicationV3List.add(indicationV3Builder.measurementType(btc ? "money" : "temp").unit(btc ? "usd" : "c")
                         .value(indicationToSave.getAir().getTemp().getCelsius()).build());
             }

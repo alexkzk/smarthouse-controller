@@ -1,41 +1,58 @@
 package com.alexsoft.smarthouse.controller;
 
-import com.alexsoft.smarthouse.dto.ChartDto;
-import com.alexsoft.smarthouse.service.IndicationService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.alexsoft.smarthouse.entity.IndicationV3;
+import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.OptionalDouble;
+
+@RestController
 @RequestMapping
 @RequiredArgsConstructor
 public class SummaryController {
 
-    private final IndicationService indicationService;
+    private final IndicationRepositoryV3 indicationRepositoryV3;
+    private final DateUtils dateUtils;
 
-    @GetMapping("/v2/summary")
-    public String aggregateV2(Model model, @RequestParam(required = false) String place, @RequestParam(required = false) String period, HttpServletRequest request) {
-        ChartDto chartDto;
-        if (StringUtils.isBlank(place) && StringUtils.isBlank(period)) {
-            chartDto = indicationService.getAggregatedDataV2(request.getRemoteAddr(), request.getServletPath());
-        } else {
-            chartDto = indicationService.getAggregatedDataDaily(place, period, request.getRemoteAddr(), request.getServletPath());
-        }
-        model.addAttribute(chartDto);
-        return "status/summary";
+    @GetMapping( "/status-bar")
+    public String getStatusBarString() {
+
+        LocalDateTime utcMinusFiveMinutes = dateUtils.getUtc().minusMinutes(5);
+
+        OptionalDouble avgTemp = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("HOME-AVG"),
+                utcMinusFiveMinutes, "temp").stream().mapToDouble(IndicationV3::getValue).average();
+        OptionalDouble avgAh = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("HOME-AVG"),
+                utcMinusFiveMinutes, "ah").stream().mapToDouble(IndicationV3::getValue).average();
+        OptionalDouble avgBtc = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("BTC"),
+                utcMinusFiveMinutes, "money").stream().mapToDouble(IndicationV3::getValue).average();
+
+        String btcFormatted = avgBtc.isPresent()
+                ? BigDecimal.valueOf(avgBtc.getAsDouble() / 1000)
+                .setScale(1, RoundingMode.HALF_UP)
+                .toString()
+                : "???";
+
+        String tempFormatted = avgTemp.isPresent()
+                ? BigDecimal.valueOf(avgTemp.getAsDouble())
+                .setScale(1, RoundingMode.HALF_UP)
+                .toString()
+                : "?";
+
+        String ahFormatted = avgAh.isPresent()
+                ? BigDecimal.valueOf(avgAh.getAsDouble())
+                .setScale(1, RoundingMode.HALF_UP)
+                .toString()
+                : "?";
+
+        return String.format("%s %s/%s", btcFormatted, tempFormatted, ahFormatted);
     }
 
-    @GetMapping("/v3/summary")
-    public String aggregateV3(Model model, @RequestParam(required = false) String place, @RequestParam(required = false) String locations,
-            @RequestParam(required = false) String period, HttpServletRequest request) {
-        ChartDto chartDto = indicationService.getAggregatedDataV3(locations == null ? place : locations, period, request.getRemoteAddr(),
-                request.getServletPath());
-        model.addAttribute(chartDto);
-        return "status/summary";
-    }
 }
