@@ -98,7 +98,7 @@ public class ApplianceService {
             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
             OptionalDouble averageOptional = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
-            Double average = null;
+            double average;
             if (averageOptional.isPresent()) {
                 average = averageOptional.getAsDouble();
                 appliance.setActual(average);
@@ -136,12 +136,13 @@ public class ApplianceService {
                             "indefinitely" : "until " + appliance.getLockedUntilUtc());
                 }
 
-                applianceRepository.save(appliance);
 
                 LOGGER.info("{} is {} for {} minutes", appliance.getDescription(), appliance.getFormattedState(), calculateDurationSinceSwitch(appliance, utc));
             } else {
+                appliance.setActual(null);
                 LOGGER.info("Power control method executed, indications were empty");
             }
+            applianceRepository.save(appliance);
             sendState(appliance);
         } else {
             LOGGER.info("Reference sensors list is empty, skipping power control");
