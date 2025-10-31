@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -29,12 +30,13 @@ public class StatusBarService {
     public String getStatusBarString() {
 
         LocalDateTime utcMinusFiveMinutes = dateUtils.getUtc().minusMinutes(5);
+        LocalDateTime utcMinusHour = dateUtils.getUtc().minusHours(1);
         Optional<Appliance> ac = applianceRepository.findById("AC");
         Optional<Appliance> deh = applianceRepository.findById("DEH");
         OptionalDouble avgBtc = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("BTC"),
                 utcMinusFiveMinutes, "money").stream().mapToDouble(IndicationV3::getValue).average();
-        OptionalDouble avgOutT = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
-                utcMinusFiveMinutes, "temp").stream().mapToDouble(IndicationV3::getValue).average();
+        Optional<IndicationV3> avgOutT = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
+                utcMinusHour, "temp").stream().max(Comparator.comparing(IndicationV3::getUtcTime));
 
         String btcFormatted = avgBtc.isPresent()
                 ? BigDecimal.valueOf(avgBtc.getAsDouble() / 1000)
@@ -50,7 +52,7 @@ public class StatusBarService {
                 .map(actual -> BigDecimal.valueOf(actual).setScale(2, RoundingMode.HALF_UP).toString())
                 .orElse("??.??");
 
-        String outTempFormatted = avgOutT.isPresent() ? BigDecimal.valueOf(avgOutT.getAsDouble()).setScale(1, RoundingMode.HALF_UP).toString() : "??.?";
+        String outTempFormatted = avgOutT.isPresent() ? BigDecimal.valueOf(avgOutT.get().getValue()).setScale(1, RoundingMode.HALF_UP).toString() : "??.?";
 
         return String.format("%s    %s/%s    %s", btcFormatted, tempFormatted, ahFormatted, outTempFormatted);
     }
