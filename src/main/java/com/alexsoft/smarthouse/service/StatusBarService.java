@@ -52,7 +52,7 @@ public class StatusBarService {
 
         String outTempFormatted = avgOutT.isPresent() ? BigDecimal.valueOf(avgOutT.getAsDouble()).setScale(1, RoundingMode.HALF_UP).toString() : "??.?";
 
-        return String.format("%s    %s/%s    ", btcFormatted, tempFormatted, ahFormatted, outTempFormatted);
+        return String.format("%s    %s/%s    %s", btcFormatted, tempFormatted, ahFormatted, outTempFormatted);
     }
 
 }
