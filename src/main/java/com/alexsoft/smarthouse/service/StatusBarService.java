@@ -33,6 +33,8 @@ public class StatusBarService {
         Optional<Appliance> deh = applianceRepository.findById("DEH");
         OptionalDouble avgBtc = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("BTC"),
                 utcMinusFiveMinutes, "money").stream().mapToDouble(IndicationV3::getValue).average();
+        OptionalDouble avgOutT = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
+                utcMinusFiveMinutes, "temp").stream().mapToDouble(IndicationV3::getValue).average();
 
         String btcFormatted = avgBtc.isPresent()
                 ? BigDecimal.valueOf(avgBtc.getAsDouble() / 1000)
@@ -48,7 +50,9 @@ public class StatusBarService {
                 .map(actual -> BigDecimal.valueOf(actual).setScale(2, RoundingMode.HALF_UP).toString())
                 .orElse("??.??");
 
-        return String.format("%s    %s/%s", btcFormatted, tempFormatted, ahFormatted);
+        String outTempFormatted = avgOutT.isPresent() ? BigDecimal.valueOf(avgOutT.getAsDouble()).setScale(1, RoundingMode.HALF_UP).toString() : "??.?";
+
+        return String.format("%s    %s/%s    ", btcFormatted, tempFormatted, ahFormatted, outTempFormatted);
     }
 
 }
