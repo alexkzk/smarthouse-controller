@@ -180,8 +180,9 @@ public class ApplianceService {
                 messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
                         .formatted("on", appliance.getState() == ON ? 160 : 20));
             } else {
-                messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
-                        .formatted(appliance.getState() == ON ? "on" : "off", 160));
+                String brightness = !appliance.getCode().equals("TER-LIGHTS") ? ", \"brightness\": 160" : "";
+                messageService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
+                        .formatted(appliance.getState() == ON ? "on" : "off"));
             }
         } else {
             messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
