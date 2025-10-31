@@ -1,5 +1,8 @@
 package com.alexsoft.smarthouse.utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class TempUtils {
 
     public Integer calculateRelativeHumidity(final Float temp, final Float devpoint) {
@@ -15,6 +18,11 @@ public class TempUtils {
 
     public Float calculateAbsoluteHumidity(Float temp, Integer rh) {
         return calculateAbsoluteHumidity(temp, rh, null);
+    }
+
+    public Double calculateAbsoluteHumidity(Double temp, Double rh, int precision) {
+        return BigDecimal.valueOf(calculateAbsoluteHumidity(temp.floatValue(), BigDecimal.valueOf(rh).setScale(0, RoundingMode.HALF_UP).intValue(), null))
+                .setScale(precision, RoundingMode.HALF_UP).doubleValue();
     }
 
     public Float calculateAbsoluteHumidity(Float temp, Integer rh, Float pressure) {

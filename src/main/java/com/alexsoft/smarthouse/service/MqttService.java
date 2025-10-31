@@ -7,6 +7,7 @@ import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.utils.DateUtils;
+import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +27,8 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -38,8 +41,10 @@ public class MqttService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MqttService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private final TempUtils tempUtils = new TempUtils();
 
     private final ApplianceService applianceService;
+    private final MessageService messageService;
 
     @Value("tcp://${mqtt.server-in}:${mqtt.port}")
     private String mqttUrlIn;
@@ -56,6 +61,8 @@ public class MqttService {
     private final DateUtils dateUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
+    @Value("${mqtt.topic}")
+    private String measurementTopic;
 
     @Bean
     public DefaultMqttPahoClientFactory mqttClientFactory() {
@@ -101,21 +108,30 @@ public class MqttService {
                 } else if (topic != null && !topic.startsWith("zigbee2mqtt/bridge")) {
                     Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
                     List<IndicationV3> indicationV3s = new ArrayList<>();
+                    String deviceId = topic.split("/")[1];
                     IndicationV3Builder indicationV3Builder = IndicationV3.builder().localTime(dateUtils.getLocalDateTime())
-                            .utcTime(dateUtils.getUtc()).deviceId(topic.split("/")[1]);
+                            .utcTime(dateUtils.getUtc()).deviceId(deviceId);
 
                     if (map.containsKey("power")) {
                         indicationV3Builder.deviceType("sp");
                         MEASUREMENT_TYPES.forEach(m -> indicationV3s.add(indicationV3Builder.measurementType(m).unit(UNITS_MAP.get(m))
                                 .value(getValue(String.valueOf(map.get(m)))).build()));
-                    } else if (map.containsKey("illuminance")) {
+                    }
+                    if (map.containsKey("illuminance")) {
                         indicationV3s.add(indicationV3Builder.deviceType("lis").measurementType("illuminance").unit("lux")
                                 .value(getValue(String.valueOf(map.get("illuminance")))).build());
+                    }
+                    Double temperature = getValue(String.valueOf(map.get("temperature")));
+                    if (map.containsKey("humidity")) {
+                        double rh = BigDecimal.valueOf(getValue(String.valueOf(map.get("humidity")))).setScale(0, RoundingMode.HALF_UP).doubleValue();
+                        Double ah = tempUtils.calculateAbsoluteHumidity(temperature, rh, 2);
+                        messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"ah\": %f, \"rh\": %f, \"celsius\": %f}}}".formatted(deviceId, ah, rh, temperature)));
+                        System.out.println();
                     }
 
                     indicationServiceV3.saveAll(indicationV3s);
 
-                    String applianceCode = topic.split("/")[1];
+                    String applianceCode = deviceId;
                     Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(applianceCode);
                     if (applianceByCode.isPresent() && map.containsKey("state")) {
                         String receivedState = (String) map.get("state");

@@ -48,7 +48,7 @@ public class StatusBarService {
                 .map(actual -> BigDecimal.valueOf(actual).setScale(2, RoundingMode.HALF_UP).toString())
                 .orElse("??.??");
 
-        return String.format("%s  %s/%s", btcFormatted, tempFormatted, ahFormatted);
+        return String.format("%s    %s/%s", btcFormatted, tempFormatted, ahFormatted);
     }
 
 }
