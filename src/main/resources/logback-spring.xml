@@ -1,60 +1,13 @@
 <configuration>
-  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-  <springProperty name="filePath" source="logging.filepath"/>
-  <springProperty name="main-log-filename" source="logging.main.name"/>
-  <springProperty name="main-log-lifetime" source="logging.main.max-history"/>
-  <springProperty name="messaging-log-filename" source="logging.msg.name"/>
-  <springProperty name="messaging-log-lifetime" source="logging.msg.max-history"/>
-  <springProperty name="sql-log-filename" source="logging.sql.name"/>
-  <springProperty name="sql-log-lifetime" source="logging.sql.max-history"/>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
 
-  <appender name="MAIN_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${filePath}/${main-log-filename}.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${filePath}/${main-log-filename}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-      <maxHistory>${main-log-lifetime}</maxHistory>
-    </rollingPolicy>
-    <encoder>
-      <pattern>${FILE_LOG_PATTERN}</pattern>
-    </encoder>
-  </appender>
-
-  <appender name="MSG_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${filePath}/${messaging-log-filename}.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${filePath}/${messaging-log-filename}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-      <maxHistory>${messaging-log-lifetime}</maxHistory>
-    </rollingPolicy>
-    <encoder>
-      <pattern>${FILE_LOG_PATTERN}</pattern>
-    </encoder>
-  </appender>
-
-  <appender name="SQL_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${filePath}/${sql-log-filename}.log</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${filePath}/${sql-log-filename}-%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-      <maxHistory>${sql-log-lifetime}</maxHistory>
-    </rollingPolicy>
-    <encoder>
-      <pattern>${FILE_LOG_PATTERN}</pattern>
-    </encoder>
-  </appender>
-
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-    </encoder>
-  </appender>
-
-  <root>
-    <appender-ref ref="STDOUT"/>
-    <appender-ref ref="MAIN_LOG"/>
-  </root>
-
-  <logger name="org.hibernate.SQL" additivity="false">
-    <appender-ref ref="SQL_LOG"/>
-  </logger>
-
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
 </configuration>
