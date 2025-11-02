@@ -50,7 +50,7 @@ public class ScheduledService {
 
     public void calculateTrendAndSend(LocalDateTime utcDateTime, int minutes, String measurementType, List<String> deviceIds) {
         Comparator<IndicationV3> comparator = Comparator.comparing(IndicationV3::getUtcTime);
-        List<IndicationV3> averages = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(
+        List<IndicationV3> averages = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(
                 deviceIds, utcDateTime.minusMinutes(minutes), measurementType);
         Optional<IndicationV3> first = averages.stream().max(comparator);
         Optional<IndicationV3> second = averages.stream().min(comparator);

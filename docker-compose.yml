@@ -6,6 +6,8 @@ services:
     container_name: smarthouse-controller
     depends_on:
       - smarthouse-db
+      - smarthouse-influxdb
+      - smarthouse-mqtt-broker
     ports:
       - '24867:24867'
     environment:
@@ -29,6 +31,36 @@ services:
     volumes:
       # Database data directory
       - ./postgresql_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - smarthouse_network
+
+  smarthouse-influxdb:
+    image: influxdb:2.0
+    container_name: smarthouse-influxdb
+    ports:
+      - "8086:8086" # InfluxDB HTTP API
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup                           # Setup mode
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:admin}                      # Admin username
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}              # Admin password
+      - DOCKER_INFLUXDB_INIT_ORG=Home                            # Organization
+      - DOCKER_INFLUXDB_INIT_BUCKET=smarthouse-bucket             # Default bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_ADMIN_TOKEN}        # Auth token
+    volumes:
+      - ./influxdb_data:/var/lib/influxdb2            # Persistent storage
+    restart: unless-stopped
+    networks:
+      - smarthouse_network
+
+  smarthouse-mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: smarthouse-mqtt-broker
+    ports:
+      - "1883:1883"  # MQTT port
+      - "9001:9001"  # Websockets (optional)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: unless-stopped
     networks:
       - smarthouse_network

@@ -96,7 +96,7 @@ public class ApplianceService {
         if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
             LocalDateTime utc = dateUtils.getUtc();
             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
-            OptionalDouble averageOptional = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
+            OptionalDouble averageOptional = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
             double average;
             if (averageOptional.isPresent()) {
@@ -189,10 +189,10 @@ public class ApplianceService {
                     .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         }
 
-        if (appliance.getCode().equals("DEH") || appliance.getCode().equals("AC")) {
+        if (appliance.getCode().equals("AC")) {
             messageService.sendMessage(measurementTopic,
                     "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
-                            appliance.getCode(), appliance.getState() == ON ? (appliance.getCode().equals("DEH") ? 1 : 2) : 0));
+                            appliance.getCode(), appliance.getState() == ON ? 1 : 0));
         }
     }
 

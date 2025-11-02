@@ -7,7 +7,6 @@ import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -33,9 +32,9 @@ public class StatusBarService {
         LocalDateTime utcMinusHour = dateUtils.getUtc().minusHours(1);
         Optional<Appliance> ac = applianceRepository.findById("AC");
         Optional<Appliance> deh = applianceRepository.findById("DEH");
-        OptionalDouble avgBtc = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("BTC"),
+        OptionalDouble avgBtc = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("BTC"),
                 utcMinusFiveMinutes, "money").stream().mapToDouble(IndicationV3::getValue).average();
-        Optional<IndicationV3> avgOutT = indicationRepositoryV3.findByDeviceIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
+        Optional<IndicationV3> avgOutT = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
                 utcMinusHour, "temp").stream().max(Comparator.comparing(IndicationV3::getUtcTime));
 
         String btcFormatted = avgBtc.isPresent()

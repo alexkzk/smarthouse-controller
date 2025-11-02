@@ -38,9 +38,9 @@ public class IndicationV3 {
 
     private String measurementType;
 
-    private String deviceId;
-
-    private String deviceType;
+    private String locationId;
+    private String publisherId;
+    private String mqttTopic;
 
     private String unit;
 

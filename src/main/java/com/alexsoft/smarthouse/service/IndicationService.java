@@ -297,16 +297,17 @@ public class IndicationService {
     }
 
     @Transactional
-    public void save(Indication indicationToSave) {
+    public List<IndicationV3> save(Indication indicationToSave) {
         IndicationV2 indicationV2 = MetarService.toIndicationV2(indicationToSave);
         calculateAbsoluteHumidity(indicationToSave);
         setEmptyMeasurementsToNull(indicationToSave);
         List<IndicationV3> indicationV3List = new ArrayList<>();
         String deviceId = indicationToSave.getIndicationPlace();
         IndicationV3Builder indicationV3Builder = IndicationV3.builder()
+                .publisherId(indicationToSave.getPublisherId())
                 .utcTime(indicationToSave.getReceivedUtc())
                 .localTime(indicationToSave.getReceivedLocal())
-                .deviceId(deviceId);
+                .locationId(deviceId);
         if (indicationToSave.getAir() != null) {
             if (indicationToSave.getAir().getPressure() != null) {
                 indicationV3List.add(
@@ -335,6 +336,7 @@ public class IndicationService {
             }
             indicationRepository.save(indicationToSave);
         }
+        return indicationV3List;
     }
 
     private boolean hasNoAhCalculated(Indication indication) {
