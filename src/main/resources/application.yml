@@ -23,7 +23,7 @@ spring:
     password: smarthouse
 
 influxdb:
-  url: http://localhost:8086           # Replace with the URL of your InfluxDB server
+  url: http://smarthouse-influxdb:8086           # Replace with the URL of your InfluxDB server
   token: ${INFLUXDB_ADMIN_TOKEN}               # Replace with your InfluxDB access token (API token)
   org: Home                                # Replace with your InfluxDB organization name
   bucket: smarthouse-bucket
