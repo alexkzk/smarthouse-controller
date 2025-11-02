@@ -125,7 +125,7 @@ public class MqttService {
                     if (map.containsKey("humidity")) {
                         double rh = BigDecimal.valueOf(getValue(String.valueOf(map.get("humidity")))).setScale(0, RoundingMode.HALF_UP).doubleValue();
                         Double ah = tempUtils.calculateAbsoluteHumidity(temperature, rh, 2);
-                        messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"ah\": %f, \"rh\": %f, \"celsius\": %f}}}".formatted(deviceId, ah, rh, temperature)));
+                        messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"%s\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"ah\": %f, \"rh\": %f, \"celsius\": %f}}}".formatted(topic, deviceId, ah, rh, temperature)));
                         System.out.println();
                     }
 
