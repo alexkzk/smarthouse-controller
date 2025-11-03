@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class MessageService {
+public class MessageSenderService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageSenderService.class);
 
     @Value("${mqtt.msgSendingEnabled}")
     private boolean msgSendingEnabled;

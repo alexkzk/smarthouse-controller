@@ -66,17 +66,17 @@ public class MetarService {
     private final TempUtils tempUtils = new TempUtils();
     private final DateUtils dateUtils;
     private final AirspaceActivityRepository airspaceActivityRepository;
-    private final MessageService messageService;
+    private final MessageSenderService messageSenderService;
 
 
     public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
-            AirspaceActivityRepository airspaceActivityRepository, MessageService messageService) {
+            AirspaceActivityRepository airspaceActivityRepository, MessageSenderService messageSenderService) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
         this.dateUtils = dateUtils;
         this.airspaceActivityRepository = airspaceActivityRepository;
-        this.messageService = messageService;
+        this.messageSenderService = messageSenderService;
     }
 
     @Scheduled(cron = "0 0 */1 * * *")
@@ -134,7 +134,7 @@ public class MetarService {
                     Air air = indication.getAir();
                     if (air != null) {
                         Temp temp = air.getTemp();
-                        messageService.sendMessage(measurementTopic,
+                        messageSenderService.sendMessage(measurementTopic,
                                 ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"OUT\", \"air\": {\"temp\": {\"celsius\": %.3f,"
                                         + " \"ah\": %.3f}}}").formatted(key,
                                         temp == null ? null : temp.getCelsius(),

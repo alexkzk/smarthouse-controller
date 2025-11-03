@@ -25,7 +25,7 @@ public class ScheduledService {
     public static final List<String> TREND_MEASURE_TYPES = List.of("ah", "temp");
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;
-    private final MessageService messageService;
+    private final MessageSenderService messageSenderService;
     private final IndicationRepositoryV3 indicationRepositoryV3;
 
     @Value("${mqtt.topic}")
@@ -63,7 +63,7 @@ public class ScheduledService {
         }
         Double trend = (first.get().getValue() - second.get().getValue()) / secondsDifference * 3600;
         String celsius = measurementType.equals("ah") ? "ah" : "celsius";
-        messageService.sendMessage(measurementTopic,
+        messageSenderService.sendMessage(measurementTopic,
                 ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\":"
                         + " {\"temp\": {\"" + celsius + "\": %.3f}}}").formatted(minutes, trend));
     }

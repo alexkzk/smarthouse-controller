@@ -6,6 +6,7 @@ import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.repository.InfluxRepository;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,12 +41,12 @@ import java.util.*;
 
 @Configuration
 @RequiredArgsConstructor
-public class MqttService {
+public class MessageReceiverService {
 
     public static final List<String> MEASUREMENT_TYPES = List.of("energy", "power", "state", "voltage");
     public static final Map<String, String> UNITS_MAP = Map.of("energy", "kWh", "power", "W", "voltage", "V", "illuminance", "lux");
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MqttService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageReceiverService.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final TempUtils tempUtils = new TempUtils();
@@ -53,9 +54,9 @@ public class MqttService {
     private final DateUtils dateUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
+    private final InfluxRepository influxRepository;
 
-    private InfluxDBClient influxDBClient;
-    private final MessageService messageService;
+    private final MessageSenderService messageSenderService;
 
     @Value("tcp://${mqtt.server-in}:${mqtt.port}")
     private String mqttUrlIn;
@@ -71,23 +72,6 @@ public class MqttService {
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
-
-    @Value("${influxdb.url}")
-    private String influxDbUrl;
-
-    @Value("${influxdb.token}")
-    private String influxDbToken;
-
-    @Value("${influxdb.org}")
-    private String influxDbOrg;
-
-    @Value("${influxdb.bucket}")
-    private String influxDbBucket;
-
-    @PostConstruct
-    private void initializeInfluxDbClient() {
-        this.influxDBClient = InfluxDBClientFactory.create(influxDbUrl, influxDbToken.toCharArray());
-    }
 
     @Bean
     public DefaultMqttPahoClientFactory mqttClientFactory() {
@@ -116,49 +100,6 @@ public class MqttService {
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }
-    /*private void insertDataIntoInflux(String measurement, Map<String, String> tags, Map<String, Object> fields, Instant timestamp) {
-        try {
-            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
-
-            Point point = Point.measurement(measurement)      // Measurement
-                    .addTags(tags)                          // Add tags
-                    .addFields(fields)                      // Add fields
-                    .time(timestamp, WritePrecision.NS);    // Timestamp in nanoseconds
-
-            // Write the point to InfluxDB bucket
-            writeApi.writePoint(influxDbBucket, influxDbOrg, point);
-
-        } catch (Exception e) {
-            LOGGER.error("Failed to write data to InfluxDB", e);
-        }
-    }*/
-
-    private void saveIndicationV3ToInflux(IndicationV3 indication) {
-        if (indication.getLocationId().equals("HOME-DEH")) {
-            return;
-        }
-        try {
-            // Prepare InfluxDB Write API
-            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
-
-            // Map IndicationV3 fields to an InfluxDB Point
-            Point point = Point.measurement("mqtt")      // _measurement
-                    .addTag("host", "smarthouse-server")                // Example host
-                    .addTag("location_id", indication.getLocationId())         // Example measure place
-                    .addTag("publisher_id", indication.getPublisherId())   // Publisher ID
-                    .addTag("mqtt_topic", indication.getMqttTopic())
-                    .addField(indication.getLocationId().equals("HOME-AC") ? "state" : indication.getMeasurementType(), indication.getValue()) // Measurement type as the Field Key
-                    .time(indication.getUtcTime().atZone(java.time.ZoneOffset.UTC).toInstant(), WritePrecision.NS); // _time
-
-            // Write the Point to InfluxDB
-            writeApi.writePoint(influxDbBucket, influxDbOrg, point);
-
-            // Log inserted point
-            LOGGER.info("Saved IndicationV3 to InfluxDB: {}", point.toLineProtocol());
-        } catch (Exception e) {
-            LOGGER.error("Failed to save IndicationV3 to InfluxDB: {}", indication, e);
-        }
-    }
 
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
@@ -174,7 +115,7 @@ public class MqttService {
                 if (mqttTopic.equals(topic)) {
                     List<IndicationV3> indicationV3s = indicationService.save(toIndication(payload));
                     indicationV3s.forEach(ind -> ind.setMqttTopic(topic));
-                    indicationV3s.forEach(this::saveIndicationV3ToInflux);
+                    indicationV3s.forEach(influxRepository::saveIndicationV3ToInflux);
                 } else if (topic != null && !topic.startsWith("zigbee2mqtt/bridge")) {
                     List<IndicationV3> indicationV3s = new ArrayList<>();
                     Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
@@ -194,12 +135,11 @@ public class MqttService {
                     if (map.containsKey("humidity")) {
                         double rh = BigDecimal.valueOf(getValue(String.valueOf(map.get("humidity")))).setScale(0, RoundingMode.HALF_UP).doubleValue();
                         Double ah = tempUtils.calculateAbsoluteHumidity(temperature, rh, 2);
-                        messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"%s\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"ah\": %f, \"rh\": %f, \"celsius\": %f}}}".formatted(topic, deviceId, ah, rh, temperature)));
-                        System.out.println();
+                        messageSenderService.sendMessage(measurementTopic, ("{\"publisherId\": \"%s\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"ah\": %f, \"rh\": %f, \"celsius\": %f}}}".formatted(topic, deviceId, ah, rh, temperature)));
                     }
 
                     indicationServiceV3.saveAll(indicationV3s);
-                    indicationV3s.forEach(this::saveIndicationV3ToInflux);
+                    indicationV3s.forEach(influxRepository::saveIndicationV3ToInflux);
 
                     String applianceCode = deviceId;
                     Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(applianceCode);

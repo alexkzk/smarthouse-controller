@@ -37,7 +37,7 @@ public class ApplianceService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceService.class);
     public static final List<String> UNTIL_7AM_APPLIANCES = List.of("LR-LUTV", "TER-LIGHTS");
 
-    private final MessageService messageService;
+    private final MessageSenderService messageSenderService;
     private final DateUtils dateUtils;
     private final ApplianceRepository applianceRepository;
     private final IndicationRepositoryV3 indicationRepositoryV3;
@@ -168,7 +168,7 @@ public class ApplianceService {
         String metricType = appliance.getMetricType();
         if (metricType.equals("temp") || metricType.equals("humidity")) {
             String type = metricType.equals("humidity") ? "ah" : "celsius";
-            messageService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
+            messageSenderService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
                     + " \"air\": {\"temp\": {\"" + type + "\": %.3f}}}").formatted(average));
         }
     }
@@ -177,20 +177,20 @@ public class ApplianceService {
         LocalDateTime now = dateUtils.getLocalDateTime();
         if (appliance.getZigbee2MqttTopic() != null) {
             if (appliance.getCode().equals("LR-LUTV") && (now.getHour() < 7 || now.getHour() > 21)) {
-                messageService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
+                messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
                         .formatted("on", appliance.getState() == ON ? 160 : 20));
             } else {
                 String brightness = List.of("MB-LOTV", "LR-LUTV", "MB-LOB").contains(appliance.getCode()) ? ", \"brightness\": 160" : "";
-                messageService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
+                messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
                         .formatted(appliance.getState() == ON ? "on" : "off"));
             }
         } else {
-            messageService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+            messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                     .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         }
 
         if (appliance.getCode().equals("AC")) {
-            messageService.sendMessage(measurementTopic,
+            messageSenderService.sendMessage(measurementTopic,
                     "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
                             appliance.getCode(), appliance.getState() == ON ? 1 : 0));
         }
