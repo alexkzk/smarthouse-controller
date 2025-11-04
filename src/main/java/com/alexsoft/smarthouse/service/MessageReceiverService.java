@@ -112,7 +112,7 @@ public class MessageReceiverService {
                     Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
                     String deviceId = topic.split("/")[1];
                     IndicationV3Builder indicationV3Builder = IndicationV3.builder().mqttTopic(topic).localTime(dateUtils.getLocalDateTime())
-                            .utcTime(dateUtils.getUtc()).publisherId(topic).locationId(deviceId);
+                            .utcTime(dateUtils.getUtc()).publisherId("zigbee2mqtt").locationId(deviceId);
 
                     if (map.containsKey("power")) {
                         MEASUREMENT_TYPES.forEach(m -> indicationV3s.add(indicationV3Builder.measurementType(m).unit(UNITS_MAP.get(m))
