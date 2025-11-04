@@ -45,11 +45,12 @@ public class InfluxRepository {
 
     public int syncFromPostgres(LocalDateTime startDate, LocalDateTime endDate) {
         List<IndicationV3> indications = indicationRepositoryV3.findByUtcTimeBetween(startDate, endDate);
+        return saveAll(indications);
+    }
 
-        List<Point> points = indications.stream()
-                .filter(indication -> !indication.getLocationId().equals("HOME-DEH"))
-                .map(this::convertToPoint)
-                .toList();
+    public int saveAll(List<IndicationV3> indications) {
+
+        List<Point> points = indications.stream().map(this::convertToPoint).toList();
 
         WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
         try {
@@ -59,6 +60,7 @@ public class InfluxRepository {
         }
 
         return points.size();
+
     }
 
     private Point convertToPoint(IndicationV3 indication) {

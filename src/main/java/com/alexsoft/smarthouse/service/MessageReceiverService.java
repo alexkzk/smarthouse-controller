@@ -6,17 +6,11 @@ import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.ApplianceState;
-import com.alexsoft.smarthouse.repository.InfluxRepository;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.influxdb.client.InfluxDBClient;
-import com.influxdb.client.InfluxDBClientFactory;
-import com.influxdb.client.WriteApiBlocking;
-import com.influxdb.client.domain.WritePrecision;
-import com.influxdb.client.write.Point;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.slf4j.Logger;
@@ -33,7 +27,6 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
-import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -54,7 +47,6 @@ public class MessageReceiverService {
     private final DateUtils dateUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
-    private final InfluxRepository influxRepository;
 
     private final MessageSenderService messageSenderService;
 
@@ -115,7 +107,6 @@ public class MessageReceiverService {
                 if (mqttTopic.equals(topic)) {
                     List<IndicationV3> indicationV3s = indicationService.save(toIndication(payload), topic);
                     indicationV3s.forEach(ind -> ind.setMqttTopic(topic));
-                    indicationV3s.forEach(influxRepository::saveIndicationV3ToInflux);
                 } else if (topic != null && !topic.startsWith("zigbee2mqtt/bridge")) {
                     List<IndicationV3> indicationV3s = new ArrayList<>();
                     Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
@@ -139,7 +130,6 @@ public class MessageReceiverService {
                     }
 
                     indicationServiceV3.saveAll(indicationV3s);
-                    indicationV3s.forEach(influxRepository::saveIndicationV3ToInflux);
 
                     String applianceCode = deviceId;
                     Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(applianceCode);

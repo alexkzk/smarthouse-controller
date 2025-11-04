@@ -129,19 +129,7 @@ public class MetarService {
                     } catch (Exception e) {
                         LOGGER.error("Error during setting wind speed and wind direction", e);
                     }
-//                    indicationService.save(indication, indicationV2, AggregationPeriod.INSTANT);
-
-                    Air air = indication.getAir();
-                    if (air != null) {
-                        Temp temp = air.getTemp();
-                        messageSenderService.sendMessage(measurementTopic,
-                                ("{\"publisherId\": \"AVWX\", \"measurePlace\": \"%s\", \"inOut\": \"OUT\", \"air\": {\"temp\": {\"celsius\": %.3f,"
-                                        + " \"ah\": %.3f}}}").formatted(key,
-                                        temp == null ? null : temp.getCelsius(),
-                                        temp == null ? null : temp.getAh())
-                        );
-
-                    }
+                    indicationService.save(indication, null);
                 } else {
                     LOGGER.info("Metar is expired: {}", metar);
                 }
@@ -163,7 +151,7 @@ public class MetarService {
         indication.setInOut(InOut.OUT);
         indication.setIssued(metar.getTime().getIssueDateTime().toLocalDateTime());
         indication.setReceivedUtc(now);
-        indication.setPublisherId(metar.getStation());
+        indication.setPublisherId("AVWX");
         indication.setMetar(metar.getRaw());
         Air air = new Air();
         indication.setAir(air);
