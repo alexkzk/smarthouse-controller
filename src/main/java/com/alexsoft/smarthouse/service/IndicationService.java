@@ -1,7 +1,6 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
-import com.alexsoft.smarthouse.configuration.SmarthouseConfiguration;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.repository.IndicationRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryCustom;
@@ -297,7 +296,7 @@ public class IndicationService {
     }
 
     @Transactional
-    public List<IndicationV3> save(Indication indicationToSave) {
+    public List<IndicationV3> save(Indication indicationToSave, String topic) {
         IndicationV2 indicationV2 = MetarService.toIndicationV2(indicationToSave);
         calculateAbsoluteHumidity(indicationToSave);
         setEmptyMeasurementsToNull(indicationToSave);
@@ -306,6 +305,7 @@ public class IndicationService {
         IndicationV3Builder indicationV3Builder = IndicationV3.builder()
                 .publisherId(indicationToSave.getPublisherId())
                 .utcTime(indicationToSave.getReceivedUtc())
+                .mqttTopic(topic)
                 .localTime(indicationToSave.getReceivedLocal())
                 .locationId(deviceId);
         if (indicationToSave.getAir() != null) {

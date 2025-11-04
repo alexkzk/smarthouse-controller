@@ -54,13 +54,16 @@ Rebuild and redeploy on PI4
 ### Database operations
 
 Dump table
-`docker exec smarthouse-db sh -c "pg_dump -U smarthouse -t main.indication_v2 smarthouse | gzip > /home/indication_v2.sql.gz"`
+`docker exec smarthouse-db sh -c "pg_dump -U smarthouse -t main.indication_v2 smarthouse | gzip > /home/alexkzk/indication_v2.sql.gz"`
+
+-- no compression
+`docker exec -i smarthouse-db pg_dump -U smarthouse -d smarthouse --table="main.indication_v3" --data-only > /home/indication_v3.sql`
 
 Copy and Gzip file from inside a container
 `docker cp smarthouse-db:/home/indication_v2.sql.gz ~`
 
 Restore locally
+`SELECT setval('main.indication_sq_v3', 19449626);`
 `gunzip -c ~/Downloads/indication_v2.sql.gz | psql -U smarthouse -d smarthouse -h localhost -p 24870 -f indication_v2.sql`
-
 
 Author: Author. 2020.

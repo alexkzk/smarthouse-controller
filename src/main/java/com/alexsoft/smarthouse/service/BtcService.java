@@ -41,7 +41,7 @@ public class BtcService {
                 Indication indication = Indication.builder().inOut(InOut.OUT).indicationPlace("BTC").aggregationPeriod(AggregationPeriod.INSTANT).issued(etTimestamp)
                         .publisherId("coingecko.com").receivedUtc(utcTimestamp).receivedLocal(etTimestamp).air(Air.builder().temp(Temp.builder().celsius(btcPrice)
                                 .build()).build()).build();
-                indicationService.save(indication);
+                indicationService.save(indication, null);
                 btcRepository.save(btc);
             }
 

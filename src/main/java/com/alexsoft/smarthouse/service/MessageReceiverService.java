@@ -113,7 +113,7 @@ public class MessageReceiverService {
             try {
                 LOGGER.info("Received an MQTT message: {}", payload);
                 if (mqttTopic.equals(topic)) {
-                    List<IndicationV3> indicationV3s = indicationService.save(toIndication(payload));
+                    List<IndicationV3> indicationV3s = indicationService.save(toIndication(payload), topic);
                     indicationV3s.forEach(ind -> ind.setMqttTopic(topic));
                     indicationV3s.forEach(influxRepository::saveIndicationV3ToInflux);
                 } else if (topic != null && !topic.startsWith("zigbee2mqtt/bridge")) {
