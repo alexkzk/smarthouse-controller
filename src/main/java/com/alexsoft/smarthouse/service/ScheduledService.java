@@ -27,6 +27,8 @@ public class ScheduledService {
     private final DateUtils dateUtils;
     private final MessageSenderService messageSenderService;
     private final IndicationRepositoryV3 indicationRepositoryV3;
+    private final IndicationService indicationService;
+    private final IndicationServiceV3 indicationServiceV3;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -63,9 +65,11 @@ public class ScheduledService {
         }
         Double trend = (first.get().getValue() - second.get().getValue()) / secondsDifference * 3600;
         String celsius = measurementType.equals("ah") ? "ah" : "celsius";
-        messageSenderService.sendMessage(measurementTopic,
+        /*messageSenderService.sendMessage(measurementTopic,
                 ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\":"
-                        + " {\"temp\": {\"" + celsius + "\": %.3f}}}").formatted(minutes, trend));
+                        + " {\"temp\": {\"" + celsius + "\": %.3f}}}").formatted(minutes, trend));*/
+        indicationServiceV3.save(IndicationV3.builder().locationId("HOME-TREND%d").localTime(dateUtils.getLocalDateTime()).utcTime(dateUtils.getUtc())
+                .publisherId("smarthouse-server").value(trend).build());
     }
 
 }
