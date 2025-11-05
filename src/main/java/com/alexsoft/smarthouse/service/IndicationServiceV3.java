@@ -16,6 +16,7 @@ public class IndicationServiceV3 {
     private final InfluxRepository influxRepository;
 
     public IndicationV3 save(IndicationV3 indication) {
+        influxRepository.saveAll(List.of(indication));
         return indicationRepositoryV3.save(indication);
     }
 
