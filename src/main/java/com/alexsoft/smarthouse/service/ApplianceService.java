@@ -43,6 +43,8 @@ public class ApplianceService {
     private final IndicationRepositoryV3 indicationRepositoryV3;
     private final ApplianceGroupRepository applianceGroupRepository;
     private final SunUtils sunUtils;
+    private final IndicationService indicationService;
+    private final IndicationServiceV3 indicationServiceV3;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -171,7 +173,7 @@ public class ApplianceService {
             String type = metricType.equals("humidity") ? "ah" : "temp";
             /*messageSenderService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
                     + " \"air\": {\"temp\": {\"" + type + "\": %.3f}}}").formatted(average));*/
-            indicationRepositoryV3.save(IndicationV3.builder().locationId("HOME-AVG").localTime(now).utcTime(utc).publisherId("smarthouse-server").value(average)
+            indicationServiceV3.save(IndicationV3.builder().locationId("HOME-AVG").localTime(now).utcTime(utc).publisherId("smarthouse-server").value(average)
                     .measurementType(type).value(average).build());
         }
     }
