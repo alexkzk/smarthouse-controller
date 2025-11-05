@@ -68,7 +68,7 @@ public class ScheduledService {
         /*messageSenderService.sendMessage(measurementTopic,
                 ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\":"
                         + " {\"temp\": {\"" + celsius + "\": %.3f}}}").formatted(minutes, trend));*/
-        indicationServiceV3.save(IndicationV3.builder().locationId("HOME-TREND%d").localTime(dateUtils.getLocalDateTime()).utcTime(dateUtils.getUtc())
+        indicationServiceV3.save(IndicationV3.builder().locationId("HOME-TREND%d".formatted(minutes)).localTime(dateUtils.getLocalDateTime()).utcTime(dateUtils.getUtc())
                 .publisherId("smarthouse-server").measurementType(measurementType.equals("ah") ? "ah" : "temp").value(trend).build());
     }
 

@@ -66,4 +66,8 @@ Restore locally
 `SELECT setval('main.indication_sq_v3', 19449626);`
 `gunzip -c ~/Downloads/indication_v3.sql.gz | psql -U smarthouse -d smarthouse -h localhost -p 24870`
 
+Influx sync from IndicationV3 table
+`influx delete   --bucket smarthouse-bucket   --org Home   --start 1970-01-01T00:00:00Z   --stop 2100-01-01T00:00:00Z`
+`curl --location --request POST 'http://localhost:24867/smarthouse/indications/influx-sync?startDate=2025-10-17T00%3A00%3A00&endDate=2025-10-27T00%3A00%3A00'`
+
 Author: Author. 2020.
