@@ -95,6 +95,7 @@ public class ApplianceService {
 
         if (CollectionUtils.isNotEmpty(appliance.getReferenceSensors())) {
             LocalDateTime utc = dateUtils.getUtc();
+            LocalDateTime now = dateUtils.getLocalDateTime();
             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
             OptionalDouble averageOptional = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
@@ -105,7 +106,7 @@ public class ApplianceService {
                 LOGGER.info("Power control method executed, average was: \u001B[34m{}\u001B[0m, the {} setting: {}, hysteresis: {}",
                         appliance.getDescription(), average, appliance.getSetting(), appliance.getHysteresis());
 
-                sendAvgMessage(appliance, average);
+                sendAvgMessage(appliance, average, utc, now);
                 checkLock(appliance, utc);
 
                 if (!appliance.isLocked()) {
@@ -164,12 +165,14 @@ public class ApplianceService {
         }
     }
 
-    private void sendAvgMessage(Appliance appliance, Double average) {
+    private void sendAvgMessage(Appliance appliance, Double average, LocalDateTime utc, LocalDateTime now) {
         String metricType = appliance.getMetricType();
         if (metricType.equals("temp") || metricType.equals("humidity")) {
-            String type = metricType.equals("humidity") ? "ah" : "celsius";
-            messageSenderService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
-                    + " \"air\": {\"temp\": {\"" + type + "\": %.3f}}}").formatted(average));
+            String type = metricType.equals("humidity") ? "ah" : "temp";
+            /*messageSenderService.sendMessage(measurementTopic, ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-AVG\", \"inOut\": \"IN\","
+                    + " \"air\": {\"temp\": {\"" + type + "\": %.3f}}}").formatted(average));*/
+            indicationRepositoryV3.save(IndicationV3.builder().locationId("HOME-AVG").localTime(now).utcTime(utc).publisherId("smarthouse-server").value(average)
+                    .measurementType(type).value(average).build());
         }
     }
 
