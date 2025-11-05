@@ -175,6 +175,7 @@ public class ApplianceService {
 
     public void sendState(Appliance appliance) {
         LocalDateTime now = dateUtils.getLocalDateTime();
+        LocalDateTime utc = dateUtils.getUtc();
         if (appliance.getZigbee2MqttTopic() != null) {
             if (appliance.getCode().equals("LR-LUTV") && (now.getHour() < 7 || now.getHour() > 21)) {
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
@@ -190,9 +191,8 @@ public class ApplianceService {
         }
 
         if (appliance.getCode().equals("AC")) {
-            messageSenderService.sendMessage(measurementTopic,
-                    "{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"celsius\": %d}}}".formatted(
-                            appliance.getCode(), appliance.getState() == ON ? 1 : 0));
+            indicationRepositoryV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
+                    .locationId("HOME-AC").value((double) (appliance.getState() == ON ? 1 : 0)).build());
         }
     }
 
