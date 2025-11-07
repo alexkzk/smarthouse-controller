@@ -191,7 +191,7 @@ public class ApplianceService {
                     if (appliance.getPowerSetting() == null) {
                         brightness = ", \"brightness\": 160";
                     } else {
-                        brightness = ", \"brightness\": %d".formatted((int) (255 / appliance.getPowerSetting()));
+                        brightness = ", \"brightness\": %d".formatted((int) (255 * (appliance.getPowerSetting() / 100)));
                     }
                 } else if ("LR-LUTV".equals(appliance.getCode())) {
                     brightness = ", \"brightness\": 160";
