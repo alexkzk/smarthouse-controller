@@ -38,6 +38,9 @@ public class ApplianceController {
         return applianceService.getApplianceByCode(applianceCode).map(appliance -> {
             updates.forEach((key, value) -> {
                 switch (key) {
+                    case "powerSetting":
+                        appliance.setPowerSetting((Double) value);
+                        break;
                     case "description":
                         appliance.setDescription((String) value);
                         break;

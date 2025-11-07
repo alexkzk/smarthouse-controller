@@ -59,6 +59,8 @@ public class Appliance {
     private Double durationOnMinutes;
     private Double durationOffMinutes;
     private Boolean sensorControlled;
+    private Boolean dimmable;
+    private Double powerSetting;
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
     private Map<String, Object> schedule;

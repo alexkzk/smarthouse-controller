@@ -186,7 +186,18 @@ public class ApplianceService {
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
                         .formatted("on", appliance.getState() == ON ? 160 : 20));
             } else {
-                String brightness = List.of("MB-LOTV", "LR-LUTV", "MB-LOB").contains(appliance.getCode()) ? ", \"brightness\": 160" : "";
+                String brightness;
+                if (List.of("MB-LOTV", "MB-LOB").contains(appliance.getCode())) {
+                    if (appliance.getPowerSetting() == null) {
+                        brightness = ", \"brightness\": 160";
+                    } else {
+                        brightness = ", \"brightness\": %d".formatted((int) (255 / appliance.getPowerSetting()));
+                    }
+                } else if ("LR-LUTV".equals(appliance.getCode())) {
+                    brightness = ", \"brightness\": 160";
+                } else {
+                    brightness = "";
+                }
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
                         .formatted(appliance.getState() == ON ? "on" : "off"));
             }
