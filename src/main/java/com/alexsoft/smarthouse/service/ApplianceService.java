@@ -187,14 +187,12 @@ public class ApplianceService {
                         .formatted("on", appliance.getState() == ON ? 160 : 20));
             } else {
                 String brightness;
-                if (List.of("MB-LOTV", "MB-LOB").contains(appliance.getCode())) {
+                if (List.of("MB-LOTV", "MB-LOB", "LR-LUTV").contains(appliance.getCode())) {
                     if (appliance.getPowerSetting() == null) {
                         brightness = ", \"brightness\": 160";
                     } else {
                         brightness = ", \"brightness\": %d".formatted((int) (255 * (appliance.getPowerSetting() / 100)));
                     }
-                } else if ("LR-LUTV".equals(appliance.getCode())) {
-                    brightness = ", \"brightness\": 160";
                 } else {
                     brightness = "";
                 }
