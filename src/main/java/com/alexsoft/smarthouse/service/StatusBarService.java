@@ -36,6 +36,8 @@ public class StatusBarService {
                 utcMinusFiveMinutes, "money").stream().mapToDouble(IndicationV3::getValue).average();
         Optional<IndicationV3> avgOutT = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
                 utcMinusHour, "temp").stream().max(Comparator.comparing(IndicationV3::getUtcTime));
+        Optional<IndicationV3> avgOutAh = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("out"),
+                utcMinusHour, "ah").stream().max(Comparator.comparing(IndicationV3::getUtcTime));
 
         String btcFormatted = avgBtc.isPresent()
                 ? BigDecimal.valueOf(avgBtc.getAsDouble() / 1000)
@@ -43,17 +45,18 @@ public class StatusBarService {
                 .toString()
                 : "???.?";
 
-        String tempFormatted = ac.map(Appliance::getActual)
-                .map(actual -> BigDecimal.valueOf(actual).setScale(2, RoundingMode.HALF_UP).toString())
-                .orElse("??.??");
+        String indorTempFormatted = ac.map(Appliance::getActual)
+                .map(actual -> BigDecimal.valueOf(actual).setScale(1, RoundingMode.HALF_UP).toString())
+                .orElse("??.?");
 
-        String ahFormatted = deh.map(Appliance::getActual)
-                .map(actual -> BigDecimal.valueOf(actual).setScale(2, RoundingMode.HALF_UP).toString())
-                .orElse("??.??");
+        String indoorAhFormatted = deh.map(Appliance::getActual)
+                .map(actual -> BigDecimal.valueOf(actual).setScale(1, RoundingMode.HALF_UP).toString())
+                .orElse("??.?");
 
-        String outTempFormatted = avgOutT.isPresent() ? BigDecimal.valueOf(avgOutT.get().getValue()).setScale(1, RoundingMode.HALF_UP).toString() : "??.?";
+        String outTempFormatted = avgOutT.isPresent() ? BigDecimal.valueOf(avgOutT.get().getValue()).setScale(0, RoundingMode.HALF_UP).toString() : "??";
+        String outAhFormatted = avgOutAh.isPresent() ? BigDecimal.valueOf(avgOutAh.get().getValue()).setScale(0, RoundingMode.HALF_UP).toString() : "??";
 
-        return String.format("%s    %s/%s    %s", btcFormatted, tempFormatted, ahFormatted, outTempFormatted);
+        return String.format("%s    %s/%s    %s/%s", btcFormatted, indorTempFormatted, indoorAhFormatted, outTempFormatted, outAhFormatted);
     }
 
 }
