@@ -5,6 +5,7 @@ import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.repository.InfluxRepository;
 import com.alexsoft.smarthouse.service.IndicationServiceV2;
 import com.alexsoft.smarthouse.service.IndicationServiceV3;
+import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,15 +30,11 @@ public class IndicationsController {
     private final InfluxRepository influxRepository;
     private final IndicationServiceV3 indicationServiceV3;
     private final IndicationRepositoryV3 indicationRepositoryV3;
+    private final DateUtils dateUtils;
 
     @PostMapping
     public ResponseEntity<String> createIndication(@RequestBody IndicationV3 indication) {
-        IndicationV3 savedIndication = indicationServiceV3.createIndication(indication);
-        LocalDateTime localTime = savedIndication.getLocalTime();
-        List<IndicationV3> mbs = indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1), localTime, savedIndication.getMeasurementType());
-        IndicationV3 mbs1 = IndicationV3.builder().locationId("mbs").localTime(localTime).measurementType(savedIndication.getMeasurementType() + "-30d")
-                .value(mbs.stream().mapToDouble(IndicationV3::getValue).sum()).build();
-        indicationServiceV3.createIndication(mbs1);
+        indicationServiceV3.saveAll(createMbsIndication(indication));
         return ResponseEntity.ok(indicationServiceV3.getMbsStatus());
     }
 
@@ -86,11 +83,7 @@ public class IndicationsController {
                                             .build();
 
                                     // Save to database
-                                    indicationServiceV3.createIndication(indication);
-                                    List<IndicationV3> mbs = indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1), localTime, measurementType);
-                                    IndicationV3 mbs1 = IndicationV3.builder().locationId("mbs").localTime(localTime).measurementType(measurementType + "-30d")
-                                            .value(mbs.stream().mapToDouble(IndicationV3::getValue).sum()).build();
-                                    indicationServiceV3.createIndication(mbs1);
+                                    indicationServiceV3.saveAll(createMbsIndication(indication));
                                 }
                             }
                         }
@@ -116,6 +109,30 @@ public class IndicationsController {
     public ResponseEntity<String> filterByDate(@RequestParam LocalDateTime startDate, @RequestParam LocalDateTime endDate) {
         influxRepository.syncFromPostgres(startDate, endDate);
         return null;
+
+    }
+
+    private List<IndicationV3> createMbsIndication(IndicationV3 indication) {
+        LocalDateTime utc = dateUtils.getUtc();
+        String measurementType = indication.getMeasurementType();
+        LocalDateTime localTime = indication.getLocalTime();
+        if (indication.getUtcTime() == null && localTime != null) {
+            indication.setUtcTime(dateUtils.toUtc(localTime));
+        }
+        if (localTime == null && indication.getUtcTime() != null) {
+            indication.setLocalTime(dateUtils.toLocalDateTime(indication.getUtcTime()));
+        }
+        if (indication.getUtcTime() == null) {
+            indication.setUtcTime(utc);
+        }
+        if( localTime == null) {
+            indication.setLocalTime(dateUtils.toLocalDateTime(utc));
+        }
+        IndicationV3 mbs30d = IndicationV3.builder().locationId("mbs").localTime(localTime).measurementType(measurementType + "-30d")
+                .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1), localTime, measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
+        IndicationV3 mbs1d = IndicationV3.builder().locationId("mbs").localTime(localTime).measurementType(measurementType + "-1d")
+                .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusDays(1), localTime, measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
+        return List.of(indication, mbs30d, mbs1d);
 
     }
 
