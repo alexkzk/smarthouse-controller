@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface IndicationRepositoryV3 extends JpaRepository<IndicationV3, Integer> {
-    List<IndicationV3> findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List<String> locationIds, LocalDateTime localTime, String measurementType);
+    List<IndicationV3> findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List<String> locationIds, LocalDateTime utc, String measurementType);
     List<IndicationV3> findByUtcTimeBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<IndicationV3> findByLocalTimeBetweenAndMeasurementType(LocalDateTime startDate, LocalDateTime endDate, String measurementType);
 }
