@@ -128,9 +128,9 @@ public class IndicationsController {
         if( localTime == null) {
             indication.setLocalTime(dateUtils.toLocalDateTime(utc));
         }
-        IndicationV3 mbs30d = IndicationV3.builder().locationId("mbs").localTime(localTime).measurementType(measurementType + "-30d")
+        IndicationV3 mbs30d = IndicationV3.builder().locationId("mbs").localTime(localTime).utcTime(utc).measurementType(measurementType + "-30d")
                 .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1), localTime, measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
-        IndicationV3 mbs1d = IndicationV3.builder().locationId("mbs").localTime(localTime).measurementType(measurementType + "-1d")
+        IndicationV3 mbs1d = IndicationV3.builder().locationId("mbs").localTime(localTime).utcTime(utc).measurementType(measurementType + "-1d")
                 .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusDays(1), localTime, measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
         return List.of(indication, mbs30d, mbs1d);
 
