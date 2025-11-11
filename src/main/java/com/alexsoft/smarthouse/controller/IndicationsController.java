@@ -30,7 +30,7 @@ public class IndicationsController {
     private final IndicationServiceV3 indicationServiceV3;
     private final IndicationRepositoryV3 indicationRepositoryV3;
 
-    /*@PostMapping
+    @PostMapping
     public ResponseEntity<String> createIndication(@RequestBody IndicationV3 indication) {
         IndicationV3 savedIndication = indicationServiceV3.createIndication(indication);
         LocalDateTime localTime = savedIndication.getLocalTime();
@@ -39,10 +39,10 @@ public class IndicationsController {
                 .value(mbs.stream().mapToDouble(IndicationV3::getValue).sum()).build();
         indicationServiceV3.createIndication(mbs1);
         return ResponseEntity.ok(indicationServiceV3.getMbsStatus());
-    }*/
+    }
 
-    @PostMapping
-    public ResponseEntity<String> createIndication() {
+    @PostMapping("/mbs/reprocess")
+    public ResponseEntity<String> reprocessMbs() {
 
         // Load CSV file from resources folder
         ClassLoader classLoader = getClass().getClassLoader();
