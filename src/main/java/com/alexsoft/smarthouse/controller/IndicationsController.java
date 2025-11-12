@@ -78,6 +78,7 @@ public class IndicationsController {
                                     IndicationV3 indication = IndicationV3.builder()
                                             .locationId("mbs")
                                             .localTime(localTime)
+                                            .utcTime(dateUtils.toUtc(localTime))
                                             .measurementType(measurementType)  // Match types
                                             .value(value)
                                             .build();
@@ -113,9 +114,10 @@ public class IndicationsController {
     }
 
     private List<IndicationV3> createMbsIndication(IndicationV3 indication) {
-        LocalDateTime utc = dateUtils.getUtc();
+        indicationRepositoryV3.save(indication);
         String measurementType = indication.getMeasurementType();
         LocalDateTime localTime = indication.getLocalTime();
+        LocalDateTime utc = indication.getUtcTime();
         if (indication.getUtcTime() == null && localTime != null) {
             indication.setUtcTime(dateUtils.toUtc(localTime));
         }
@@ -129,9 +131,9 @@ public class IndicationsController {
             indication.setLocalTime(dateUtils.toLocalDateTime(utc));
         }
         IndicationV3 mbs30d = IndicationV3.builder().locationId("mbs").localTime(localTime).utcTime(utc).measurementType(measurementType + "-30d")
-                .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1), localTime, measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
+                .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1).plusSeconds(1), localTime.plusSeconds(1), measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
         IndicationV3 mbs1d = IndicationV3.builder().locationId("mbs").localTime(localTime).utcTime(utc).measurementType(measurementType + "-1d")
-                .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusDays(1), localTime, measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
+                .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusDays(1).plusSeconds(1), localTime.plusSeconds(1), measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();
         return List.of(indication, mbs30d, mbs1d);
 
     }
