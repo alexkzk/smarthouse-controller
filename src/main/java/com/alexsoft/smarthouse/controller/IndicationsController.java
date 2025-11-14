@@ -107,8 +107,8 @@ public class IndicationsController {
 
 
     @PostMapping("/influx-sync")
-    public ResponseEntity<String> filterByDate(@RequestParam LocalDateTime startDate, @RequestParam LocalDateTime endDate) {
-        influxRepository.syncFromPostgres(startDate, endDate);
+    public ResponseEntity<String> filterByDate(@RequestParam(required = false) LocalDateTime startDate, @RequestParam(required = false) LocalDateTime endDate) {
+        influxRepository.syncAllFromPostgresBy1Days(startDate, endDate);
         return null;
 
     }

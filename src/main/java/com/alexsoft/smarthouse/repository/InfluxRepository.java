@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,14 +40,47 @@ public class InfluxRepository {
 
     private final IndicationRepositoryV3 indicationRepositoryV3;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @PostConstruct
     private void initializeInfluxDbClient() {
         this.influxDBClient = InfluxDBClientFactory.create(influxDbUrl, influxDbToken.toCharArray());
     }
 
-    public int syncFromPostgres(LocalDateTime startDate, LocalDateTime endDate) {
-        List<IndicationV3> indications = indicationRepositoryV3.findByUtcTimeBetween(startDate, endDate);
-        return saveAll(indications);
+    public int syncAllFromPostgresBy1Days(LocalDateTime startDate, LocalDateTime endDate) {
+
+        if (startDate == null) {
+            startDate = indicationRepositoryV3.findMinUtcTime();
+        }
+
+        if (endDate == null) {
+            endDate = indicationRepositoryV3.findMaxUtcTime();
+        }
+
+        int totalSynced = 0;
+        LocalDateTime chunkStart = startDate;
+
+        while (!chunkStart.isAfter(endDate)) {
+            LocalDateTime chunkEnd = chunkStart.plusDays(1);
+            if (chunkEnd.isAfter(endDate)) {
+                chunkEnd = endDate;
+            }
+
+            LOGGER.info("Syncing indications from {} to {}", chunkStart, chunkEnd);
+
+            List<IndicationV3> indications =
+                    indicationRepositoryV3.findByUtcTimeBetween(chunkStart, chunkEnd);
+
+            totalSynced += saveAll(indications);
+
+            entityManager.clear();
+
+            // move to next 1‑day window, avoid overlap
+            chunkStart = chunkEnd.plusNanos(1);
+        }
+
+        return totalSynced;
     }
 
     public int saveAll(List<IndicationV3> indications) {
