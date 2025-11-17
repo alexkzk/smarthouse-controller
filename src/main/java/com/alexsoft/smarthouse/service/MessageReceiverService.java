@@ -47,7 +47,6 @@ public class MessageReceiverService {
     private final DateUtils dateUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
-
     private final MessageSenderService messageSenderService;
 
     @Value("tcp://${mqtt.server-in}:${mqtt.port}")
@@ -122,11 +121,21 @@ public class MessageReceiverService {
                         indicationV3s.add(indicationV3Builder.measurementType("illuminance").unit("lux")
                                 .value(getValue(String.valueOf(map.get("illuminance")))).build());
                     }
-                    Double temperature = getValue(String.valueOf(map.get("temperature")));
+                    if (map.containsKey("temperature")) {
+                        Double temperature = getValue(String.valueOf(map.get("temperature")));
+                        indicationV3s.add(indicationV3Builder.measurementType("temp").unit("c")
+                                .value(temperature).build());
+                    }
                     if (map.containsKey("humidity")) {
-                        double rh = BigDecimal.valueOf(getValue(String.valueOf(map.get("humidity")))).setScale(0, RoundingMode.HALF_UP).doubleValue();
-                        Double ah = tempUtils.calculateAbsoluteHumidity(temperature, rh, 2);
-                        messageSenderService.sendMessage(measurementTopic, ("{\"publisherId\": \"%s\", \"measurePlace\": \"%s\", \"inOut\": \"IN\", \"air\": {\"temp\": {\"ah\": %f, \"rh\": %f, \"celsius\": %f}}}".formatted(topic, deviceId, ah, rh, temperature)));
+                        Double rh = getValue(String.valueOf(map.get("humidity")));
+                        indicationV3s.add(indicationV3Builder.measurementType("rh").unit("%")
+                                .value(rh).build());
+                        Double temperature = getValue(String.valueOf(map.get("temperature")));
+                        if (temperature != null && rh != null) {
+                            indicationV3s.add(indicationV3Builder.measurementType("ah").unit("g/m3")
+                                    .value(tempUtils.calculateAbsoluteHumidity(temperature.floatValue(), rh.intValue()).doubleValue()).build());
+
+                        }
                     }
 
                     indicationServiceV3.saveAll(indicationV3s);
