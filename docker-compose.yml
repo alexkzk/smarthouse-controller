@@ -16,6 +16,13 @@ services:
       - SPRING_DATASOURCE_USERNAME=smarthouse
       - SPRING_DATASOURCE_PASSWORD=smarthouse
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Git configuration
+      - GIT_REPO_SSH=git@github.com:your-user/smarthouse-controller.git
+      - GIT_BRANCH=master
+      - SSH_KEY_PATH=/ssh/id_rsa
+    volumes:
+      # SSH key from host into container (read-only)
+      - ~/.ssh/id_rsa:/ssh/id_rsa:ro
     restart: unless-stopped
     networks:
       - smarthouse_network
@@ -29,7 +36,6 @@ services:
     ports:
       - '24870:5432'
     volumes:
-      # Database data directory
       - ./postgresql_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
@@ -39,16 +45,16 @@ services:
     image: influxdb:2.0
     container_name: smarthouse-influxdb
     ports:
-      - "8086:8086" # InfluxDB HTTP API
+      - "8086:8086"
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup                           # Setup mode
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:admin}                      # Admin username
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:changeme}              # Admin password
-      - DOCKER_INFLUXDB_INIT_ORG=Home                            # Organization
-      - DOCKER_INFLUXDB_INIT_BUCKET=smarthouse-bucket             # Default bucket
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:your-influxdb-token-here}        # Auth token
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:changeme}
+      - DOCKER_INFLUXDB_INIT_ORG=Home
+      - DOCKER_INFLUXDB_INIT_BUCKET=smarthouse-bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:your-influxdb-token-here}
     volumes:
-      - ./influxdb_data:/var/lib/influxdb2            # Persistent storage
+      - ./influxdb_data:/var/lib/influxdb2
     restart: unless-stopped
     networks:
       - smarthouse_network
@@ -57,8 +63,8 @@ services:
     image: eclipse-mosquitto:latest
     container_name: smarthouse-mqtt-broker
     ports:
-      - "1883:1883"  # MQTT port
-      - "9001:9001"  # Websockets (optional)
+      - "1883:1883"
+      - "9001:9001"
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: unless-stopped
