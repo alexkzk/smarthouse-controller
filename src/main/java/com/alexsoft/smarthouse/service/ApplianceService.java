@@ -205,7 +205,7 @@ public class ApplianceService {
         }
 
         if (appliance.getCode().equals("AC")) {
-            indicationRepositoryV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
+            indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
                     .locationId("HOME-AC").value((double) (appliance.getState() == ON ? 1 : 0)).build());
         }
     }
