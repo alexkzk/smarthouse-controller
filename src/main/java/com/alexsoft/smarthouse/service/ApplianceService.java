@@ -101,6 +101,8 @@ public class ApplianceService {
             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
             OptionalDouble averageOptional = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(appliance.getReferenceSensors(),
                             averageStart, appliance.getMeasurementType()).stream().mapToDouble(IndicationV3::getValue).average();
+            OptionalDouble avgDehPowerConsumption = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("lr-sp-dehumidifier"),
+                            averageStart, "power").stream().mapToDouble(IndicationV3::getValue).average();
             double average;
             if (averageOptional.isPresent()) {
                 average = averageOptional.getAsDouble();
@@ -146,7 +148,7 @@ public class ApplianceService {
                 LOGGER.info("Power control method executed, indications were empty");
             }
             applianceRepository.save(appliance);
-            sendState(appliance);
+            sendState(appliance, avgDehPowerConsumption);
         } else {
             LOGGER.info("Reference sensors list is empty, skipping power control");
         }
@@ -178,7 +180,7 @@ public class ApplianceService {
         }
     }
 
-    public void sendState(Appliance appliance) {
+    public void sendState(Appliance appliance, OptionalDouble avgDehPowerConsumption) {
         LocalDateTime now = dateUtils.getLocalDateTime();
         LocalDateTime utc = dateUtils.getUtc();
         if (appliance.getZigbee2MqttTopic() != null) {
@@ -198,6 +200,35 @@ public class ApplianceService {
                 }
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
                         .formatted(appliance.getState() == ON ? "on" : "off"));
+            }
+            //  Turn on the FAN periodically while DEH is on
+            if (appliance.getCode().equals("DEH") && applianceRepository.findById("AC").get().getState() == OFF) {
+                boolean fanNeedsToBeTurnedOn;
+                LOGGER.info("mqtt.smarthouse.power.control inside");
+                if (now.getHour() > 22 || now.getHour() < 8) {
+                    // night time
+                    fanNeedsToBeTurnedOn = List.of(55,56,57,58,59)
+                            .contains(now.getMinute());
+                } else {
+                    // day time
+                    fanNeedsToBeTurnedOn = List.of(17,18,19,37,38,39,57,58,59)
+                            .contains(now.getMinute());
+                }
+                if (appliance.getState() == ON && avgDehPowerConsumption.isPresent() && avgDehPowerConsumption.getAsDouble() > 500) {
+                    if (fanNeedsToBeTurnedOn) {
+                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "on"));
+                        indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
+                                .locationId("HOME-FAN").value(1.0).build());
+                    } else {
+                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
+                        indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
+                                .locationId("HOME-FAN").value(0.0).build());
+                    }
+                } else {
+                    messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
+                    indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
+                            .locationId("HOME-FAN").value(0.0).build());
+                }
             }
         } else {
             messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"

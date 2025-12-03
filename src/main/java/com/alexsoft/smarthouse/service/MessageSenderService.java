@@ -21,6 +21,7 @@ public class MessageSenderService {
 
     public void sendMessage(String topic, String messagePayload) {
         if (!msgSendingEnabled) {
+            LOGGER.info("Skipping Sending MQTT message: topic={}, payload={}", topic, messagePayload);
             return;
         }
         LOGGER.info("Sending MQTT message: topic={}, payload={}", topic, messagePayload);
