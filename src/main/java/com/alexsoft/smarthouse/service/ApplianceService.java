@@ -207,7 +207,7 @@ public class ApplianceService {
                 LOGGER.info("mqtt.smarthouse.power.control inside");
                 if (now.getHour() > 22 || now.getHour() < 8) {
                     // night time
-                    fanNeedsToBeTurnedOn = List.of(55,56,57,58,59)
+                    fanNeedsToBeTurnedOn = List.of(27,28,29,57,58,59)
                             .contains(now.getMinute());
                 } else {
                     // day time
