@@ -200,6 +200,10 @@ public class ApplianceService {
                 }
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
                         .formatted(appliance.getState() == ON ? "on" : "off"));
+                if (appliance.getCode().equals("TER-LIGHTS")) {
+                    messageSenderService.sendMessage("zigbee2mqtt/WRKTABLE", ("{\"state\": \"%s\"" + brightness + "}")
+                            .formatted(appliance.getState() == ON ? "on" : "off"));
+                }
             }
             //  Turn on the FAN periodically while DEH is on
             if (appliance.getCode().equals("DEH") && applianceRepository.findById("AC").get().getState() == OFF) {
@@ -207,7 +211,7 @@ public class ApplianceService {
                 LOGGER.info("mqtt.smarthouse.power.control inside");
                 if (now.getHour() > 22 || now.getHour() < 8) {
                     // night time
-                    fanNeedsToBeTurnedOn = List.of(27,28,29,57,58,59)
+                    fanNeedsToBeTurnedOn = List.of(26,27,28,29,56,57,58,59)
                             .contains(now.getMinute());
                 } else {
                     // day time
@@ -225,16 +229,10 @@ public class ApplianceService {
                                 .locationId("HOME-FAN").value(0.0).build());
                     }
                 } else {
-                    if (List.of(55,56,57,58,59).contains(now.getMinute())) {
-                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "on"));
-                        indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
-                                .locationId("HOME-FAN").value(1.0).build());
-                    } else {
-                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
-                        indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
-                                .locationId("HOME-FAN").value(0.0).build());
+                    messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
+                    indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
+                            .locationId("HOME-FAN").value(0.0).build());
 
-                    }
                 }
             }
         } else {
