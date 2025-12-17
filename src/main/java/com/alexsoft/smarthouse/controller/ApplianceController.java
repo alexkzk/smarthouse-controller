@@ -21,7 +21,9 @@ import java.util.Map;
 @RequestMapping("/appliances")
 @RequiredArgsConstructor
 public class ApplianceController {
+
     private static final Logger logger = LoggerFactory.getLogger(ApplianceController.class);
+    public static final double TEMP_CONTROLL_STEP = 0.25;
 
     private final ApplianceService applianceService;
     private final DateUtils dateUtils;
@@ -105,7 +107,7 @@ public class ApplianceController {
 
 
     public static Double increaseTemperature(Double currentTemperature) {
-        return roundToNearestHalf(currentTemperature) + 0.5;
+        return roundToNearestHalf(currentTemperature) + TEMP_CONTROLL_STEP;
     }
 
     public static Double decreaseTemperature(Double currentTemperature) {
@@ -113,7 +115,7 @@ public class ApplianceController {
         if (currentTemperature > roundedTemperature) {
             return roundedTemperature;
         }
-        return roundedTemperature - 0.5;
+        return roundedTemperature - TEMP_CONTROLL_STEP;
     }
 
     private static double roundToNearestHalf(double value) {
