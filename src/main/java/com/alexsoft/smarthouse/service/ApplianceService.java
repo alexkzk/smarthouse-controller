@@ -201,7 +201,7 @@ public class ApplianceService {
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
                         .formatted(appliance.getState() == ON ? "on" : "off"));
                 if (appliance.getCode().equals("TER-LIGHTS")) {
-                    messageSenderService.sendMessage("zigbee2mqtt/WRKTABLE", ("{\"state\": \"%s\"" + brightness + "}")
+                    messageSenderService.sendMessage("zigbee2mqtt/WRKTABLE/set", ("{\"state\": \"%s\"" + brightness + "}")
                             .formatted(appliance.getState() == ON ? "on" : "off"));
                 }
             }

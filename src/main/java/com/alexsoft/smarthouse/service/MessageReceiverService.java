@@ -140,15 +140,14 @@ public class MessageReceiverService {
 
                     indicationServiceV3.saveAll(indicationV3s);
 
-                    String applianceCode = deviceId;
-                    Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(applianceCode);
+                    Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(deviceId);
                     if (applianceByCode.isPresent() && map.containsKey("state")) {
                         String receivedState = (String) map.get("state");
                         Appliance appliance = applianceByCode.get();
                         if (!appliance.getState().name().equalsIgnoreCase(receivedState)) {
                             applianceService.toggleAppliance(appliance, ApplianceState.valueOf(receivedState), dateUtils.getUtc());
                             applianceService.saveOrUpdateAppliance(appliance);
-                            applianceService.powerControl(appliance.getCode());
+//                            applianceService.powerControl(appliance.getCode());   //  avoid race condition
                         }
                     }
 
