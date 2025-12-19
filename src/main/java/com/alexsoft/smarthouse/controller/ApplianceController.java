@@ -29,8 +29,8 @@ public class ApplianceController {
     private final DateUtils dateUtils;
 
     @GetMapping
-    public ResponseEntity<List<Appliance>> getAllAppliances() {
-        List<Appliance> appliances = applianceService.getAllAppliances();
+    public ResponseEntity<List<Appliance>> getAllAppliances(@RequestParam(required = false) String requesterId) {
+        List<Appliance> appliances = applianceService.getAllAppliances(requesterId);
         return ResponseEntity.ok(appliances);
     }
 

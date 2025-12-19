@@ -2,12 +2,14 @@ package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.entity.IndicationV3;
+import com.alexsoft.smarthouse.entity.Request;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.event.HourChangedEvent;
 import com.alexsoft.smarthouse.event.SunsetEvent;
 import com.alexsoft.smarthouse.repository.ApplianceGroupRepository;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.repository.RequestRepository;
 import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.SunUtils;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,7 @@ public class ApplianceService {
     private final SunUtils sunUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
+    private final RequestRepository requestRepository;
 
     @Value("${mqtt.topic}")
     private String measurementTopic;
@@ -247,6 +250,13 @@ public class ApplianceService {
     }
 
     public List<Appliance> getAllAppliances() {
+        return applianceRepository.findAll();
+    }
+
+    public List<Appliance> getAllAppliances(String requesterId) {
+        if (requesterId != null) {
+            requestRepository.save(Request.builder().requesterId(requesterId).utcTime(dateUtils.getUtc()).build());
+        }
         return applianceRepository.findAll();
     }
 
