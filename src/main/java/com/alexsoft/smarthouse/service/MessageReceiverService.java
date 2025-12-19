@@ -102,7 +102,7 @@ public class MessageReceiverService {
             String payload = (String) message.getPayload();
             String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
             try {
-                LOGGER.info("Received an MQTT message: {}", payload);
+                LOGGER.info("mqtt.msg.received: {}", payload);
                 if (mqttTopic.equals(topic)) {
                     List<IndicationV3> indicationV3s = indicationService.save(toIndication(payload), topic);
                     indicationV3s.forEach(ind -> ind.setMqttTopic(topic));

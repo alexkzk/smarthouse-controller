@@ -119,7 +119,7 @@ public class ApplianceController {
     }
 
     private static double roundToNearestHalf(double value) {
-        return Math.round(value * 2) / 2.0;
+        return Math.round(value * 4) / 4.0;
     }
 
 
