@@ -46,12 +46,12 @@ public class AstroEventPublisher {
         Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
         lastSunsetReported = lastSunsetEvent == null ? null : convertToLocalDateTime((Timestamp) lastSunsetEvent);
         appReady = true;
-        eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("app-startup").build());
+        eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("application.startup").build());
     }
 
     @EventListener(ContextClosedEvent.class)
     public void onApplicationEvent() {
-        eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("app-shutdown").build());
+        eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("application.shutdown").build());
     }
 
     @Scheduled(fixedRate = 60 * 1000)
@@ -78,7 +78,7 @@ public class AstroEventPublisher {
         LocalDateTime localDateTime = getLocalDateTime();
         int currentHour = localDateTime.getHour();
         if (!Objects.equals(currentHour, lastReportedNewHour)) {
-            eventRepository.save(Event.builder().utcTime(toUtc(localDateTime)).type("new-hour").build());
+            eventRepository.save(Event.builder().utcTime(toUtc(localDateTime)).type("new.hour").build());
             LOGGER.info("New hour event: {}", currentHour);
             hourChangeTrackerRepository.updatePreviousHour(currentHour, convertToTimestamp(localDateTime));
             lastReportedNewHour = currentHour;

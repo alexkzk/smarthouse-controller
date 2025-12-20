@@ -1,11 +1,13 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Appliance;
+import com.alexsoft.smarthouse.entity.Event;
 import com.alexsoft.smarthouse.entity.Indication;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.repository.EventRepository;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -45,7 +47,7 @@ public class MessageReceiverService {
     private final ApplianceService applianceService;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
-    private final MessageSenderService messageSenderService;
+    private final EventRepository eventRepository;
 
     @Value("tcp://${mqtt.server-in}:${mqtt.port}")
     private String mqttUrlIn;
@@ -99,6 +101,12 @@ public class MessageReceiverService {
             }
             String payload = (String) message.getPayload();
             String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
+            try {
+                Map<String, Object> msgMap = OBJECT_MAPPER.readValue(payload, Map.class);
+                eventRepository.save(Event.builder().type("inbound.mqtt.msg").utcTime(getUtc()).data(msgMap).build());
+            } catch (Exception  e) {
+                LOGGER.warn("Failed to log inbound MQTT message payload {}", payload);
+            }
             try {
                 LOGGER.info("mqtt.msg.received: {}", payload);
                 if (mqttTopic.equals(topic)) {
