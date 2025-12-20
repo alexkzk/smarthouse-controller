@@ -2,8 +2,8 @@ package com.alexsoft.smarthouse.controller;
 
 import com.alexsoft.smarthouse.entity.Appliance;
 import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.service.ApplianceFacade;
 import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +17,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
+import static com.alexsoft.smarthouse.utils.DateUtils.getUtc;
+
 @RestController
 @RequestMapping("/appliances")
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class ApplianceController {
     public static final double TEMP_CONTROLL_STEP = 0.25;
 
     private final ApplianceService applianceService;
-    private final DateUtils dateUtils;
+    private ApplianceFacade applianceFacade;
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances(@RequestParam(required = false) String requesterId) {
@@ -48,7 +50,7 @@ public class ApplianceController {
                         break;
                     case "state":
                         ApplianceState newState = ApplianceState.valueOf((String) value);
-                        applianceService.toggleAppliance(appliance, newState, dateUtils.getUtc());
+                        applianceFacade.toggle(appliance, newState, getUtc(), "android-app");
                         break;
                     case "consumptionKwh":
                         appliance.setConsumptionKwh(Double.valueOf(value.toString()));

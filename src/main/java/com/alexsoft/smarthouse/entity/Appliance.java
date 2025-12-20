@@ -1,5 +1,6 @@
 package com.alexsoft.smarthouse.entity;
 
+import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.MapToJsonConverter;
 import com.alexsoft.smarthouse.utils.StringListConverter;
 import com.alexsoft.smarthouse.enums.ApplianceState;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 import static com.alexsoft.smarthouse.utils.Constants.APPLICATION_OPERATION_TIMEZONE;
+import static com.alexsoft.smarthouse.utils.DateUtils.*;
 
 @Entity
 @Table(schema = "main")
@@ -67,6 +69,29 @@ public class Appliance {
 
     public Optional<ApplianceGroup> getApplianceGroup() {
         return applianceGroup == null ? Optional.empty() : Optional.of(applianceGroup);
+    }
+
+    public boolean toggle(ApplianceState newState, LocalDateTime utc) {
+        if (newState == ON && getState() == OFF) {
+            setState(newState, utc);
+            if (getMinimumOnCycleMinutes() != null) {
+                setLocked(true);
+                setLockedUntilUtc(utc.plusMinutes(getMinimumOnCycleMinutes()));
+            }
+            return true;
+        } else if (newState == OFF && getState() == ON) {
+            setState(OFF, utc);
+            if (getCode().equals("LR-LUTV") || getCode().equals("TER-LIGHTS")) {
+                setLockedUntilUtc(sixThirtyAm());
+            } else if (getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
+                setLockedUntilUtc(toUtc(getSunriseTime().plusHours(1)));
+            } else if (getMinimumOffCycleMinutes() != null) {
+                setLocked(true);
+                setLockedUntilUtc(utc.plusMinutes(getMinimumOffCycleMinutes()));
+            }
+            return true;
+        }
+        return false;
     }
 
     public void setState(ApplianceState state, LocalDateTime localdatetime) {

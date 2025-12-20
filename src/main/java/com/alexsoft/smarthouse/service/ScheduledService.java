@@ -16,6 +16,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import static com.alexsoft.smarthouse.utils.DateUtils.getLocalDateTime;
+import static com.alexsoft.smarthouse.utils.DateUtils.getUtc;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -24,10 +27,7 @@ public class ScheduledService {
     public static final List<String> TREND_DEVICE_IDS = List.of("HOME-MB", "HOME-LR");
     public static final List<String> TREND_MEASURE_TYPES = List.of("ah", "temp");
     private final ApplianceService applianceService;
-    private final DateUtils dateUtils;
-    private final MessageSenderService messageSenderService;
     private final IndicationRepositoryV3 indicationRepositoryV3;
-    private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
 
     @Value("${mqtt.topic}")
@@ -42,7 +42,7 @@ public class ScheduledService {
     @Scheduled(cron = "*/3 * * * * *")
     @Transactional
     public void calculateTrends() {
-        LocalDateTime utcDateTime = dateUtils.getUtc();
+        LocalDateTime utcDateTime = getUtc();
         TREND_MEASURE_TYPES.forEach(measurementType -> {
             calculateTrendAndSend(utcDateTime, 1, measurementType, TREND_DEVICE_IDS);
             calculateTrendAndSend(utcDateTime, 5, measurementType, TREND_DEVICE_IDS);
@@ -64,11 +64,7 @@ public class ScheduledService {
             return;
         }
         Double trend = (first.get().getValue() - second.get().getValue()) / secondsDifference * 3600;
-        String celsius = measurementType.equals("ah") ? "ah" : "celsius";
-        /*messageSenderService.sendMessage(measurementTopic,
-                ("{\"publisherId\": \"i7-4770k\", \"measurePlace\": \"HOME-TREND%d\", \"inOut\": \"IN\", \"air\":"
-                        + " {\"temp\": {\"" + celsius + "\": %.3f}}}").formatted(minutes, trend));*/
-        indicationServiceV3.save(IndicationV3.builder().locationId("HOME-TREND%d".formatted(minutes)).localTime(dateUtils.getLocalDateTime()).utcTime(dateUtils.getUtc())
+        indicationServiceV3.save(IndicationV3.builder().locationId("HOME-TREND%d".formatted(minutes)).localTime(getLocalDateTime()).utcTime(getUtc())
                 .publisherId("smarthouse-server").measurementType(measurementType.equals("ah") ? "ah" : "temp").value(trend).build());
     }
 

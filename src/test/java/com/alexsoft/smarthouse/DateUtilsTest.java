@@ -12,20 +12,17 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.stream.Stream;
 
+import static com.alexsoft.smarthouse.utils.DateUtils.roundDateTime;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DateUtilsTest {
 
-    private final ZoneId userTimezone = ZoneId.of("Europe/Kiev");
-    private final DateTimeFormatter chartDateTimePattern = DateTimeFormatter.ofPattern("E d, HH:mm");
-    private final DateUtils dateUtils = new DateUtils(userTimezone, chartDateTimePattern);
-
     @ParameterizedTest
     @MethodSource
     public void roundTest(int amount, TemporalUnit temporalUnit, String input, String expectedResult) {
-        assertThat(dateUtils.roundDateTime(
+        assertThat(roundDateTime(
                 LocalDateTime.parse(input), amount, temporalUnit),
                 is(LocalDateTime.parse(expectedResult))
         );

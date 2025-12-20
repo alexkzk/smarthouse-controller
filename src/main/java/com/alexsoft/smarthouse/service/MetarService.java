@@ -38,6 +38,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import static com.alexsoft.smarthouse.utils.DateUtils.toLocalDateTimeAtZone;
+
 @Service
 public class MetarService {
 
@@ -64,17 +66,15 @@ public class MetarService {
     private final RestTemplate restTemplate;
     private final IndicationService indicationService;
     private final TempUtils tempUtils = new TempUtils();
-    private final DateUtils dateUtils;
     private final AirspaceActivityRepository airspaceActivityRepository;
     private final MessageSenderService messageSenderService;
 
 
-    public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService, DateUtils dateUtils,
+    public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService,
             AirspaceActivityRepository airspaceActivityRepository, MessageSenderService messageSenderService) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder.build();
         this.indicationService = indicationService;
-        this.dateUtils = dateUtils;
         this.airspaceActivityRepository = airspaceActivityRepository;
         this.messageSenderService = messageSenderService;
     }
@@ -121,7 +121,7 @@ public class MetarService {
                     indication.setIndicationPlace(key);
                     indication.setReceivedUtc(indication.getReceivedUtc());
                     Optional<String> timeZone = value.values().stream().findFirst();
-                    indication.setReceivedLocal(dateUtils.toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
+                    indication.setReceivedLocal(toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
                     IndicationV2 indicationV2 = toIndicationV2(indication);
                     try {
                         indicationV2.setWindSpeed(new Measurement(metar.getWindSpeed().getValue(), null, null));

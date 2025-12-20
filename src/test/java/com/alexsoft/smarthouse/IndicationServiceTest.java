@@ -38,9 +38,6 @@ public class IndicationServiceTest {
     @Mock
     IndicationRepository indicationRepository;
 
-    @Mock
-    DateUtils dateUtils = new DateUtils(ZoneId.of("America/New_York"), DateTimeFormatter.ofPattern("E d, HH:mm"));
-
     @InjectMocks
     IndicationService indicationService;
 
