@@ -13,11 +13,8 @@ import java.util.Date;
 import java.util.Optional;
 
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import static com.alexsoft.smarthouse.publisher.AstroEventPublisher.USER_LOCATION;
+import static com.alexsoft.smarthouse.service.AstroEventPublisher.USER_LOCATION;
 import static com.alexsoft.smarthouse.utils.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 

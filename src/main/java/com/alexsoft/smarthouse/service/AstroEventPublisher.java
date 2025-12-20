@@ -1,11 +1,10 @@
-package com.alexsoft.smarthouse.publisher;
+package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Event;
 import com.alexsoft.smarthouse.event.HourChangedEvent;
 import com.alexsoft.smarthouse.event.SunsetEvent;
 import com.alexsoft.smarthouse.repository.EventRepository;
 import com.alexsoft.smarthouse.repository.HourChangeTrackerRepository;
-import com.alexsoft.smarthouse.utils.DateUtils;
 import com.luckycatlabs.sunrisesunset.dto.Location;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -46,6 +46,12 @@ public class AstroEventPublisher {
         Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
         lastSunsetReported = lastSunsetEvent == null ? null : convertToLocalDateTime((Timestamp) lastSunsetEvent);
         appReady = true;
+        eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("app-startup").build());
+    }
+
+    @EventListener(ContextClosedEvent.class)
+    public void onApplicationEvent() {
+        eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("app-shutdown").build());
     }
 
     @Scheduled(fixedRate = 60 * 1000)

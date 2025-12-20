@@ -64,18 +64,22 @@ public class ApplianceService {
             if (averageOptional.isPresent()) {
                 double average = averageOptional.getAsDouble();
                 appliance.setActual(average);
-                LOGGER.info("pwr-control for {} executed, avg: \u001B[34m{}\u001B[0m, setting: {}, hysteresis: {}",
+                LOGGER.info("pwr-control for {} executed, avg: {}, setting: {}, hysteresis: {}",
                         appliance.getCode(), average, appliance.getSetting(), appliance.getHysteresis());
 
                 sendAvgMessage(appliance, average, utc, toLocalDateTime(utc));
                 checkLock(appliance, utc);
 
                 if (!appliance.isLocked()) {
+
+                    //  overwrite manual changed setting
                     Double scheduledSetting = appliance.determineScheduledSetting();
                     if (scheduledSetting != null && !Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
                         appliance.setScheduledSetting(scheduledSetting);
                         appliance.setSetting(scheduledSetting);
                     }
+
+                    //  control based ong avg setting
                     if (appliance.getSetting() != null) {
                         boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
                         boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
@@ -85,6 +89,7 @@ public class ApplianceService {
                             applianceFacade.toggle(appliance, OFF, utc, "pwr-control");
                         }
                     }
+
                 } else {
                     LOGGER.info("pwr-control Appliance {} is locked {}", appliance.getCode(), appliance.getLockedUntilUtc() == null ?
                             "indefinitely" : "until " + appliance.getLockedUntilUtc());
