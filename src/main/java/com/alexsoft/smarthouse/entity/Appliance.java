@@ -71,29 +71,6 @@ public class Appliance {
         return applianceGroup == null ? Optional.empty() : Optional.of(applianceGroup);
     }
 
-    public boolean toggle(ApplianceState newState, LocalDateTime utc) {
-        if (newState == ON && getState() == OFF) {
-            setState(newState, utc);
-            if (getMinimumOnCycleMinutes() != null) {
-                setLocked(true);
-                setLockedUntilUtc(utc.plusMinutes(getMinimumOnCycleMinutes()));
-            }
-            return true;
-        } else if (newState == OFF && getState() == ON) {
-            setState(OFF, utc);
-            if (getCode().equals("LR-LUTV") || getCode().equals("TER-LIGHTS")) {
-                setLockedUntilUtc(sixThirtyAm());
-            } else if (getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-                setLockedUntilUtc(toUtc(getSunriseTime().plusHours(1)));
-            } else if (getMinimumOffCycleMinutes() != null) {
-                setLocked(true);
-                setLockedUntilUtc(utc.plusMinutes(getMinimumOffCycleMinutes()));
-            }
-            return true;
-        }
-        return false;
-    }
-
     public void setState(ApplianceState state, LocalDateTime localdatetime) {
         if (state != this.state) {
             if (state == ON) {

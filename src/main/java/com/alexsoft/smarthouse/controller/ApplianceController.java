@@ -50,7 +50,7 @@ public class ApplianceController {
                         break;
                     case "state":
                         ApplianceState newState = ApplianceState.valueOf((String) value);
-                        applianceFacade.toggle(appliance, newState, getUtc(), "android-app", true);
+                        applianceFacade.toggle(appliance, newState, getUtc(), "http-controller", true);
                         break;
                     case "consumptionKwh":
                         appliance.setConsumptionKwh(Double.valueOf(value.toString()));

@@ -60,7 +60,7 @@ public class AstroEventPublisher {
             return;
         }
         LocalDateTime localDateTime = getLocalDateTime();
-        LocalDateTime sunsetDateTime = getSunsetTime();
+        LocalDateTime sunsetDateTime = getNearestSunsetTime();
         if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
             LOGGER.info("Sunset event");
             eventRepository.save(Event.builder().utcTime(toUtc(localDateTime)).type("sunset").build());

@@ -43,7 +43,7 @@ public class ApplianceFacade {
             appliance.setState(OFF, utc);
             switched = true;
         }
-        updateLock(appliance, utc, requester);
+        setLock(appliance, utc, requester);
 
         if (switched) {
             LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, requester);
@@ -55,28 +55,36 @@ public class ApplianceFacade {
         }
     }
 
-    private static void updateLock(Appliance appliance, LocalDateTime utc, String requester) {
+    private static void setLock(Appliance appliance, LocalDateTime utc, String requester) {
 
-        if ("mqtt-msg".equals(requester)) {
-            //  lock forever
-            appliance.setLocked(true);
-            appliance.setLockedUntilUtc(null);
-            return;
-        }
-
-        if (appliance.getState() == OFF) {
-            if (appliance.getCode().equals("LR-LUTV") || appliance.getCode().equals("TER-LIGHTS")) {
-                appliance.setLockedUntilUtc(sixThirtyAm());
-            } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-                appliance.setLockedUntilUtc(toUtc(getSunriseTime().plusHours(1)));
-            } else if (appliance.getMinimumOffCycleMinutes() != null) {
-                appliance.setLocked(true);
-                appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOffCycleMinutes()));
+        if (("http-controller".equals(requester) || "mqtt-msg".equals(requester)) &&
+                appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
+            if (isDark()) {
+                if (appliance.getState() == OFF) {
+                    appliance.setLocked(true);
+                    appliance.setLockedUntilUtc(sixThirtyAmAtUtc());
+                } else {
+                    appliance.setLocked(false);
+                }
+            } else {
+                if (appliance.getState() == OFF) {
+                    appliance.setLocked(false);
+                } else {
+                    appliance.setLocked(true);
+                    appliance.setLockedUntilUtc(getNearestSunsetTime().plusHours(1));
+                }
             }
         } else {
-            if (appliance.getMinimumOnCycleMinutes() != null) {
-                appliance.setLocked(true);
-                appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOnCycleMinutes()));
+            if (appliance.getState() == OFF) {
+                if (appliance.getMinimumOffCycleMinutes() != null) {
+                    appliance.setLocked(true);
+                    appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOffCycleMinutes()));
+                }
+            } else {
+                if (appliance.getMinimumOnCycleMinutes() != null) {
+                    appliance.setLocked(true);
+                    appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOnCycleMinutes()));
+                }
             }
         }
     }

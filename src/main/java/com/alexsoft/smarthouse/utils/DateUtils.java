@@ -111,7 +111,7 @@ public class DateUtils {
         return localDateTime.format(chartDateTimePattern);
     }
 
-    public static LocalDateTime sixThirtyAm() {
+    public static LocalDateTime sixThirtyAmAtUtc() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
 
         // Set target time to 6:30 AM
@@ -128,12 +128,12 @@ public class DateUtils {
 
     }
 
-    public static LocalDateTime getSunsetTime() {
+    public static LocalDateTime getNearestSunsetTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
         return toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance()));
     }
 
-    public static LocalDateTime getSunriseTime() {
+    public static LocalDateTime getNearestSunriseTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
         LocalDateTime sunriseTime = toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance()));
         if (getLocalDateTime().isAfter(sunriseTime)) {
@@ -141,4 +141,13 @@ public class DateUtils {
         }
         return sunriseTime;
     }
+
+    public static boolean isDark() {
+        LocalDateTime nearestSunriseTime = getNearestSunriseTime();
+        LocalDateTime nearestSunsetTime = getNearestSunsetTime();
+
+        // Check if the current time is either before sunrise or after sunset
+        return nearestSunriseTime.isBefore(nearestSunsetTime);
+    }
+
 }
