@@ -43,7 +43,7 @@ public class ApplianceFacade {
             appliance.setState(OFF, utc);
             switched = true;
         }
-        setLock(appliance, utc, requester);
+        setLock(appliance, utc, requester, switched);
 
         if (switched) {
             LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, requester);
@@ -55,7 +55,7 @@ public class ApplianceFacade {
         }
     }
 
-    private static void setLock(Appliance appliance, LocalDateTime utc, String requester) {
+    private static void setLock(Appliance appliance, LocalDateTime utc, String requester, boolean switched) {
 
         if (("http-controller".equals(requester) || "mqtt-msg".equals(requester)) &&
                 appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
@@ -65,16 +65,18 @@ public class ApplianceFacade {
                     appliance.setLockedUntilUtc(sixThirtyAmAtUtc());
                 } else {
                     appliance.setLocked(false);
+                    appliance.setLockedUntilUtc(null);
                 }
             } else {
                 if (appliance.getState() == OFF) {
                     appliance.setLocked(false);
+                    appliance.setLockedUntilUtc(null);
                 } else {
                     appliance.setLocked(true);
-                    appliance.setLockedUntilUtc(getNearestSunsetTime().plusHours(1));
+                    appliance.setLockedUntilUtc(toUtc(getNearestSunsetTime().plusHours(1)));
                 }
             }
-        } else {
+        } else if (switched) {
             if (appliance.getState() == OFF) {
                 if (appliance.getMinimumOffCycleMinutes() != null) {
                     appliance.setLocked(true);
