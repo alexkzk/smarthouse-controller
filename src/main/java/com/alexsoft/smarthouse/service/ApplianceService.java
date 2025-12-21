@@ -48,7 +48,7 @@ public class ApplianceService {
         applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group -> Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
             if (Integer.parseInt(turnOffHour) == event.getHour()) {
                 applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
-                        .forEach(app -> applianceFacade.toggle(app, ApplianceState.OFF, utc, "turn off hours setting"));
+                        .forEach(app -> applianceFacade.toggle(app, ApplianceState.OFF, utc, "turn off hours setting", true));
             }
         }));
     }
@@ -84,10 +84,10 @@ public class ApplianceService {
                         boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
                         boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
                         if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
-                            applianceFacade.toggle(appliance, ON, utc, "pwr-control");
+                            applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
                             return;
                         } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
-                            applianceFacade.toggle(appliance, OFF, utc, "pwr-control");
+                            applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
                             return;
                         }
                     }
@@ -106,7 +106,7 @@ public class ApplianceService {
         } else {
             LOGGER.info("pwr-control for {} executed, reference sensors list is empty, skipping power control", appliance.getCode());
         }
-        applianceFacade.toggle(appliance, appliance.getState(), utc, "pwr-control");
+        applianceFacade.toggle(appliance, appliance.getState(), utc, "pwr-control", true);
     }
 
     private List<IndicationV3> calculateAverage(Appliance appliance, LocalDateTime utc) {

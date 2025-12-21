@@ -20,8 +20,7 @@ import java.util.OptionalDouble;
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 import static com.alexsoft.smarthouse.service.ApplianceService.MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC;
-import static com.alexsoft.smarthouse.utils.DateUtils.getUtc;
-import static com.alexsoft.smarthouse.utils.DateUtils.toLocalDateTime;
+import static com.alexsoft.smarthouse.utils.DateUtils.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,23 +34,51 @@ public class ApplianceFacade {
     private final IndicationRepositoryV3 indicationRepositoryV3;
     private final EventRepository eventRepository;
 
-    public void toggleWithoutSend(Appliance appliance, ApplianceState newState, LocalDateTime utc, String reason) {
-        boolean switched = appliance.toggle(newState, utc);
+    public void toggle(Appliance appliance, ApplianceState newState, LocalDateTime utc, String requester, boolean sendMqtt) {
+        boolean switched = false;
+        if (newState == ON && appliance.getState() == OFF) {
+            appliance.setState(newState, utc);
+            switched = true;
+        } else if (newState == OFF && appliance.getState() == ON) {
+            appliance.setState(OFF, utc);
+            switched = true;
+        }
+        updateLock(appliance, utc, requester);
+
         if (switched) {
-            LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, reason);
+            LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, requester);
             eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState)).build());
             applianceRepository.save(appliance);
+        }
+        if (sendMqtt) {
+            sendState(appliance);
         }
     }
 
-    public void toggle(Appliance appliance, ApplianceState newState, LocalDateTime utc, String reason) {
-        boolean switched = appliance.toggle(newState, utc);
-        if (switched) {
-            LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, reason);
-            eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState)).build());
-            applianceRepository.save(appliance);
+    private static void updateLock(Appliance appliance, LocalDateTime utc, String requester) {
+
+        if ("mqtt-msg".equals(requester)) {
+            //  lock forever
+            appliance.setLocked(true);
+            appliance.setLockedUntilUtc(null);
+            return;
         }
-        sendState(appliance);
+
+        if (appliance.getState() == OFF) {
+            if (appliance.getCode().equals("LR-LUTV") || appliance.getCode().equals("TER-LIGHTS")) {
+                appliance.setLockedUntilUtc(sixThirtyAm());
+            } else if (appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
+                appliance.setLockedUntilUtc(toUtc(getSunriseTime().plusHours(1)));
+            } else if (appliance.getMinimumOffCycleMinutes() != null) {
+                appliance.setLocked(true);
+                appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOffCycleMinutes()));
+            }
+        } else {
+            if (appliance.getMinimumOnCycleMinutes() != null) {
+                appliance.setLocked(true);
+                appliance.setLockedUntilUtc(utc.plusMinutes(appliance.getMinimumOnCycleMinutes()));
+            }
+        }
     }
 
     private void sendState(Appliance appliance) {
