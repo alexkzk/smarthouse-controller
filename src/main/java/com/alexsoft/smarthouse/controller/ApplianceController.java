@@ -28,7 +28,7 @@ public class ApplianceController {
     public static final double TEMP_CONTROLL_STEP = 0.25;
 
     private final ApplianceService applianceService;
-    private ApplianceFacade applianceFacade;
+    private final ApplianceFacade applianceFacade;
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances(@RequestParam(required = false) String requesterId) {
