@@ -35,6 +35,14 @@ public class ApplianceFacade {
     private final IndicationRepositoryV3 indicationRepositoryV3;
     private final EventRepository eventRepository;
 
+    public void toggleWithoutSend(Appliance appliance, ApplianceState newState, LocalDateTime utc, String reason) {
+        boolean switched = appliance.toggle(newState, utc);
+        if (switched) {
+            LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, reason);
+            eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState)).build());
+            applianceRepository.save(appliance);
+        }
+    }
 
     public void toggle(Appliance appliance, ApplianceState newState, LocalDateTime utc, String reason) {
         boolean switched = appliance.toggle(newState, utc);
