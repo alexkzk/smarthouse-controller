@@ -85,8 +85,10 @@ public class ApplianceService {
                         boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
                         if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
                             applianceFacade.toggle(appliance, ON, utc, "pwr-control");
+                            return;
                         } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
                             applianceFacade.toggle(appliance, OFF, utc, "pwr-control");
+                            return;
                         }
                     }
 
@@ -104,6 +106,7 @@ public class ApplianceService {
         } else {
             LOGGER.info("pwr-control for {} executed, reference sensors list is empty, skipping power control", appliance.getCode());
         }
+        applianceFacade.toggle(appliance, appliance.getState(), utc, "pwr-control");
     }
 
     private List<IndicationV3> calculateAverage(Appliance appliance, LocalDateTime utc) {

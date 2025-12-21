@@ -152,7 +152,6 @@ public class MessageReceiverService {
                         Appliance appliance = applianceByCode.get();
                         if (!appliance.getState().name().equalsIgnoreCase(receivedState)) {
                             applianceFacade.toggleWithoutSend(appliance, ApplianceState.valueOf(receivedState), getUtc(), "mqtt-msg");
-                            applianceService.saveOrUpdateAppliance(appliance);
 //                            applianceService.powerControl(appliance.getCode());   //  avoid race condition
                         }
                     }

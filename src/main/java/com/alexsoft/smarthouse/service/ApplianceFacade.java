@@ -50,8 +50,8 @@ public class ApplianceFacade {
             LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, reason);
             eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState)).build());
             applianceRepository.save(appliance);
-            sendState(appliance);
         }
+        sendState(appliance);
     }
 
     private void sendState(Appliance appliance) {
