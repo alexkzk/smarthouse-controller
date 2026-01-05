@@ -186,6 +186,16 @@ public class ApplianceService {
     public void sendState(Appliance appliance, OptionalDouble avgDehPowerConsumption) {
         LocalDateTime now = dateUtils.getLocalDateTime();
         LocalDateTime utc = dateUtils.getUtc();
+        boolean acNeedsToBeTurnedOn;
+        if (now.getHour() > 22 || now.getHour() < 8) {
+            // night time
+            acNeedsToBeTurnedOn = List.of(26,27,28,29,56,57,58,59)
+                    .contains(now.getMinute());
+        } else {
+            // day time
+            acNeedsToBeTurnedOn = List.of(17,18,19,37,38,39,57,58,59)
+                    .contains(now.getMinute());
+        }
         if (appliance.getZigbee2MqttTopic() != null) {
             if (appliance.getCode().equals("LR-LUTV") && (now.getHour() < 7 || now.getHour() > 21)) {
                 messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
@@ -210,37 +220,30 @@ public class ApplianceService {
             }
             //  Turn on the FAN periodically while DEH is on
             if (appliance.getCode().equals("DEH") && applianceRepository.findById("AC").get().getState() == OFF) {
-                boolean fanNeedsToBeTurnedOn;
                 LOGGER.info("mqtt.smarthouse.power.control inside");
-                if (now.getHour() > 22 || now.getHour() < 8) {
-                    // night time
-                    fanNeedsToBeTurnedOn = List.of(26,27,28,29,56,57,58,59)
-                            .contains(now.getMinute());
-                } else {
-                    // day time
-                    fanNeedsToBeTurnedOn = List.of(17,18,19,37,38,39,57,58,59)
-                            .contains(now.getMinute());
-                }
                 if (appliance.getState() == ON && avgDehPowerConsumption.isPresent() && avgDehPowerConsumption.getAsDouble() > 500) {
-                    if (fanNeedsToBeTurnedOn) {
-                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "on"));
+                    if (acNeedsToBeTurnedOn) {
+                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("AC", "on"));
                         indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
-                                .locationId("HOME-FAN").value(1.0).build());
+                                .locationId("HOME-AC").value(1.0).build());
                     } else {
-                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
+                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("AC", "off"));
                         indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
-                                .locationId("HOME-FAN").value(0.0).build());
+                                .locationId("HOME-AC").value(0.0).build());
                     }
                 } else {
-                    messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
+                    messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("AC", "off"));
                     indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(now).utcTime(utc)
-                            .locationId("HOME-FAN").value(0.0).build());
-
+                            .locationId("HOME-AC").value(0.0).build());
                 }
             }
         } else {
-            messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
-                    .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+            if (appliance.getCode().equals("AC") && appliance.getState() == OFF && acNeedsToBeTurnedOn) {
+
+            } else {
+                messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
+                        .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
+            }
         }
 
         if (appliance.getCode().equals("AC")) {
