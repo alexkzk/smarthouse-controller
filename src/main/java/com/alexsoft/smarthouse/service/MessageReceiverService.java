@@ -1,12 +1,13 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Appliance;
+import com.alexsoft.smarthouse.entity.Event;
 import com.alexsoft.smarthouse.entity.Indication;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.ApplianceState;
-import com.alexsoft.smarthouse.utils.DateUtils;
+import com.alexsoft.smarthouse.repository.EventRepository;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,10 +28,10 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageHandler;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
+
+import static com.alexsoft.smarthouse.utils.DateUtils.*;
 
 @Configuration
 @RequiredArgsConstructor
@@ -44,10 +45,9 @@ public class MessageReceiverService {
 
     private final TempUtils tempUtils = new TempUtils();
     private final ApplianceService applianceService;
-    private final DateUtils dateUtils;
     private final IndicationService indicationService;
     private final IndicationServiceV3 indicationServiceV3;
-    private final MessageSenderService messageSenderService;
+    private final EventRepository eventRepository;
 
     @Value("tcp://${mqtt.server-in}:${mqtt.port}")
     private String mqttUrlIn;
@@ -94,13 +94,19 @@ public class MessageReceiverService {
 
     @Bean
     @ServiceActivator(inputChannel = "mqttInputChannel")
-    public MessageHandler messageHandler() {
+    public MessageHandler messageHandler(ApplianceFacade applianceFacade) {
         return message -> {
             if (message.getHeaders().get("mqtt_receivedTopic") == null) {
                 return;
             }
             String payload = (String) message.getPayload();
             String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
+            try {
+                Map<String, Object> msgMap = OBJECT_MAPPER.readValue(payload, Map.class);
+                eventRepository.save(Event.builder().type("inbound.mqtt.msg").utcTime(getUtc()).data(msgMap).build());
+            } catch (Exception  e) {
+                LOGGER.warn("Failed to log inbound MQTT message payload {}", payload);
+            }
             try {
                 LOGGER.info("mqtt.msg.received: {}", payload);
                 if (mqttTopic.equals(topic)) {
@@ -110,8 +116,8 @@ public class MessageReceiverService {
                     List<IndicationV3> indicationV3s = new ArrayList<>();
                     Map<String, Object> map = new ObjectMapper().readValue(payload, new TypeReference<>() {});
                     String deviceId = topic.split("/")[1];
-                    IndicationV3Builder indicationV3Builder = IndicationV3.builder().mqttTopic(topic).localTime(dateUtils.getLocalDateTime())
-                            .utcTime(dateUtils.getUtc()).publisherId("zigbee2mqtt").locationId(deviceId);
+                    IndicationV3Builder indicationV3Builder = IndicationV3.builder().mqttTopic(topic).localTime(getLocalDateTime())
+                            .utcTime(getUtc()).publisherId("zigbee2mqtt").locationId(deviceId);
 
                     if (map.containsKey("power")) {
                         MEASUREMENT_TYPES.forEach(m -> indicationV3s.add(indicationV3Builder.measurementType(m).unit(UNITS_MAP.get(m))
@@ -145,9 +151,7 @@ public class MessageReceiverService {
                         String receivedState = (String) map.get("state");
                         Appliance appliance = applianceByCode.get();
                         if (!appliance.getState().name().equalsIgnoreCase(receivedState)) {
-                            applianceService.toggleAppliance(appliance, ApplianceState.valueOf(receivedState), dateUtils.getUtc());
-                            applianceService.saveOrUpdateAppliance(appliance);
-//                            applianceService.powerControl(appliance.getCode());   //  avoid race condition
+                            applianceFacade.toggle(appliance, ApplianceState.valueOf(receivedState), getUtc(), "mqtt-msg", false);
                         }
                     }
 
@@ -159,10 +163,10 @@ public class MessageReceiverService {
     }
 
     private Indication toIndication(String payload) throws JsonProcessingException {
-        LocalDateTime utc = dateUtils.getUtc();
+        LocalDateTime utc = getUtc();
         Indication indication = OBJECT_MAPPER.readValue(payload, Indication.class);
         indication.setReceivedUtc(utc);
-        indication.setReceivedLocal(dateUtils.toLocalDateTime(utc));
+        indication.setReceivedLocal(toLocalDateTime(utc));
         if (indication.getAggregationPeriod() == null) {
             indication.setAggregationPeriod(AggregationPeriod.INSTANT);
         }

@@ -21,6 +21,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+import static com.alexsoft.smarthouse.utils.DateUtils.toLocalDateTime;
+import static com.alexsoft.smarthouse.utils.DateUtils.toUtc;
+
 @RestController
 @RequestMapping("/indications")
 @AllArgsConstructor
@@ -30,7 +33,6 @@ public class IndicationsController {
     private final InfluxRepository influxRepository;
     private final IndicationServiceV3 indicationServiceV3;
     private final IndicationRepositoryV3 indicationRepositoryV3;
-    private final DateUtils dateUtils;
 
     @PostMapping
     public ResponseEntity<String> createIndication(@RequestBody IndicationV3 indication) {
@@ -78,7 +80,7 @@ public class IndicationsController {
                                     IndicationV3 indication = IndicationV3.builder()
                                             .locationId("mbs")
                                             .localTime(localTime)
-                                            .utcTime(dateUtils.toUtc(localTime))
+                                            .utcTime(toUtc(localTime))
                                             .measurementType(measurementType)  // Match types
                                             .value(value)
                                             .build();
@@ -119,16 +121,16 @@ public class IndicationsController {
         LocalDateTime localTime = indication.getLocalTime();
         LocalDateTime utc = indication.getUtcTime();
         if (indication.getUtcTime() == null && localTime != null) {
-            indication.setUtcTime(dateUtils.toUtc(localTime));
+            indication.setUtcTime(toUtc(localTime));
         }
         if (localTime == null && indication.getUtcTime() != null) {
-            indication.setLocalTime(dateUtils.toLocalDateTime(indication.getUtcTime()));
+            indication.setLocalTime(toLocalDateTime(indication.getUtcTime()));
         }
         if (indication.getUtcTime() == null) {
             indication.setUtcTime(utc);
         }
         if( localTime == null) {
-            indication.setLocalTime(dateUtils.toLocalDateTime(utc));
+            indication.setLocalTime(toLocalDateTime(utc));
         }
         IndicationV3 mbs30d = IndicationV3.builder().locationId("mbs").localTime(localTime).utcTime(utc).measurementType(measurementType + "-30d")
                 .value(indicationRepositoryV3.findByLocalTimeBetweenAndMeasurementType(localTime.minusMonths(1).plusSeconds(1), localTime.plusSeconds(1), measurementType).stream().mapToDouble(IndicationV3::getValue).sum()).build();

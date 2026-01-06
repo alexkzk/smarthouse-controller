@@ -1,5 +1,6 @@
 package com.alexsoft.smarthouse.entity;
 
+import com.alexsoft.smarthouse.utils.DateUtils;
 import com.alexsoft.smarthouse.utils.MapToJsonConverter;
 import com.alexsoft.smarthouse.utils.StringListConverter;
 import com.alexsoft.smarthouse.enums.ApplianceState;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
 import static com.alexsoft.smarthouse.utils.Constants.APPLICATION_OPERATION_TIMEZONE;
+import static com.alexsoft.smarthouse.utils.DateUtils.*;
 
 @Entity
 @Table(schema = "main")
