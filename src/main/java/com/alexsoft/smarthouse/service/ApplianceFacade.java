@@ -115,40 +115,6 @@ public class ApplianceFacade {
                             .formatted(appliance.getState() == ON ? "on" : "off"));
                 }
             }
-            //  Turn on the FAN periodically while DEH is on
-            if (appliance.getCode().equals("DEH") && applianceRepository.findById("AC").get().getState() == OFF) {
-                boolean fanNeedsToBeTurnedOn;
-                LOGGER.info("mqtt.smarthouse.power.control inside");
-                if (toLocalDateTime(utc).getHour() > 22 || toLocalDateTime(utc).getHour() < 8) {
-                    // night time
-                    fanNeedsToBeTurnedOn = List.of(26, 27, 28, 29, 56, 57, 58, 59)
-                            .contains(toLocalDateTime(utc).getMinute());
-                } else {
-                    // day time
-                    fanNeedsToBeTurnedOn = List.of(17, 18, 19, 37, 38, 39, 57, 58, 59)
-                            .contains(toLocalDateTime(utc).getMinute());
-                }
-
-                OptionalDouble avgDehPowerConsumption = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("lr-sp-dehumidifier"),
-                        utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes())), "power").stream().mapToDouble(IndicationV3::getValue).average();
-
-                if (appliance.getState() == ON && avgDehPowerConsumption.isPresent() && avgDehPowerConsumption.getAsDouble() > 500) {
-                    if (fanNeedsToBeTurnedOn) {
-                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "on"));
-                        indicationRepositoryV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(toLocalDateTime(utc)).utcTime(utc)
-                                .locationId("HOME-FAN").value(1.0).build());
-                    } else {
-                        messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
-                        indicationRepositoryV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(toLocalDateTime(utc)).utcTime(utc)
-                                .locationId("HOME-FAN").value(0.0).build());
-                    }
-                } else {
-                    messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}".formatted("FAN", "off"));
-                    indicationRepositoryV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(toLocalDateTime(utc)).utcTime(utc)
-                            .locationId("HOME-FAN").value(0.0).build());
-
-                }
-            }
         } else {
             messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                     .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
