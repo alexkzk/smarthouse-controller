@@ -83,27 +83,28 @@ public class ApplianceService {
                     if (appliance.getSetting() != null) {
                         boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
                         boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
-                        boolean acNeedsToBeTurnedOn;
-                        if (toLocalDateTime(utc).getHour() > 22 || toLocalDateTime(utc).getHour() < 8) {
-                            // night time
-                            acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(30));
-                        } else {
-                            // day time
-                            acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(20));
-                        }
                         if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
                             applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
                             return;
                         } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
                             applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
                             return;
-                        } else if (appliance.getCode().equals("AC") && appliance.getState() == OFF && acNeedsToBeTurnedOn) {
+                        } else if (appliance.getCode().equals("AC") && appliance.getState() == OFF) {
+                            boolean acNeedsToBeTurnedOn;
+                            Appliance deh = applianceRepository.findById("DEH").get();
+                            if (toLocalDateTime(utc).getHour() > 22 || toLocalDateTime(utc).getHour() < 8) {
+                                // night time
+                                acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(30)) && deh.getSwitched().isBefore(utc.minusMinutes(15));
+                            } else {
+                                // day time
+                                acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(20)) && deh.getSwitched().isBefore(utc.minusMinutes(15));
+                            }
                             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
                             OptionalDouble avgDehPowerConsumption = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("lr-sp-dehumidifier"),
                                     averageStart, "power").stream().mapToDouble(IndicationV3::getValue).average();
-                            if (avgDehPowerConsumption.isPresent() && avgDehPowerConsumption.getAsDouble() > 500) {
+                            if (acNeedsToBeTurnedOn && avgDehPowerConsumption.isPresent() && avgDehPowerConsumption.getAsDouble() > 500) {
                                 LOGGER.info("AC turned on based on DEH average consumption");
-                                applianceFacade.toggle(appliance, ON , utc, "pwr-control", true);
+                                applianceFacade.toggle(appliance, ON , utc, "deh-on", true);
                             }
                         }
                     }
