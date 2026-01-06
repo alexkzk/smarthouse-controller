@@ -163,6 +163,8 @@ public class ApplianceService {
     public List<Appliance> getAllAppliances(String requesterId) {
         if (requesterId != null) {
             requestRepository.save(Request.builder().requesterId(requesterId).utcTime(getUtc()).build());
+        } else {
+            requestRepository.save(Request.builder().requesterId("UNKNOWN").utcTime(getUtc()).build());
         }
         return applianceRepository.findAll();
     }
