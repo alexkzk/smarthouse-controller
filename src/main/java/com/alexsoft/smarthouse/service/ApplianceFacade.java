@@ -36,13 +36,11 @@ public class ApplianceFacade {
 
     public void toggle(Appliance appliance, ApplianceState newState, LocalDateTime utc, String requester, boolean sendMqtt) {
         boolean switched = false;
-        if (newState == ON && appliance.getState() == OFF) {
+        if (newState != appliance.getState()) {
             appliance.setState(newState, utc);
             switched = true;
-        } else if (newState == OFF && appliance.getState() == ON) {
-            appliance.setState(OFF, utc);
-            switched = true;
         }
+
         setLock(appliance, utc, requester, switched);
 
         if (switched) {
