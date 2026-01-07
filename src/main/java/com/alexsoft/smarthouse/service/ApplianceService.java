@@ -123,7 +123,9 @@ public class ApplianceService {
         } else {
             LOGGER.info("pwr-control for {} executed, reference sensors list is empty, skipping power control", appliance.getCode());
         }
-        applianceFacade.toggle(appliance, appliance.getState(), utc, "pwr-control", true);
+        if (!appliance.isLocked()) {
+            applianceFacade.toggle(appliance, appliance.getState(), utc, "pwr-control", true);
+        }
     }
 
     private List<IndicationV3> calculateAverage(Appliance appliance, LocalDateTime utc) {

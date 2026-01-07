@@ -130,17 +130,47 @@ public class DateUtils {
 
     public static LocalDateTime getNearestSunsetTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
-        return toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance()));
+
+        // Get current date and time
+        Calendar currentDate = Calendar.getInstance();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Get today's sunset
+        LocalDateTime todaySunset = toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(currentDate));
+
+        // Check if today's sunset is in the past
+        if (now.isAfter(todaySunset)) {
+            // If it is, move to the next day
+            currentDate.add(Calendar.DAY_OF_YEAR, 1);
+            return toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(currentDate));
+        }
+
+        // If today's sunset is in the future, return it
+        return todaySunset;
     }
+
 
     public static LocalDateTime getNearestSunriseTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
-        LocalDateTime sunriseTime = toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance()));
-        if (getLocalDateTime().isAfter(sunriseTime)) {
-            sunriseTime = sunriseTime.plusDays(1);
+
+        // Get current date and time
+        Calendar currentDate = Calendar.getInstance();
+        LocalDateTime now = getLocalDateTime(); // Assume this returns the current LocalDateTime
+
+        // Get today's sunrise
+        LocalDateTime todaySunrise = toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(currentDate));
+
+        // Check if today's sunrise is in the past
+        if (now.isAfter(todaySunrise)) {
+            // If it is, move to the next day
+            currentDate.add(Calendar.DAY_OF_YEAR, 1);
+            return toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(currentDate));
         }
-        return sunriseTime;
+
+        // If today's sunrise is in the future, return it
+        return todaySunrise;
     }
+
 
     public static boolean isDark() {
         LocalDateTime nearestSunriseTime = getNearestSunriseTime();
