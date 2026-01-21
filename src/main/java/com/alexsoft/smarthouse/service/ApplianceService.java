@@ -94,10 +94,10 @@ public class ApplianceService {
                             Appliance deh = applianceRepository.findById("DEH").get();
                             if (toLocalDateTime(utc).getHour() > 22 || toLocalDateTime(utc).getHour() < 8) {
                                 // night time
-                                acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(30)) && deh.getSwitched().isBefore(utc.minusMinutes(15));
+                                acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(30)) && deh.getSwitched().isBefore(utc.minusMinutes(15)) && appliance.getActual() - appliance.getSetting() > 0.5;
                             } else {
                                 // day time
-                                acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(20)) && deh.getSwitched().isBefore(utc.minusMinutes(15));
+                                acNeedsToBeTurnedOn = appliance.getSwitched().isBefore(utc.minusMinutes(20)) && deh.getSwitched().isBefore(utc.minusMinutes(15)) && appliance.getActual() - appliance.getSetting() > 0.5;
                             }
                             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
                             OptionalDouble avgDehPowerConsumption = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("lr-sp-dehumidifier"),
