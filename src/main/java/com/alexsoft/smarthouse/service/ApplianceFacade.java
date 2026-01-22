@@ -33,12 +33,18 @@ public class ApplianceFacade {
     private final MessageSenderService messageSenderService;
     private final IndicationRepositoryV3 indicationRepositoryV3;
     private final EventRepository eventRepository;
+    private final IndicationServiceV3 indicationServiceV3;
 
     public void toggle(Appliance appliance, ApplianceState newState, LocalDateTime utc, String requester, boolean sendMqtt) {
         boolean switched = false;
         if (newState != appliance.getState()) {
             appliance.setState(newState, utc);
             switched = true;
+        }
+
+        if (appliance.getCode().equals("AC")) {
+            indicationServiceV3.save(IndicationV3.builder().publisherId("smarthouse-server").measurementType("state").localTime(toLocalDateTime(utc)).utcTime(utc)
+                    .locationId("HOME-AC").value(appliance.getState() == ON ? 1.0 : 0.0).build());
         }
 
         setLock(appliance, utc, requester, switched);
