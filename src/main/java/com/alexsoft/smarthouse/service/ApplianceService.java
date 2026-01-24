@@ -82,7 +82,7 @@ public class ApplianceService {
                     //  control based ong avg setting
                     if (appliance.getSetting() != null) {
                         boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
-                        boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
+                        boolean offCondition = average < appliance.getSetting() - (appliance.getHysteresis() + (appliance.getCode().equals("AC") ? 0.5 : 0));
                         if (appliance.getCode().equals("AC") && appliance.getState() == OFF) {
                             Appliance fan = applianceRepository.findById("FAN").orElseThrow();
                             LocalDateTime now = toLocalDateTime(utc);
