@@ -39,6 +39,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static com.alexsoft.smarthouse.utils.DateUtils.toLocalDateTimeAtZone;
+import static com.alexsoft.smarthouse.utils.DateUtils.toUtc;
 
 @Service
 public class MetarService {
@@ -73,8 +74,8 @@ public class MetarService {
     @Value("${weatherapi.baseUri:https://api.weatherapi.com/v1/forecast.json}")
     private String weatherApiBaseUri;
 
-    @Value("${weatherapi.key:}")
-    private String weatherApiKey;
+//    @Value("${weatherapi.key:}")
+    private String weatherApiKey = "d6f0c7e886914244b47212927261601";
 
     // Location to query (zip/city). Example: 33019
     @Value("${weatherapi.q:33019}")
@@ -160,7 +161,7 @@ public class MetarService {
     }
 
     // Calls WeatherAPI every hour, saves current conditions and forecast for the same hour tomorrow
-    @Scheduled(cron = "${weatherapi.cron:0 0 * * * *}")
+    @Scheduled(cron = "0 0 */1 * * *")
     public void retrieveAndProcessWeatherApi() {
         if (weatherApiKey == null || weatherApiKey.isBlank()) {
             LOGGER.warn("WeatherAPI key is not configured; skipping call");
@@ -171,7 +172,7 @@ public class MetarService {
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(weatherApiBaseUri)
                     .queryParam("key", weatherApiKey)
                     .queryParam("q", weatherApiQuery)
-                    .queryParam("days", weatherApiDays);
+                    .queryParam("days", 4);
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(HttpHeaders.ACCEPT, "application/json");
@@ -190,21 +191,18 @@ public class MetarService {
             String place = optText(root.at("/location/name"));
             String tzId = optText(root.at("/location/tz_id"));
 
-            // Current conditions
-            com.fasterxml.jackson.databind.JsonNode current = root.path("current");
-            if (!current.isMissingNode()) {
-                Indication currentInd = indicationFromWeatherApiCurrent(root, place, tzId);
-                if (currentInd != null) {
-                    indicationService.save(currentInd, null);
-                }
-            }
-
-            // Forecast for the same hour tomorrow
+            // Forecast for 1 and 3 days in advance
             com.fasterxml.jackson.databind.JsonNode forecastDays = root.path("forecast").path("forecastday");
             if (forecastDays.isArray() && forecastDays.size() > 0) {
-                Indication forecastInd = indicationFromWeatherApiForecastSameHourTomorrow(forecastDays, place, tzId);
-                if (forecastInd != null) {
-                    indicationService.save(forecastInd, null);
+                // Forecast for the same hour tomorrow
+                Indication forecastInd1 = indicationFromWeatherApiForecast(forecastDays, place, tzId, 1);
+                if (forecastInd1 != null) {
+                    indicationService.save(forecastInd1, null);
+                }
+                // Forecast for the same hour 3 days later
+                Indication forecastInd3 = indicationFromWeatherApiForecast(forecastDays, place, tzId, 3);
+                if (forecastInd3 != null) {
+                    indicationService.save(forecastInd3, null);
                 }
             }
 
@@ -217,76 +215,16 @@ public class MetarService {
         return node == null || node.isMissingNode() || node.isNull() ? null : node.asText();
     }
 
-    private Indication indicationFromWeatherApiCurrent(com.fasterxml.jackson.databind.JsonNode root, String place, String tzId) {
-        try {
-            com.fasterxml.jackson.databind.JsonNode current = root.path("current");
-            Double tempC = asDouble(current.path("temp_c"), null);
-            Integer humidity = asInt(current.path("humidity"), null);
-            Double dewpointC = asDouble(current.path("dewpoint_c"), null);
-            Integer windDeg = asInt(current.path("wind_degree"), null);
-            Double windKph = asDouble(current.path("wind_kph"), null);
-            String lastUpdated = optText(current.path("last_updated")); // in local time of location
-
-            LocalDateTime issuedLocal = null;
-            if (lastUpdated != null && tzId != null) {
-                try {
-                    // last_updated format: yyyy-MM-dd HH:mm
-                    java.time.format.DateTimeFormatter f = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                    issuedLocal = LocalDateTime.parse(lastUpdated, f);
-                } catch (Exception ignore) {}
-            }
-
-            LocalDateTime nowUtc = ZonedDateTime.now(ZoneId.of("UTC")).toLocalDateTime();
-
-            Indication indication = new Indication();
-            indication.setAggregationPeriod(AggregationPeriod.INSTANT);
-            indication.setIndicationPlace(place != null ? place : weatherApiQuery);
-            indication.setInOut(InOut.OUT);
-            indication.setIssued(issuedLocal != null ? issuedLocal : nowUtc);
-            indication.setReceivedUtc(nowUtc);
-            indication.setPublisherId("WEATHERAPI");
-
-            if (tzId != null) {
-                indication.setReceivedLocal(toLocalDateTimeAtZone(indication.getReceivedUtc(), Optional.of(tzId)));
-            }
-
-            Air air = new Air();
-            indication.setAir(air);
-            Temp temp = new Temp();
-            air.setTemp(temp);
-            if (tempC != null) temp.setCelsius(tempC);
-            if (humidity != null) temp.setRh(humidity);
-            if (tempC != null && humidity != null) {
-                temp.setAh(tempUtils.calculateAbsoluteHumidity(tempC.floatValue(), humidity).doubleValue());
-            }
-
-            try {
-                Integer windMs = null;
-                if (windKph != null) {
-                    windMs = (int) BigDecimal.valueOf(windKph / 3.6d).setScale(2, RoundingMode.HALF_UP).doubleValue();
-                }
-                air.setWind(new Wind(null, windDeg, windMs));
-            } catch (Exception e) {
-                LOGGER.error("Error during setting wind from WeatherAPI current", e);
-            }
-
-            return indication;
-        } catch (Exception e) {
-            LOGGER.error("Error mapping WeatherAPI current to Indication", e);
-            return null;
-        }
-    }
-
-    private Indication indicationFromWeatherApiForecastSameHourTomorrow(com.fasterxml.jackson.databind.JsonNode forecastDays,
-                                                                        String place, String tzId) {
+    private Indication indicationFromWeatherApiForecast(com.fasterxml.jackson.databind.JsonNode forecastDays,
+                                                        String place, String tzId, int daysInAdvance) {
         try {
             // Determine target local hour
             ZoneId zone = tzId != null ? ZoneId.of(tzId) : ZoneId.of("UTC");
             ZonedDateTime nowAtZone = ZonedDateTime.now(zone);
             int targetHour = nowAtZone.getHour();
-            ZonedDateTime targetTomorrow = nowAtZone.plusDays(1).withHour(targetHour).withMinute(0).withSecond(0).withNano(0);
+            ZonedDateTime targetTime = nowAtZone.plusDays(daysInAdvance).withHour(targetHour).withMinute(0).withSecond(0).withNano(0);
 
-            // Flatten all hourly entries and find matching hour for tomorrow
+            // Flatten all hourly entries and find matching hour
             com.fasterxml.jackson.databind.JsonNode bestHourNode = null;
             for (com.fasterxml.jackson.databind.JsonNode day : forecastDays) {
                 for (com.fasterxml.jackson.databind.JsonNode hour : day.path("hour")) {
@@ -296,7 +234,7 @@ public class MetarService {
                         java.time.format.DateTimeFormatter f = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                         LocalDateTime ldt = LocalDateTime.parse(timeStr, f);
                         ZonedDateTime zdt = ldt.atZone(zone);
-                        if (zdt.isEqual(targetTomorrow)) {
+                        if (zdt.isEqual(targetTime)) {
                             bestHourNode = hour;
                             break;
                         }
@@ -306,11 +244,11 @@ public class MetarService {
             }
 
             if (bestHourNode == null) {
-                // Fallback: take the first hour of the next day element, if exists
-                if (forecastDays.size() >= 2) {
-                    com.fasterxml.jackson.databind.JsonNode nextDay = forecastDays.get(1);
-                    if (nextDay != null && nextDay.path("hour").isArray() && nextDay.path("hour").size() > targetHour) {
-                        bestHourNode = nextDay.path("hour").get(targetHour);
+                // Fallback: take the matching hour from the specific day index if exists
+                if (forecastDays.size() > daysInAdvance) {
+                    com.fasterxml.jackson.databind.JsonNode targetDay = forecastDays.get(daysInAdvance);
+                    if (targetDay != null && targetDay.path("hour").isArray() && targetDay.path("hour").size() > targetHour) {
+                        bestHourNode = targetDay.path("hour").get(targetHour);
                     }
                 }
             }
@@ -336,14 +274,14 @@ public class MetarService {
 
             Indication indication = new Indication();
             indication.setAggregationPeriod(AggregationPeriod.INSTANT);
-            indication.setIndicationPlace(place != null ? place : weatherApiQuery);
+            indication.setIndicationPlace("FORT-LAUDERDALE-" + daysInAdvance + "D-FRCST");
             indication.setInOut(InOut.OUT);
             indication.setIssued(issuedLocal != null ? issuedLocal : nowUtc);
-            indication.setReceivedUtc(nowUtc);
-            indication.setPublisherId("WEATHERAPI_FORECAST");
+            indication.setReceivedUtc(toUtc(issuedLocal));
+            indication.setPublisherId("weatherapi.com");
 
             if (tzId != null) {
-                indication.setReceivedLocal(toLocalDateTimeAtZone(indication.getReceivedUtc(), Optional.of(tzId)));
+                indication.setReceivedLocal(issuedLocal);
             }
 
             Air air = new Air();
