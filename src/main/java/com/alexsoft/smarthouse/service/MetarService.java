@@ -82,7 +82,7 @@ public class MetarService {
     private String weatherApiQuery;
 
     // number of forecast days to request (we need at least 2 to get tomorrow)
-    @Value("${weatherapi.days:8}")
+    @Value("${weatherapi.days:14}")
     private Integer weatherApiDays;
 
     // schedule for WeatherAPI call (default: every hour at minute 0)
@@ -191,7 +191,7 @@ public class MetarService {
             String place = optText(root.at("/location/name"));
             String tzId = optText(root.at("/location/tz_id"));
 
-            // Forecast for 1, 3 and 7 days in advance
+            // Forecast for 1, 3, 7 and 13 days in advance
             com.fasterxml.jackson.databind.JsonNode forecastDays = root.path("forecast").path("forecastday");
             if (forecastDays.isArray() && forecastDays.size() > 0) {
                 // Forecast for the same hour tomorrow
@@ -208,6 +208,11 @@ public class MetarService {
                 Indication forecastInd7 = indicationFromWeatherApiForecast(forecastDays, place, tzId, 7);
                 if (forecastInd7 != null) {
                     indicationService.save(forecastInd7, null);
+                }
+                // Forecast for the same hour 13 days later
+                Indication forecastInd13 = indicationFromWeatherApiForecast(forecastDays, place, tzId, 13);
+                if (forecastInd13 != null) {
+                    indicationService.save(forecastInd13, null);
                 }
             }
 
