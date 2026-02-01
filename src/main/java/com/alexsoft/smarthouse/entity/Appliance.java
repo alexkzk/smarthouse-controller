@@ -66,6 +66,9 @@ public class Appliance {
     @Convert(converter = MapToJsonConverter.class)
     @Column(length = 2048)
     private Map<String, Object> schedule;
+    @Convert(converter = MapToJsonConverter.class)
+    @Column(length = 2048)
+    private Map<String, String> displayStatus;
 
     public Optional<ApplianceGroup> getApplianceGroup() {
         return applianceGroup == null ? Optional.empty() : Optional.of(applianceGroup);
@@ -143,8 +146,4 @@ public class Appliance {
         }
         return value != null ? value.toString() : null;
     }
-
-    @Convert(converter = MapToJsonConverter.class)
-    @Column(length = 2048)
-    private Map<String, String> displayStatus;
 }

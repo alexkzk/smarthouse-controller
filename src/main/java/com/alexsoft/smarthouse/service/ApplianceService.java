@@ -73,7 +73,7 @@ public class ApplianceService {
                 if (!appliance.isLocked()) {
 
                     //  overwrite manual changed setting
-                    Double scheduledSetting = appliance.determineScheduledSetting();
+                    Double scheduledSetting = appliance.determineScheduledSetting();    //  todo doublecheck this logic, seemed like didn't work well with AC heating mode
                     if (scheduledSetting != null && !Objects.equals(appliance.getScheduledSetting(), scheduledSetting)) {
                         appliance.setScheduledSetting(scheduledSetting);
                         appliance.setSetting(scheduledSetting);
@@ -81,8 +81,6 @@ public class ApplianceService {
 
                     //  control based ong avg setting
                     if (appliance.getSetting() != null) {
-                        boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
-                        boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
                         if (appliance.getCode().equals("AC") && appliance.getState() == OFF) {
                             Appliance fan = applianceRepository.findById("FAN").orElseThrow();
                             LocalDateTime now = toLocalDateTime(utc);
@@ -117,12 +115,25 @@ public class ApplianceService {
 
                             }
                         }
-                        if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
-                            applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
-                            return;
-                        } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
-                            applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
-                            return;
+                        if (appliance.getCode().equals("AC") && Boolean.TRUE.equals(appliance.getInverted())) {
+                            // AC Heating mode
+                            if (average < appliance.getSetting() - appliance.getHysteresis()) {
+                                applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
+                                return;
+                            } else if (average > appliance.getSetting() + appliance.getHysteresis()) {
+                                applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
+                                return;
+                            }
+                        } else {
+                            boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
+                            boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
+                            if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
+                                applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
+                                return;
+                            } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
+                                applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
+                                return;
+                            }
                         }
 
                     }
