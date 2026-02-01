@@ -75,7 +75,7 @@ public class MetarService {
     private String weatherApiBaseUri;
 
 //    @Value("${weatherapi.key:}")
-    private String weatherApiKey = "d6f0c7e886914244b47212927261601";
+    private String weatherApiKey = "WEATHERAPI_KEY_REDACTED";
 
     // Location to query (zip/city). Example: 33019
     @Value("${weatherapi.q:33019}")
