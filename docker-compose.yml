@@ -58,6 +58,10 @@ services:
     restart: unless-stopped
     networks:
       - smarthouse_network
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
 
   smarthouse-mqtt-broker:
     image: eclipse-mosquitto:latest
