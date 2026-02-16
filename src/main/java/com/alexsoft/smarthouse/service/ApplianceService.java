@@ -126,7 +126,7 @@ public class ApplianceService {
                             }
                         } else {
                             boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
-                            boolean offCondition = average < appliance.getSetting() - appliance.getHysteresis();
+                            boolean offCondition = average < appliance.getSetting() - (appliance.getHysteresis() + (appliance.getCode().equals("AC") ? 0.5 : 0));
                             if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
                                 applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
                                 return;
