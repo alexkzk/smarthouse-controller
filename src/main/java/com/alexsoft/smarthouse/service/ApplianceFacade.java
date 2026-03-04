@@ -63,7 +63,8 @@ public class ApplianceFacade {
 
         if (("http-controller".equals(requester) || "mqtt-msg".equals(requester)) &&
                 appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-            if (isDark()) {
+            appliance.setLocked(true);
+            /*if (isDark()) {
                 if (appliance.getState() == OFF) {
                     appliance.setLocked(true);
                     LocalDateTime lockedUntilUtc = sixThirtyAmAtUtc();
@@ -85,7 +86,7 @@ public class ApplianceFacade {
                     appliance.setLockedUntilUtc(lockedUntilUtc);
                     eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#4".formatted(appliance.getCode(), lockedUntilUtc)).build());
                 }
-            }
+            }*/
         } else if (switched) {
             if (appliance.getState() == OFF) {
                 if (appliance.getMinimumOffCycleMinutes() != null) {
