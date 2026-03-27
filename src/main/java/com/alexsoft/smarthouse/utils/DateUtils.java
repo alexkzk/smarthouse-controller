@@ -138,7 +138,7 @@ public class DateUtils {
 
         // Get current date and time
         Calendar currentDate = Calendar.getInstance();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = getLocalDateTime();
 
         // Get today's sunset
         LocalDateTime todaySunset = toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(currentDate));
