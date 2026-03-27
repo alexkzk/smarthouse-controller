@@ -50,8 +50,8 @@ public class ApplianceFacade {
 
         if (switched) {
             LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, requester);
-            eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState))
-                    .data(Map.of("source", requester)).build());
+            eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                    .data(Map.of("action", "switch", "state", newState.name(), "source", requester)).build());
             applianceRepository.save(appliance);
         }
         if (sendMqtt) {
@@ -70,27 +70,30 @@ public class ApplianceFacade {
                     // only update if not already locked until a later time (preserve user extensions)
                     if (appliance.getLockedUntilUtc() == null || appliance.getLockedUntilUtc().isBefore(sixThirtyAm)) {
                         appliance.setLockedUntilUtc(sixThirtyAm);
-                        eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#1".formatted(appliance.getCode(), sixThirtyAm)).build());
+                        eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                                .data(Map.of("action", "locked-until", "until", sixThirtyAm.toString(), "rule", 1)).build());
                     } else {
-                        eventRepository.save(Event.builder().utcTime(utc)
-                                .type("%s.lock.preserved".formatted(appliance.getCode()))
-                                .data(Map.of("existing", appliance.getLockedUntilUtc().toString(), "attempted", sixThirtyAm.toString())).build());
+                        eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                                .data(Map.of("action", "lock.preserved", "existing", appliance.getLockedUntilUtc().toString(), "attempted", sixThirtyAm.toString())).build());
                     }
                 } else {
                     appliance.setLocked(false);
                     appliance.setLockedUntilUtc(null);
-                    eventRepository.save(Event.builder().utcTime(utc).type("%s.unlocked#2".formatted(appliance.getCode())).build());
+                    eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                            .data(Map.of("action", "unlocked", "rule", 2)).build());
                 }
             } else {
                 if (appliance.getState() == OFF) {
                     appliance.setLocked(false);
                     appliance.setLockedUntilUtc(null);
-                    eventRepository.save(Event.builder().utcTime(utc).type("%s.unlocked#4".formatted(appliance.getCode())).build());
+                    eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                            .data(Map.of("action", "unlocked", "rule", 4)).build());
                 } else {
                     appliance.setLocked(true);
                     LocalDateTime lockedUntilUtc = toUtc(getNearestSunsetTime().plusHours(1));
                     appliance.setLockedUntilUtc(lockedUntilUtc);
-                    eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#4".formatted(appliance.getCode(), lockedUntilUtc)).build());
+                    eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                            .data(Map.of("action", "locked-until", "until", lockedUntilUtc.toString(), "rule", 4)).build());
                 }
             }
         } else if (switched) {
@@ -99,14 +102,16 @@ public class ApplianceFacade {
                     appliance.setLocked(true);
                     LocalDateTime lockedUntilUtc = utc.plusMinutes(appliance.getMinimumOffCycleMinutes());
                     appliance.setLockedUntilUtc(lockedUntilUtc);
-                    eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#5".formatted(appliance.getCode(), lockedUntilUtc)).build());
+                    eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                            .data(Map.of("action", "locked-until", "until", lockedUntilUtc.toString(), "rule", 5)).build());
                 }
             } else {
                 if (appliance.getMinimumOnCycleMinutes() != null) {
                     appliance.setLocked(true);
                     LocalDateTime lockedUntilUtc = utc.plusMinutes(appliance.getMinimumOnCycleMinutes());
                     appliance.setLockedUntilUtc(lockedUntilUtc);
-                    eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#6".formatted(appliance.getCode(), lockedUntilUtc)).build());
+                    eventRepository.save(Event.builder().utcTime(utc).type(appliance.getCode())
+                            .data(Map.of("action", "locked-until", "until", lockedUntilUtc.toString(), "rule", 6)).build());
                 }
             }
         }

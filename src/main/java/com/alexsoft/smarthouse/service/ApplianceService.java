@@ -191,15 +191,15 @@ public class ApplianceService {
             appliance.setLockedUntilUtc(null);
             LOGGER.info("pwr-control '{}' has been unlocked", appliance.getDescription());
             eventRepository.save(Event.builder().utcTime(utc)
-                    .type("%s.lock.expired".formatted(appliance.getCode()))
-                    .data(Map.of("wasLockedUntil", wasLockedUntil.toString())).build());
+                    .type(appliance.getCode())
+                    .data(Map.of("action", "lock.expired", "wasLockedUntil", wasLockedUntil.toString())).build());
         }
     }
 
     private void logPwrControlDecision(Appliance appliance, ApplianceState decision, double average, LocalDateTime utc) {
         eventRepository.save(Event.builder().utcTime(utc)
-                .type("%s.pwr-control.trigger.%s".formatted(appliance.getCode(), decision.name().toLowerCase()))
-                .data(Map.of("avg", average, "setting", appliance.getSetting(), "hysteresis", appliance.getHysteresis())).build());
+                .type(appliance.getCode())
+                .data(Map.of("action", "pwr-control.trigger", "decision", decision.name().toLowerCase(), "avg", average, "setting", appliance.getSetting(), "hysteresis", appliance.getHysteresis())).build());
     }
 
     private void sendAvgMessage(Appliance appliance, Double average, LocalDateTime utc, LocalDateTime now) {
