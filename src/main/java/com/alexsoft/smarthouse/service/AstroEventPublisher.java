@@ -35,6 +35,7 @@ public class AstroEventPublisher {
     private final ApplicationEventPublisher eventPublisher;
     private final HourChangeTrackerRepository hourChangeTrackerRepository;
     private final EventRepository eventRepository;
+    private final ApplianceService applianceService;
 
     private Integer lastReportedNewHour;
     private LocalDateTime lastSunsetReported;
@@ -47,6 +48,7 @@ public class AstroEventPublisher {
         lastSunsetReported = lastSunsetEvent == null ? null : convertToLocalDateTime((Timestamp) lastSunsetEvent);
         appReady = true;
         eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("application.startup").build());
+        applianceService.onHourChanged(new HourChangedEvent(this, lastReportedNewHour));
     }
 
     @EventListener(ContextClosedEvent.class)
