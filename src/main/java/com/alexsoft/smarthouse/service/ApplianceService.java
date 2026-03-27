@@ -106,7 +106,7 @@ public class ApplianceService {
                             }
 
                             LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
-                            OptionalDouble avgDehPowerConsumption = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("lr-sp-dehumidifier"),
+                            OptionalDouble avgDehPowerConsumption = indicationRepositoryV3.findByLocationIdInAndUtcTimeIsAfterAndMeasurementType(List.of("DEH"),
                                     averageStart, "power").stream().mapToDouble(IndicationV3::getValue).average();
                             if (avgDehPowerConsumption.isPresent() && avgDehPowerConsumption.getAsDouble() > 500) {
                                 if (fanNeedsToBeTurnedOn) {
