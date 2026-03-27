@@ -1,12 +1,14 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Appliance;
+import com.alexsoft.smarthouse.entity.Event;
 import com.alexsoft.smarthouse.entity.IndicationV3;
 import com.alexsoft.smarthouse.entity.Request;
 import com.alexsoft.smarthouse.enums.ApplianceState;
 import com.alexsoft.smarthouse.event.HourChangedEvent;
 import com.alexsoft.smarthouse.repository.ApplianceGroupRepository;
 import com.alexsoft.smarthouse.repository.ApplianceRepository;
+import com.alexsoft.smarthouse.repository.EventRepository;
 import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.repository.RequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -40,6 +43,7 @@ public class ApplianceService {
     private final IndicationServiceV3 indicationServiceV3;
     private final RequestRepository requestRepository;
     private final ApplianceFacade applianceFacade;
+    private final EventRepository eventRepository;
 
     @EventListener
     @Transactional
@@ -47,8 +51,14 @@ public class ApplianceService {
         LocalDateTime utc = getUtc();
         applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group -> Arrays.stream(group.getTurnOffHours().split(",")).forEach(turnOffHour -> {
             if (Integer.parseInt(turnOffHour) == event.getHour()) {
-                applianceRepository.findAll().stream().filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
-                        .forEach(app -> applianceFacade.toggle(app, ApplianceState.OFF, utc, "turn off hours setting", true));
+                List<Appliance> affected = applianceRepository.findAll().stream()
+                        .filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
+                        .collect(Collectors.toList());
+                List<String> codes = affected.stream().map(Appliance::getCode).collect(Collectors.toList());
+                eventRepository.save(Event.builder().utcTime(utc)
+                        .type("group.%s.turn-off-hours.triggered".formatted(group.getCode()))
+                        .data(Map.of("hour", event.getHour(), "appliances", codes)).build());
+                affected.forEach(app -> applianceFacade.toggle(app, ApplianceState.OFF, utc, "turn off hours setting", true));
             }
         }));
     }
@@ -118,9 +128,11 @@ public class ApplianceService {
                         if (appliance.getCode().equals("AC") && Boolean.TRUE.equals(appliance.getInverted())) {
                             // AC Heating mode
                             if (average < appliance.getSetting() - appliance.getHysteresis()) {
+                                logPwrControlDecision(appliance, ON, average, utc);
                                 applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
                                 return;
                             } else if (average > appliance.getSetting() + appliance.getHysteresis()) {
+                                logPwrControlDecision(appliance, OFF, average, utc);
                                 applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
                                 return;
                             }
@@ -128,9 +140,11 @@ public class ApplianceService {
                             boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
                             boolean offCondition = average < appliance.getSetting() - (appliance.getHysteresis() + (appliance.getCode().equals("AC") ? 0.5 : 0));
                             if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
+                                logPwrControlDecision(appliance, ON, average, utc);
                                 applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
                                 return;
                             } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
+                                logPwrControlDecision(appliance, OFF, average, utc);
                                 applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
                                 return;
                             }
@@ -170,12 +184,22 @@ public class ApplianceService {
         return null;
     }
 
-    private static void checkLock(Appliance appliance, LocalDateTime utc) {
+    private void checkLock(Appliance appliance, LocalDateTime utc) {
         if (appliance.getLockedUntilUtc() != null && utc.isAfter(appliance.getLockedUntilUtc())) {
+            LocalDateTime wasLockedUntil = appliance.getLockedUntilUtc();
             appliance.setLocked(false);
             appliance.setLockedUntilUtc(null);
             LOGGER.info("pwr-control '{}' has been unlocked", appliance.getDescription());
+            eventRepository.save(Event.builder().utcTime(utc)
+                    .type("%s.lock.expired".formatted(appliance.getCode()))
+                    .data(Map.of("wasLockedUntil", wasLockedUntil.toString())).build());
         }
+    }
+
+    private void logPwrControlDecision(Appliance appliance, ApplianceState decision, double average, LocalDateTime utc) {
+        eventRepository.save(Event.builder().utcTime(utc)
+                .type("%s.pwr-control.trigger.%s".formatted(appliance.getCode(), decision.name().toLowerCase()))
+                .data(Map.of("avg", average, "setting", appliance.getSetting(), "hysteresis", appliance.getHysteresis())).build());
     }
 
     private void sendAvgMessage(Appliance appliance, Double average, LocalDateTime utc, LocalDateTime now) {

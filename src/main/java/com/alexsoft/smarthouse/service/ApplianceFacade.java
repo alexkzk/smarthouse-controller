@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -69,6 +70,10 @@ public class ApplianceFacade {
                     if (appliance.getLockedUntilUtc() == null || appliance.getLockedUntilUtc().isBefore(sixThirtyAm)) {
                         appliance.setLockedUntilUtc(sixThirtyAm);
                         eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#1".formatted(appliance.getCode(), sixThirtyAm)).build());
+                    } else {
+                        eventRepository.save(Event.builder().utcTime(utc)
+                                .type("%s.lock.preserved".formatted(appliance.getCode()))
+                                .data(Map.of("existing", appliance.getLockedUntilUtc().toString(), "attempted", sixThirtyAm.toString())).build());
                     }
                 } else {
                     appliance.setLocked(false);

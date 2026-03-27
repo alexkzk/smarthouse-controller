@@ -1,7 +1,9 @@
 package com.alexsoft.smarthouse.controller;
 
 import com.alexsoft.smarthouse.entity.Appliance;
+import com.alexsoft.smarthouse.entity.Event;
 import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.repository.EventRepository;
 import com.alexsoft.smarthouse.service.ApplianceFacade;
 import com.alexsoft.smarthouse.service.ApplianceService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class ApplianceController {
 
     private final ApplianceService applianceService;
     private final ApplianceFacade applianceFacade;
+    private final EventRepository eventRepository;
 
     @GetMapping
     public ResponseEntity<List<Appliance>> getAllAppliances(@RequestParam(required = false) String requesterId) {
@@ -58,19 +61,28 @@ public class ApplianceController {
                     case "locked":
                         Boolean locked = (Boolean) value;
                         appliance.setLocked(locked);
+                        eventRepository.save(Event.builder().utcTime(getUtc())
+                                .type("%s.http.locked".formatted(applianceCode))
+                                .data(Map.of("locked", locked)).build());
                         break;
                     case "lockedUntil":
                         String lockedUntil = (String) value;
                         if (lockedUntil.equals("null")) {
                             appliance.setLockedUntilUtc(null);
+                            eventRepository.save(Event.builder().utcTime(getUtc())
+                                    .type("%s.http.lockedUntil.cleared".formatted(applianceCode)).build());
                         } else {
                             LocalDateTime selectedLockedUntil = LocalDateTime.parse(lockedUntil, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
+                            LocalDateTime previousLock = appliance.getLockedUntilUtc();
                             if (appliance.getLockedUntilUtc() == null) {
                                 appliance.setLockedUntilUtc(selectedLockedUntil);
                             } else {
                                 Duration duration = Duration.between(LocalDateTime.now(), selectedLockedUntil);
                                 appliance.setLockedUntilUtc(appliance.getLockedUntilUtc().plus(duration));
                             }
+                            eventRepository.save(Event.builder().utcTime(getUtc())
+                                    .type("%s.http.lockedUntil".formatted(applianceCode))
+                                    .data(Map.of("requested", lockedUntil, "previous", String.valueOf(previousLock), "result", appliance.getLockedUntilUtc().toString())).build());
                         }
                         break;
                     case "setting":
