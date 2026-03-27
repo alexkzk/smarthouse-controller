@@ -63,13 +63,15 @@ public class ApplianceFacade {
 
         if (("http-controller".equals(requester) || "mqtt-msg".equals(requester)) &&
                 appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-            appliance.setLocked(true);
-            /*if (isDark()) {
+            if (isDark()) {
                 if (appliance.getState() == OFF) {
                     appliance.setLocked(true);
-                    LocalDateTime lockedUntilUtc = sixThirtyAmAtUtc();
-                    appliance.setLockedUntilUtc(lockedUntilUtc);
-                    eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#1".formatted(appliance.getCode(), lockedUntilUtc)).build());
+                    LocalDateTime sixThirtyAm = sixThirtyAmAtUtc();
+                    // only update if not already locked until a later time (preserve user extensions)
+                    if (appliance.getLockedUntilUtc() == null || appliance.getLockedUntilUtc().isBefore(sixThirtyAm)) {
+                        appliance.setLockedUntilUtc(sixThirtyAm);
+                        eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#1".formatted(appliance.getCode(), sixThirtyAm)).build());
+                    }
                 } else {
                     appliance.setLocked(false);
                     appliance.setLockedUntilUtc(null);
@@ -86,7 +88,7 @@ public class ApplianceFacade {
                     appliance.setLockedUntilUtc(lockedUntilUtc);
                     eventRepository.save(Event.builder().utcTime(utc).type("%s.locked-until.%s#4".formatted(appliance.getCode(), lockedUntilUtc)).build());
                 }
-            }*/
+            }
         } else if (switched) {
             if (appliance.getState() == OFF) {
                 if (appliance.getMinimumOffCycleMinutes() != null) {
