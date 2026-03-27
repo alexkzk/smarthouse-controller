@@ -50,7 +50,8 @@ public class ApplianceFacade {
 
         if (switched) {
             LOGGER.info("Switching '{}' {}: '{}'", appliance.getCode(), newState, requester);
-            eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState)).build());
+            eventRepository.save(Event.builder().utcTime(utc).type("switch.%s.%s".formatted(appliance.getCode(), newState))
+                    .data(Map.of("source", requester)).build());
             applianceRepository.save(appliance);
         }
         if (sendMqtt) {
