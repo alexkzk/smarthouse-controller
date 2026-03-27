@@ -149,7 +149,8 @@ public class MessageReceiverService {
 
                     indicationServiceV3.saveAll(indicationV3s);
 
-                    Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(deviceId);
+                    Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(deviceId)
+                            .or(() -> applianceService.getApplianceByZigbeeTopic(topic));
                     if (applianceByCode.isPresent() && map.containsKey("state")) {
                         String receivedState = (String) map.get("state");
                         Appliance appliance = applianceByCode.get();

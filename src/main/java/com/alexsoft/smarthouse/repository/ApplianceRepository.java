@@ -16,6 +16,8 @@ public interface ApplianceRepository extends JpaRepository<Appliance, String> {
     @Query("SELECT a FROM Appliance a WHERE a.code = :code")
     Optional<Appliance> findById(@Param("code") String code);
 
-
+    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000")})
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Appliance> findByZigbee2MqttTopicStartingWith(String topicPrefix);
 
 }

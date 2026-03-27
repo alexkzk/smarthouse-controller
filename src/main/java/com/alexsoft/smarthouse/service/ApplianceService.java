@@ -229,6 +229,11 @@ public class ApplianceService {
         return applianceRepository.findById(code);
     }
 
+    @Transactional
+    public Optional<Appliance> getApplianceByZigbeeTopic(String topic) {
+        return applianceRepository.findByZigbee2MqttTopicStartingWith(topic);
+    }
+
     public Appliance saveOrUpdateAppliance(Appliance appliance) {
         return applianceRepository.save(appliance);
     }
