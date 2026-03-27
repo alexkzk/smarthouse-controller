@@ -61,7 +61,7 @@ public class ApplianceFacade {
 
     private void setLock(Appliance appliance, LocalDateTime utc, String requester, boolean switched) {
 
-        if (("http-controller".equals(requester) || "mqtt-msg".equals(requester) || "turn off hours setting".equals(requester)) &&
+        if (("http-controller".equals(requester) || (requester != null && requester.startsWith("zigbee2mqtt/")) || "turn off hours setting".equals(requester)) &&
                 appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
             if (isDark()) {
                 if (appliance.getState() == OFF) {
