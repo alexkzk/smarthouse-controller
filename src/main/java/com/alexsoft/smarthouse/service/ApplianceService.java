@@ -197,8 +197,9 @@ public class ApplianceService {
     }
 
     private void logPwrControlDecision(Appliance appliance, ApplianceState decision, double average, LocalDateTime utc) {
+        String type = appliance.getState() != decision ? "pwr-control.trigger" : "pwr-control.check";
         eventRepository.save(Event.builder().utcTime(utc)
-                .type("pwr-control.trigger").device(appliance.getCode())
+                .type(type).device(appliance.getCode())
                 .data(Map.of("decision", decision.name().toLowerCase(), "avg", average, "setting", appliance.getSetting(), "hysteresis", appliance.getHysteresis())).build());
     }
 
