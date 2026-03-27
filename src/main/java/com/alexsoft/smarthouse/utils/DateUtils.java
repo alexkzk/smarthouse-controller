@@ -133,6 +133,11 @@ public class DateUtils {
         return targetTime.withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
     }
 
+    public static LocalDateTime getTodaySunsetTime() {
+        SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
+        return toLocalDateTime(sunriseSunsetCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance()));
+    }
+
     public static LocalDateTime getNearestSunsetTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
 
