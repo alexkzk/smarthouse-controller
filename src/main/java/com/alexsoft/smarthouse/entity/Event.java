@@ -28,6 +28,11 @@ public class Event {
 
     private String type;
 
+    private String device;
+
+    @Column(name = "mqtt_topic")
+    private String mqttTopic;
+
     // Persist as JSON string in a single column using AttributeConverter
     @Convert(converter = MapJsonConverter.class)
     @Column(columnDefinition = "text")

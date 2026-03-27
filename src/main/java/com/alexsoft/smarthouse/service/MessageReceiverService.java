@@ -103,7 +103,10 @@ public class MessageReceiverService {
             String topic = (String) message.getHeaders().get("mqtt_receivedTopic");
             try {
                 Map<String, Object> msgMap = OBJECT_MAPPER.readValue(payload, Map.class);
-                eventRepository.save(Event.builder().type("inbound.mqtt.msg").utcTime(getUtc()).data(msgMap).build());
+                String deviceId = topic != null && topic.startsWith("zigbee2mqtt/") && !topic.startsWith("zigbee2mqtt/bridge")
+                        ? topic.split("/")[1] : null;
+                eventRepository.save(Event.builder().type("inbound.mqtt.msg").utcTime(getUtc())
+                        .mqttTopic(topic).device(deviceId).data(msgMap).build());
             } catch (Exception  e) {
                 LOGGER.warn("Failed to log inbound MQTT message payload {}", payload);
             }

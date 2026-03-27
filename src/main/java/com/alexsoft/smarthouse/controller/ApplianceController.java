@@ -62,16 +62,15 @@ public class ApplianceController {
                         Boolean locked = (Boolean) value;
                         appliance.setLocked(locked);
                         eventRepository.save(Event.builder().utcTime(getUtc())
-                                .type(applianceCode)
-                                .data(Map.of("action", "http.locked", "locked", locked)).build());
+                                .type("http.locked").device(applianceCode)
+                                .data(Map.of("locked", locked)).build());
                         break;
                     case "lockedUntil":
                         String lockedUntil = (String) value;
                         if (lockedUntil.equals("null")) {
                             appliance.setLockedUntilUtc(null);
                             eventRepository.save(Event.builder().utcTime(getUtc())
-                                    .type(applianceCode)
-                                    .data(Map.of("action", "http.lockedUntil.cleared")).build());
+                                    .type("http.lockedUntil.cleared").device(applianceCode).build());
                         } else {
                             LocalDateTime selectedLockedUntil = LocalDateTime.parse(lockedUntil, DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"));
                             LocalDateTime previousLock = appliance.getLockedUntilUtc();
@@ -82,8 +81,8 @@ public class ApplianceController {
                                 appliance.setLockedUntilUtc(appliance.getLockedUntilUtc().plus(duration));
                             }
                             eventRepository.save(Event.builder().utcTime(getUtc())
-                                    .type(applianceCode)
-                                    .data(Map.of("action", "http.lockedUntil", "requested", lockedUntil, "previous", String.valueOf(previousLock), "result", appliance.getLockedUntilUtc().toString())).build());
+                                    .type("http.lockedUntil").device(applianceCode)
+                                    .data(Map.of("requested", lockedUntil, "previous", String.valueOf(previousLock), "result", appliance.getLockedUntilUtc().toString())).build());
                         }
                         break;
                     case "setting":
