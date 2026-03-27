@@ -1,6 +1,7 @@
 package com.alexsoft.smarthouse.utils;
 
 import java.sql.Timestamp;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -111,21 +112,25 @@ public class DateUtils {
         return localDateTime.format(chartDateTimePattern);
     }
 
-    public static LocalDateTime sixThirtyAmAtUtc() {
+    public static LocalDateTime wakeUpTime() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("America/New_York"));
 
-        // Set target time to 6:30 AM
-        ZonedDateTime sixThirtyAm = now.withHour(6).withMinute(30).withSecond(0).withNano(0);
-        if (now.getHour() > 6 || (now.getHour() == 6 && now.getMinute() >= 30)) {
-            // If current time is past 6:30 AM, move to the next day
-            sixThirtyAm = sixThirtyAm.plusDays(1);
+        // 6:55 AM on weekdays, 8:00 AM on weekends
+        boolean isWeekend = now.getDayOfWeek() == DayOfWeek.SATURDAY || now.getDayOfWeek() == DayOfWeek.SUNDAY;
+        int targetHour = isWeekend ? 8 : 6;
+        int targetMinute = isWeekend ? 0 : 55;
+
+        ZonedDateTime targetTime = now.withHour(targetHour).withMinute(targetMinute).withSecond(0).withNano(0);
+        if (!now.isBefore(targetTime)) {
+            targetTime = targetTime.plusDays(1);
+            // recalculate for the next day (weekend status may change)
+            isWeekend = targetTime.getDayOfWeek() == DayOfWeek.SATURDAY || targetTime.getDayOfWeek() == DayOfWeek.SUNDAY;
+            targetHour = isWeekend ? 8 : 6;
+            targetMinute = isWeekend ? 0 : 55;
+            targetTime = targetTime.withHour(targetHour).withMinute(targetMinute).withSecond(0).withNano(0);
         }
 
-        // Convert to UTC
-        ZonedDateTime next6_30AMUtc = sixThirtyAm.withZoneSameInstant(ZoneId.of("UTC"));
-
-        return next6_30AMUtc.toLocalDateTime();
-
+        return targetTime.withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
     }
 
     public static LocalDateTime getNearestSunsetTime() {

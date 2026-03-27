@@ -12,10 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.OptionalDouble;
 
 import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
@@ -66,7 +64,7 @@ public class ApplianceFacade {
             if (isDark()) {
                 if (appliance.getState() == OFF) {
                     appliance.setLocked(true);
-                    LocalDateTime sixThirtyAm = sixThirtyAmAtUtc();
+                    LocalDateTime sixThirtyAm = wakeUpTime();
                     // only update if not already locked until a later time (preserve user extensions)
                     if (appliance.getLockedUntilUtc() == null || appliance.getLockedUntilUtc().isBefore(sixThirtyAm)) {
                         appliance.setLockedUntilUtc(sixThirtyAm);
