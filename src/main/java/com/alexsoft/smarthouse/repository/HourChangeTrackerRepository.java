@@ -36,6 +36,28 @@ public class HourChangeTrackerRepository {
         }
     }
 
+    public Object getLastSunriseEvent() {
+        try {
+            return entityManager.createNativeQuery("SELECT updated_at FROM main.hour_change_tracker WHERE id = 3 LIMIT 1").getSingleResult();
+        } catch (Exception e) {
+            LOGGER.error("Error getting last sunrise event", e);
+            return null;
+        }
+    }
+
+    @Transactional
+    public void updateLastSunriseEvent(Timestamp lastSunriseEvent, boolean upsert) {
+        if (upsert) {
+            entityManager.createNativeQuery("INSERT INTO main.hour_change_tracker (id, updated_at) values (3, :updated_at)")
+                    .setParameter("updated_at", lastSunriseEvent)
+                    .executeUpdate();
+        } else {
+            entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET updated_at = :updated_at where id = 3")
+                    .setParameter("updated_at", lastSunriseEvent)
+                    .executeUpdate();
+        }
+    }
+
     @Transactional
     public void updatePreviousHour(int currentHour, Timestamp updatedAt) {
         entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET previous_hour = :currentHour, updated_at = :updated_at where id = 1")

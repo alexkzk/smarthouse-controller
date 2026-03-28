@@ -2,6 +2,7 @@ package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.Event;
 import com.alexsoft.smarthouse.event.HourChangedEvent;
+import com.alexsoft.smarthouse.event.SunriseEvent;
 import com.alexsoft.smarthouse.event.SunsetEvent;
 import com.alexsoft.smarthouse.repository.EventRepository;
 import com.alexsoft.smarthouse.repository.HourChangeTrackerRepository;
@@ -39,6 +40,7 @@ public class AstroEventPublisher {
 
     private Integer lastReportedNewHour;
     private LocalDateTime lastSunsetReported;
+    private LocalDateTime lastSunriseReported;
     private boolean appReady = false;
 
     @EventListener(ApplicationReadyEvent.class)
@@ -46,6 +48,8 @@ public class AstroEventPublisher {
         lastReportedNewHour = hourChangeTrackerRepository.getPreviousHour();
         Object lastSunsetEvent = hourChangeTrackerRepository.getLastSunsetEvent();
         lastSunsetReported = lastSunsetEvent == null ? null : convertToLocalDateTime((Timestamp) lastSunsetEvent);
+        Object lastSunriseEvent = hourChangeTrackerRepository.getLastSunriseEvent();
+        lastSunriseReported = lastSunriseEvent == null ? null : convertToLocalDateTime((Timestamp) lastSunriseEvent);
         appReady = true;
         eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("application.startup").build());
         applianceService.onHourChanged(new HourChangedEvent(this, lastReportedNewHour));
@@ -63,12 +67,28 @@ public class AstroEventPublisher {
         }
         LocalDateTime localDateTime = getLocalDateTime();
         LocalDateTime sunsetDateTime = getTodaySunsetTime();
-        if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(LocalDate.now()))) {
+        if (localDateTime.isAfter(sunsetDateTime) && (lastSunsetReported == null || !lastSunsetReported.toLocalDate().equals(localDateTime.toLocalDate()))) {
             LOGGER.info("Sunset event");
             eventRepository.save(Event.builder().utcTime(toUtc(localDateTime)).type("sunset").build());
             eventPublisher.publishEvent(new SunsetEvent(this));
             hourChangeTrackerRepository.updateLastSunsetEvent(convertToTimestamp(localDateTime), lastSunsetReported == null);
             lastSunsetReported = localDateTime;
+        }
+    }
+
+    @Scheduled(fixedRate = 60 * 1000)
+    public void detectSunrise() {
+        if (!appReady) {
+            return;
+        }
+        LocalDateTime localDateTime = getLocalDateTime();
+        LocalDateTime sunriseDateTime = getTodaySunriseTime();
+        if (localDateTime.isAfter(sunriseDateTime) && (lastSunriseReported == null || !lastSunriseReported.toLocalDate().equals(localDateTime.toLocalDate()))) {
+            LOGGER.info("Sunrise event");
+            eventRepository.save(Event.builder().utcTime(toUtc(localDateTime)).type("sunrise").build());
+            eventPublisher.publishEvent(new SunriseEvent(this));
+            hourChangeTrackerRepository.updateLastSunriseEvent(convertToTimestamp(localDateTime), lastSunriseReported == null);
+            lastSunriseReported = localDateTime;
         }
     }
 

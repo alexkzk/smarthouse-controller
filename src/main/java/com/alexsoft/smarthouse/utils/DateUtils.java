@@ -160,6 +160,11 @@ public class DateUtils {
     }
 
 
+    public static LocalDateTime getTodaySunriseTime() {
+        SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
+        return toLocalDateTime(sunriseSunsetCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance()));
+    }
+
     public static LocalDateTime getNearestSunriseTime() {
         SunriseSunsetCalculator sunriseSunsetCalculator = new SunriseSunsetCalculator(USER_LOCATION, APPLICATION_OPERATION_TIMEZONE);
 
