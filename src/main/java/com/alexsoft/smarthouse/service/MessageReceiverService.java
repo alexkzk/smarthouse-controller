@@ -154,7 +154,11 @@ public class MessageReceiverService {
                     if (applianceByCode.isPresent() && map.containsKey("state")) {
                         String receivedState = (String) map.get("state");
                         Appliance appliance = applianceByCode.get();
-                        if (!appliance.getState().name().equalsIgnoreCase(receivedState)) {
+                        Object brightnessRaw = map.get("brightness");
+                        boolean isDimmingToOff = "ON".equalsIgnoreCase(receivedState)
+                                && brightnessRaw != null
+                                && getValue(String.valueOf(brightnessRaw)) < 30;
+                        if (!isDimmingToOff && !appliance.getState().name().equalsIgnoreCase(receivedState)) {
                             applianceFacade.toggle(appliance, ApplianceState.valueOf(receivedState), getUtc(), topic, false);
                         }
                     }
