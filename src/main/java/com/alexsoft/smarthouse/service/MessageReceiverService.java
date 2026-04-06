@@ -159,7 +159,7 @@ public class MessageReceiverService {
                                 && brightnessRaw != null
                                 && getValue(String.valueOf(brightnessRaw)) < 30;
                         if (!isDimmingToOff && !appliance.getState().name().equalsIgnoreCase(receivedState)) {
-                            applianceFacade.toggle(appliance, ApplianceState.valueOf(receivedState), getUtc(), topic, false);
+                            applianceFacade.toggle(appliance, ApplianceState.valueOf(receivedState.toUpperCase()), getUtc(), topic, false);
                         }
                     }
 
