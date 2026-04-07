@@ -57,7 +57,7 @@ fi
 # Build application from current Git HEAD
 echo "Building application with Maven wrapper..."
 chmod +x ./mvnw
-./mvnw clean package -DskipTests ${MVN_EXTRA_OPTS}
+./mvnw clean package ${MVN_EXTRA_OPTS}
 
 echo "Build finished. Looking for JAR with pattern: ${RUN_JAR_PATTERN}"
 JAR_FILE=$(ls ${RUN_JAR_PATTERN} 2>/dev/null | head -n 1 || true)
