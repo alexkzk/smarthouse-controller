@@ -139,11 +139,11 @@ public class ApplianceService {
                         } else {
                             boolean onCondition = average > appliance.getSetting() + appliance.getHysteresis();
                             boolean offCondition = average < appliance.getSetting() - (appliance.getHysteresis() + (appliance.getCode().equals("AC") ? 0.5 : 0));
-                            if (Boolean.TRUE.equals(appliance.getInverted()) ? !onCondition : onCondition) {
+                            if (Boolean.TRUE.equals(appliance.getInverted()) ? offCondition : onCondition) {
                                 logPwrControlDecision(appliance, ON, average, utc);
                                 applianceFacade.toggle(appliance, ON, utc, "pwr-control", true);
                                 return;
-                            } else if (Boolean.TRUE.equals(appliance.getInverted()) ? !offCondition : offCondition) {
+                            } else if (Boolean.TRUE.equals(appliance.getInverted()) ? onCondition : offCondition) {
                                 logPwrControlDecision(appliance, OFF, average, utc);
                                 applianceFacade.toggle(appliance, OFF, utc, "pwr-control", true);
                                 return;
