@@ -16,7 +16,9 @@ public class Mqtt {
 
     @Bean
     public IntegrationFlow mqttOutboundFlow() {
-        return f -> f.handle(new MqttPahoMessageHandler(mqttUrlOut, mqttSubscriber));
+        MqttPahoMessageHandler handler = new MqttPahoMessageHandler(mqttUrlOut, mqttSubscriber);
+        handler.setCompletionTimeout(5000);
+        return f -> f.handle(handler);
     }
 
 }

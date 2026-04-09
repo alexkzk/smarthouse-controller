@@ -9,6 +9,7 @@ import com.alexsoft.smarthouse.utils.DateUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -93,7 +94,10 @@ public class MetarService {
     public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService,
             AirspaceActivityRepository airspaceActivityRepository, MessageSenderService messageSenderService) {
         this.metarLocationsConfig = metarLocationsConfig;
-        this.restTemplate = restTemplateBuilder.build();
+        this.restTemplate = restTemplateBuilder
+                .connectTimeout(Duration.ofSeconds(5))
+                .readTimeout(Duration.ofSeconds(10))
+                .build();
         this.indicationService = indicationService;
         this.airspaceActivityRepository = airspaceActivityRepository;
         this.messageSenderService = messageSenderService;
