@@ -1,28 +1,13 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
-import com.alexsoft.smarthouse.repository.AirspaceActivityRepository;
 import com.alexsoft.smarthouse.entity.*;
-import com.alexsoft.smarthouse.model.airplaneslive.Aircraft;
-import com.alexsoft.smarthouse.model.airplaneslive.AircraftData;
-import com.alexsoft.smarthouse.utils.DateUtils;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
 import com.alexsoft.smarthouse.enums.InOut;
+import com.alexsoft.smarthouse.model.airplaneslive.Aircraft;
+import com.alexsoft.smarthouse.model.airplaneslive.AircraftData;
 import com.alexsoft.smarthouse.model.avwx.metar.Metar;
+import com.alexsoft.smarthouse.repository.AirspaceActivityRepository;
 import com.alexsoft.smarthouse.utils.TempUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +26,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static com.alexsoft.smarthouse.utils.DateUtils.toLocalDateTimeAtZone;
 import static com.alexsoft.smarthouse.utils.DateUtils.toUtc;
@@ -169,8 +167,7 @@ public class MetarService {
                     } catch (Exception e) {
                         LOGGER.error("Error during retrieving and processing metar data for {}", key, e);
                     }
-                }, metarFetchExecutor))
-                .collect(Collectors.toList());
+                }, metarFetchExecutor)).toList();
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
