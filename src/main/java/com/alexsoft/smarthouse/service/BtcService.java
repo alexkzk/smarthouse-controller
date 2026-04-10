@@ -6,6 +6,7 @@ import com.alexsoft.smarthouse.enums.InOut;
 import com.alexsoft.smarthouse.repository.BtcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -25,6 +26,7 @@ public class BtcService {
     private final BtcRepository btcRepository;
     private final IndicationService indicationService;
 
+    @Async("ioTaskExecutor")
     @Scheduled(fixedDelay = 60000)
     public void getBtcRate() {
         try {

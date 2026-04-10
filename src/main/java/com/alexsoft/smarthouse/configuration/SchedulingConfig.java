@@ -21,7 +21,7 @@ public class SchedulingConfig implements SchedulingConfigurer {
     @Bean
     public ThreadPoolTaskScheduler taskScheduler() {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(5);
+        scheduler.setPoolSize(3);
         scheduler.setErrorHandler(t -> LOGGER.error("Unexpected error in scheduled task", t));
         scheduler.initialize();
         return scheduler;

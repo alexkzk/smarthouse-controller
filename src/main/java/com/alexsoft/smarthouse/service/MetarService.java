@@ -15,12 +15,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -36,8 +38,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 import static com.alexsoft.smarthouse.utils.DateUtils.toLocalDateTimeAtZone;
@@ -71,6 +72,7 @@ public class MetarService {
     private final TempUtils tempUtils = new TempUtils();
     private final AirspaceActivityRepository airspaceActivityRepository;
     private final MessageSenderService messageSenderService;
+    private final Executor ioTaskExecutor;
 
     // WeatherAPI configuration
     @Value("${weatherapi.baseUri:https://api.weatherapi.com/v1/forecast.json}")
@@ -92,10 +94,9 @@ public class MetarService {
     private String weatherApiCron;
 
 
-    private final ExecutorService metarFetchExecutor = Executors.newFixedThreadPool(5);
-
     public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService,
-            AirspaceActivityRepository airspaceActivityRepository, MessageSenderService messageSenderService) {
+            AirspaceActivityRepository airspaceActivityRepository, MessageSenderService messageSenderService,
+            @Qualifier("ioTaskExecutor") Executor ioTaskExecutor) {
         this.metarLocationsConfig = metarLocationsConfig;
         this.restTemplate = restTemplateBuilder
                 .connectTimeout(Duration.ofSeconds(5))
@@ -104,32 +105,38 @@ public class MetarService {
         this.indicationService = indicationService;
         this.airspaceActivityRepository = airspaceActivityRepository;
         this.messageSenderService = messageSenderService;
+        this.ioTaskExecutor = ioTaskExecutor;
     }
 
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "0 0 */1 * * *")
     public void aggregateHourly(){
         LOGGER.info("Hourly aggregating");
         indicationService.createAverageMeasurement(1, ChronoUnit.HOURS);
     }
 
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "0 */5 * * * *")
     public void aggregateMinutely(){
         LOGGER.info("Minutely aggregating");
         indicationService.createAverageMeasurement(5, ChronoUnit.MINUTES);
     }
 
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "0 0 22 * * *")
     public void aggregateDaily(){
         LOGGER.info("Daily aggregating");
         indicationService.createAverageMeasurement(1, ChronoUnit.DAYS);
     }
 
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "0 0 0 1 * *")
     public void aggregateMonthly(){
         LOGGER.info("Monthly aggregating");
         indicationService.createAverageMeasurement(1, ChronoUnit.MONTHS);
     }
 
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "${flightradar24.aircraft-reading-cron}")
     public void retrieveAndProcessAircraftNumber() {
         try {
@@ -139,6 +146,7 @@ public class MetarService {
         }
     }
 
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void retrieveAndProcessMetarData() {
         List<CompletableFuture<Void>> futures = metarLocationsConfig.getLocationMapping().entrySet().stream()
@@ -167,12 +175,13 @@ public class MetarService {
                     } catch (Exception e) {
                         LOGGER.error("Error during retrieving and processing metar data for {}", key, e);
                     }
-                }, metarFetchExecutor)).toList();
+                }, ioTaskExecutor)).toList();
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     // Calls WeatherAPI every hour, saves current conditions and forecast for the same hour tomorrow
+    @Async("ioTaskExecutor")
     @Scheduled(cron = "0 0 */1 * * *")
     public void retrieveAndProcessWeatherApi() {
         if (weatherApiKey == null || weatherApiKey.isBlank()) {
