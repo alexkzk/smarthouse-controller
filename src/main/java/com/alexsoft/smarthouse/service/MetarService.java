@@ -129,7 +129,11 @@ public class MetarService {
 
     @Scheduled(cron = "${flightradar24.aircraft-reading-cron}")
     public void retrieveAndProcessAircraftNumber() {
-        readAircraftNumber();
+        try {
+            readAircraftNumber();
+        } catch (Exception e) {
+            LOGGER.error("Error during retrieveAndProcessAircraftNumber", e);
+        }
     }
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
@@ -405,6 +409,10 @@ public class MetarService {
 
         // Log raw payload
         rawPayload = response.getBody();
+        if (rawPayload == null) {
+            LOGGER.warn("readAircraftNumber: empty response body");
+            return;
+        }
         if (!rawPayload.equalsIgnoreCase("[]")) {
             // Parse raw payload into FlightData object
             AircraftData aircraftData = null;

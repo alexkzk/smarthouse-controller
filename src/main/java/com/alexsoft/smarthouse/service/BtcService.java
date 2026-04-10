@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -24,7 +25,7 @@ public class BtcService {
     private final BtcRepository btcRepository;
     private final IndicationService indicationService;
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     public void getBtcRate() {
         try {
             Double btcPrice = webClient.get()
@@ -32,7 +33,7 @@ public class BtcService {
                     .retrieve()
                     .bodyToMono(String.class)
                     .map(this::parseBtcPrice)
-                    .block();
+                    .block(Duration.ofSeconds(10));
 
             if (btcPrice != null) {
                 LocalDateTime utcTimestamp = Instant.now().atZone(ZoneId.of("UTC")).toLocalDateTime();

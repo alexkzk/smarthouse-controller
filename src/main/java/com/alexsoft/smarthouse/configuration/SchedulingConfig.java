@@ -1,0 +1,29 @@
+package com.alexsoft.smarthouse.configuration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+
+@Configuration
+public class SchedulingConfig implements SchedulingConfigurer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulingConfig.class);
+
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar registrar) {
+        registrar.setScheduler(taskScheduler());
+    }
+
+    @Bean
+    public ThreadPoolTaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(5);
+        scheduler.setErrorHandler(t -> LOGGER.error("Unexpected error in scheduled task", t));
+        scheduler.initialize();
+        return scheduler;
+    }
+}

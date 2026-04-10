@@ -60,7 +60,7 @@ public class AstroEventPublisher {
         eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("application.shutdown").build());
     }
 
-    @Scheduled(fixedRate = 60 * 1000)
+    @Scheduled(fixedDelay = 60 * 1000)
     public void detectSunset() {
         if (!appReady) {
             return;
@@ -76,7 +76,7 @@ public class AstroEventPublisher {
         }
     }
 
-    @Scheduled(fixedRate = 60 * 1000)
+    @Scheduled(fixedDelay = 60 * 1000)
     public void detectSunrise() {
         if (!appReady) {
             return;
@@ -92,7 +92,7 @@ public class AstroEventPublisher {
         }
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedDelay = 1000)
     public void detectHourChange() {
         if (!appReady) {
             return;

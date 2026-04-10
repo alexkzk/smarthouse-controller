@@ -24,7 +24,7 @@ Spring Boot 3.4.0 IoT home automation backend. Runs on a local server, controls 
 | `MB-LOTV` | MB Led Over TV | Illuminance, inverted (setting=75, hyst=25) | `zigbee2mqtt/mb-led-over-tv/set` |
 | `TER-LIGHTS` | Terrace Lights | Illuminance, inverted (setting=75, hyst=25) — also controls `zigbee2mqtt/WRKTABLE/set` | `zigbee2mqtt/TER-LIGHTS/set` |
 
-**Appliance Group ALGHTS (id=1)**: LR-LUTV, MB-LOB, MB-LOTV, TER-LIGHTS — all illuminance-controlled lights. `turn_off_hours=0` (turn off at midnight).
+**Appliance Group ALGHTS (id=1)**: LR-LUTV, MB-LOB, MB-LOTV, TER-LIGHTS — all illuminance-controlled lights. `turn_off_hours=22` (turn off at 10 PM Eastern).
 
 **Reference sensor** for ALGHTS: `mb-lis-outdoor` (outdoor illuminance sensor). Lights turn ON when lux < 50, OFF when lux > 100 (inverted logic).
 
