@@ -78,11 +78,11 @@ public class MetarService {
     @Value("${weatherapi.baseUri:https://api.weatherapi.com/v1/forecast.json}")
     private String weatherApiBaseUri;
 
-//    @Value("${weatherapi.key:}")
-    private String weatherApiKey = "WEATHERAPI_KEY_REDACTED";
+    @Value("${weatherapi.key:}")
+    private String weatherApiKey;
 
-    // Location to query (zip/city). Example: 33019
-    @Value("${weatherapi.q:33019}")
+    // Location to query (zip/city)
+    @Value("${weatherapi.q:}")
     private String weatherApiQuery;
 
     // number of forecast days to request (we need at least 2 to get tomorrow)

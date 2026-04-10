@@ -19,8 +19,8 @@ spring:
   datasource:
     url: jdbc:postgresql://${smarthouse.db.hostname}:${smarthouse.db.port}/${smarthouse.db.name}
     driver-class-name: org.postgresql.Driver
-    username: smarthouse
-    password: smarthouse
+    username: ${SMARTHOUSE_DB_USERNAME:smarthouse}
+    password: ${SMARTHOUSE_DB_PASSWORD:changeme}
 
 influxdb:
   url: http://smarthouse-influxdb:8086           # Replace with the URL of your InfluxDB server
@@ -77,9 +77,9 @@ smarthouse:
     dump-on-destroy: true
     restore-on-startup: false
   ftp:
-    ${SMARTHOUSE_FTP_HOST:}
-    username: anonymous
-    password: ${smarthouse.ftp.username}@${smarthouse.ftp.hostname}
+    hostname: ${SMARTHOUSE_FTP_HOST:}
+    username: ${SMARTHOUSE_FTP_USER:anonymous}
+    password: ${SMARTHOUSE_FTP_PASSWORD:changeme}
     remote-path: /G/backup/smarthouse
     upload-on-destroy: ${smarthouse.db.dump-on-destroy}
 #  colors:

@@ -1,81 +1,88 @@
-# Smart House application
-### General description
+# Smarthouse Controller
 
-The application's goal is to collect data from different home IoT sensors and other needed sources, save them into a Relational Database
-(PostgreSQL) and then create different reports, charts and other statistics on the user's demand.
+A Spring Boot backend for home automation and IoT data collection. Runs on a local server and integrates with Zigbee2MQTT, PostgreSQL, and InfluxDB to automate smart appliances and track environmental data.
 
-The application performs next actions: 
-- Receives MQTT messages from MQTT broker and persists them in the DB.
-- On scheduled basis, loads realtime world weather data for specified locations (using AVWX REST API - https://avwx.rest/)
-and persists them in the DB (as if it were send via MQTT).
-- Generates different reports (simple HTML Thymeleaf templates with Google Charts) using aggregated (minutely, hourly...) measurements 
-based on previously saved data.
+## What it does
 
-### Packages content
-- configuration - Spring beans configuration.
-- db - JPA entities and repositories.
-- dto - data transfer object models.
-- rest - REST controllers.
-- presentation - Thymeleaf controllers.
-- model - model classes used in the business logic.
-- scheduled - scheduled tasks.
-- service - business logic related classes.
-- utils - static util classes, constants etc.
+**Appliance automation**
+- Controls lights, AC, dehumidifier, and ventilation fan via MQTT/Zigbee2MQTT
+- Evaluates sensor readings (illuminance, temperature, absolute humidity) against configurable thresholds with hysteresis
+- Applies inverted logic for lights: turns ON when it gets dark, OFF when it gets bright
+- Supports manual lock/unlock to prevent automation from overriding user-set states
+- Respects minimum on/off cycle durations per appliance
+- Group-level turn-off scheduling (e.g. lights off at 10 PM)
+- Sunrise/sunset-aware locking: locks lights until wake-up time after dark, until sunset+1h during the day
 
-### Frameworks and tools used
-- Spring Boot
-- Spring Data JPA
-- PostgreSQL
-- Lombok
-- Mapstruct
-- Maven
-- Liquibase
+**Sensor data collection**
+- Subscribes to `zigbee2mqtt/#` and persists all measurements (temperature, humidity, illuminance, power) to PostgreSQL
+- Syncs data to InfluxDB for time-series visualization
+- Fetches METAR weather data for ~25 airports every 30 minutes (parallelized)
+- Fetches weather forecast (WeatherAPI) and BTC/USD price on a schedule
+- Tracks aircraft activity in a configurable airspace area
 
-### Building and running the app
-You'll need JDK and Maven installed for next steps
+**Scheduled aggregation**
+- Minutely, hourly, daily, and monthly aggregations over sensor data
+- Trend calculation (units/hour) for temperature and humidity
 
-`mvn -f <path to pom.xml> clean install`
+**REST API**
+- Query and control appliances: toggle state, set/clear locks, adjust thresholds
+- All state changes and automation decisions logged as structured events in PostgreSQL
 
-`java -jar <path to JAR file previously built>`
+## Tech stack
 
-### Docker deployment
-Built and push a docker image
+- **Java 17 / Spring Boot 3.4**
+- **Spring Data JPA** + PostgreSQL
+- **Spring Integration MQTT** (Mosquitto broker via Zigbee2MQTT)
+- **InfluxDB 2.0** (time-series storage)
+- **Lombok**, **MapStruct**
+- **Docker / docker-compose** for deployment
 
-`docker build -t alexsoft/smarthouse ~/IdeaProjects/smarthouse-controller && docker tag alexsoft/smarthouse smarthouse:1.37 && docker push smarthouse:1.37`
+## Architecture highlights
 
-Run docker image
+- Two thread pools: a small scheduler pool for fast critical tasks (power control every 10s), and a separate async IO pool for all external calls and DB-heavy work — scheduler threads are never blocked by I/O
+- Hysteresis-based control loop prevents appliance chatter
+- Event sourcing: every automation decision, MQTT message, and lock change is persisted as a typed event with structured JSON data
 
-`docker stop smarthouse-controller && docker rm smarthouse-controller && docker run --restart=always -d -p 8080:8080 --name=smarthouse-controller smarthouse:1.05 && docker logs -f smarthouse-controller`
+## Running locally
 
-Rebuild and redeploy on PI4
-`cd ~/smarthouse-controller && git pull origin master && docker-compose down && docker rmi smarthouse-controller && docker-compose up -d`
+**Prerequisites:** JDK 17+, Maven, Docker
 
+```bash
+# Build
+./mvnw clean package -DskipTests
 
-### Database operations
+# Start infrastructure
+cp .env.example .env   # fill in required values
+docker-compose up -d smarthouse-db smarthouse-influxdb smarthouse-mqtt-broker
 
-Dump table
-`docker exec -i smarthouse-db pg_dump -U smarthouse -d smarthouse --table="main.indication_v3" --data-only | gzip  > indication_v3.sql.gz`
+# Run
+java -Dspring.profiles.active=local -jar target/*.jar
+```
 
--- no compression
-`docker exec -i smarthouse-db pg_dump -U smarthouse -d smarthouse --table="main.indication_v3" --data-only > /home/indication_v3.sql`
+## Docker deployment
 
-Copy and Gzip file from inside a container
-`docker cp smarthouse-db:/home/indication_v2.sql.gz ~`
+```bash
+docker-compose up -d
+```
 
-Restore locally
-`SELECT setval('main.indication_sq_v3', 19449626);`
-`gunzip -c ~/Downloads/indication_v3.sql.gz | psql -U smarthouse -d smarthouse -h localhost -p 24870`
+See `.env.example` for all required environment variables (API tokens, DB credentials, etc.).
 
-Influx sync from IndicationV3 table
-`influx delete   --bucket smarthouse-bucket   --org Home   --start 1970-01-01T00:00:00Z   --stop 2100-01-01T00:00:00Z`
-`curl --location --request POST 'http://localhost:24867/smarthouse/indications/influx-sync'`
-start and end dates are optional
-`curl --location --request POST 'http://localhost:24867/smarthouse/indications/influx-sync?startDate=2025-10-17T00%3A00%3A00&endDate=2025-10-27T00%3A00%3A00'`
+## Database operations
 
+Dump sensor data:
+```bash
+docker exec -i smarthouse-db pg_dump -U smarthouse -d smarthouse \
+  --table="main.indication_v3" --data-only | gzip > indication_v3.sql.gz
+```
 
-Reprocess MBS from init_mbs.csv in the resource folder
-`delete from indication_v3 where location_id = 'mbs';`
-`delete   --bucket smarthouse-bucket   --org Home -p location_id=mbs   --start 1970-01-01T00:00:00Z   --stop 2100-01-01T00:00:00Z`
-`curl --location --request POST 'http://localhost:24867/smarthouse/indications/mbs/reprocess'`
+Restore:
+```bash
+gunzip -c indication_v3.sql.gz | psql -U smarthouse -d smarthouse -h localhost -p 24870
+```
 
-Author: Author. 2020.
+Sync PostgreSQL data to InfluxDB:
+```bash
+curl -X POST 'http://localhost:24867/smarthouse/indications/influx-sync'
+# Optional date range:
+curl -X POST 'http://localhost:24867/smarthouse/indications/influx-sync?startDate=2025-10-17T00:00:00&endDate=2025-10-27T00:00:00'
+```

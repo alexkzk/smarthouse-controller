@@ -14,10 +14,10 @@ services:
       - JAVA_OPTS=-XX:-UseContainerSupport
       - SPRING_DATASOURCE_URL=jdbc:postgresql://smarthouse-db:5432/smarthouse
       - SPRING_DATASOURCE_USERNAME=smarthouse
-      - SPRING_DATASOURCE_PASSWORD=smarthouse
+      - SPRING_DATASOURCE_PASSWORD=${SMARTHOUSE_DB_PASSWORD:?set SMARTHOUSE_DB_PASSWORD}
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # Git configuration
-      - GIT_REPO_SSH=git@github.com:your-user/smarthouse-controller.git
+      - GIT_REPO_SSH=${GIT_REPO_SSH:?set GIT_REPO_SSH in .env}
       - GIT_BRANCH=master
       - SSH_KEY_PATH=/ssh/id_rsa
     volumes:
@@ -32,7 +32,7 @@ services:
     container_name: smarthouse-db
     environment:
       - POSTGRES_USER=smarthouse
-      - POSTGRES_PASSWORD=smarthouse
+      - POSTGRES_PASSWORD=${SMARTHOUSE_DB_PASSWORD:?set SMARTHOUSE_DB_PASSWORD}
     ports:
       - '24870:5432'
     volumes:
@@ -49,10 +49,10 @@ services:
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:admin}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:changeme}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:?set INFLUXDB_PASSWORD}
       - DOCKER_INFLUXDB_INIT_ORG=Home
       - DOCKER_INFLUXDB_INIT_BUCKET=smarthouse-bucket
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:your-influxdb-token-here}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:?set INFLUXDB_TOKEN}
     volumes:
       - ./influxdb_data:/var/lib/influxdb2
     restart: unless-stopped
