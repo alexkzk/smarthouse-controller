@@ -15,6 +15,9 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import com.alexsoft.smarthouse.enums.AggregationPeriod;
@@ -91,6 +94,8 @@ public class MetarService {
     private String weatherApiCron;
 
 
+    private final ExecutorService metarFetchExecutor = Executors.newFixedThreadPool(5);
+
     public MetarService(MetarLocationsConfig metarLocationsConfig, RestTemplateBuilder restTemplateBuilder, IndicationService indicationService,
             AirspaceActivityRepository airspaceActivityRepository, MessageSenderService messageSenderService) {
         this.metarLocationsConfig = metarLocationsConfig;
@@ -138,34 +143,36 @@ public class MetarService {
 
     @Scheduled(cron = "${avwx.metar-receiving-cron}")
     public void retrieveAndProcessMetarData() {
-
-        metarLocationsConfig.getLocationMapping().forEach((key, value) -> {
-
-            try {
-                Metar metar = readMetar(value.keySet().stream().findFirst().get());
-
-                if (metarIsNotExpired(metar)) {
-                    Indication indication = toIndication(metar);
-                    indication.setIndicationPlace(key);
-                    indication.setReceivedUtc(indication.getReceivedUtc());
-                    Optional<String> timeZone = value.values().stream().findFirst();
-                    indication.setReceivedLocal(toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
-                    IndicationV2 indicationV2 = toIndicationV2(indication);
+        List<CompletableFuture<Void>> futures = metarLocationsConfig.getLocationMapping().entrySet().stream()
+                .map(entry -> CompletableFuture.runAsync(() -> {
+                    String key = entry.getKey();
+                    Map<String, String> value = entry.getValue();
                     try {
-                        indicationV2.setWindSpeed(new Measurement(metar.getWindSpeed().getValue(), null, null));
-                        indicationV2.setWindDirection(new Measurement(metar.getWindDirection().getValue(), null, null));
+                        Metar metar = readMetar(value.keySet().stream().findFirst().get());
+                        if (metarIsNotExpired(metar)) {
+                            Indication indication = toIndication(metar);
+                            indication.setIndicationPlace(key);
+                            indication.setReceivedUtc(indication.getReceivedUtc());
+                            Optional<String> timeZone = value.values().stream().findFirst();
+                            indication.setReceivedLocal(toLocalDateTimeAtZone(indication.getReceivedUtc(), timeZone));
+                            IndicationV2 indicationV2 = toIndicationV2(indication);
+                            try {
+                                indicationV2.setWindSpeed(new Measurement(metar.getWindSpeed().getValue(), null, null));
+                                indicationV2.setWindDirection(new Measurement(metar.getWindDirection().getValue(), null, null));
+                            } catch (Exception e) {
+                                LOGGER.error("Error during setting wind speed and wind direction", e);
+                            }
+                            indicationService.save(indication, null);
+                        } else {
+                            LOGGER.info("Metar is expired: {}", metar);
+                        }
                     } catch (Exception e) {
-                        LOGGER.error("Error during setting wind speed and wind direction", e);
+                        LOGGER.error("Error during retrieving and processing metar data for {}", key, e);
                     }
-                    indicationService.save(indication, null);
-                } else {
-                    LOGGER.info("Metar is expired: {}", metar);
-                }
+                }, metarFetchExecutor))
+                .collect(Collectors.toList());
 
-            } catch (Exception e) {
-                LOGGER.error("Error during retrieving and processing metar data", e);
-            }
-        });
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     // Calls WeatherAPI every hour, saves current conditions and forecast for the same hour tomorrow
