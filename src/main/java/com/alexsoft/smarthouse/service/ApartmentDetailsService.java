@@ -21,10 +21,17 @@ public class ApartmentDetailsService {
     private LocalDateTime cacheExpiry = LocalDateTime.MIN;
 
     public String getLocationPrefix() {
-        if (LocalDateTime.now().isAfter(cacheExpiry)) {
+        if (cachedDetails == null || LocalDateTime.now().isAfter(cacheExpiry)) {
             refreshCache();
         }
-        return cachedDetails != null ? cachedDetails.getLocationPrefix() : "null";
+        return cachedDetails != null ? cachedDetails.getLocationPrefix() : "935-CORKWOOD";
+    }
+
+    public ApartmentDetails getCachedDetails() {
+        if (cachedDetails == null || LocalDateTime.now().isAfter(cacheExpiry)) {
+            refreshCache();
+        }
+        return cachedDetails;
     }
 
     private synchronized void refreshCache() {
