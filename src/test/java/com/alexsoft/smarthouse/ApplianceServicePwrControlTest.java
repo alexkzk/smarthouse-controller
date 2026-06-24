@@ -8,6 +8,7 @@ import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.repository.RequestRepository;
 import com.alexsoft.smarthouse.service.ApplianceFacade;
 import com.alexsoft.smarthouse.service.ApplianceService;
+import com.alexsoft.smarthouse.service.ApartmentDetailsService;
 import com.alexsoft.smarthouse.service.IndicationServiceV3;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,7 @@ class ApplianceServicePwrControlTest {
     @Mock RequestRepository requestRepository;
     @Mock ApplianceFacade applianceFacade;
     @Mock EventRepository eventRepository;
+    @Mock ApartmentDetailsService apartmentDetailsService;
 
     @InjectMocks ApplianceService applianceService;
 
@@ -205,5 +207,53 @@ class ApplianceServicePwrControlTest {
 
         verify(applianceFacade, times(1)).sendState(any());
         verify(applianceFacade, never()).toggle(any(), any(), any(), any(), anyBoolean());
+    }
+
+    @Test
+    void ahAppliance_calculatesAverageRhAndPassesToAndroid() {
+        Appliance deh = new Appliance();
+        deh.setCode("DEH");
+        deh.setState(OFF, LocalDateTime.now());
+        deh.setSetting(10.0); // ah
+        deh.setHysteresisOn(0.5);
+        deh.setHysteresisOff(0.5);
+        deh.setReferenceSensors(List.of("mb-sensor", "lr-sensor"));
+        deh.setMeasurementType("ah");
+        deh.setAveragePeriodMinutes(60);
+        deh.setMetricType("humidity");
+
+        when(applianceRepository.findById("DEH")).thenReturn(Optional.of(deh));
+        when(apartmentDetailsService.getLocationPrefix()).thenReturn("935-CORKWOOD");
+
+        // Mock average AH
+        when(indicationRepositoryV3.findAvgValueByLocationIdInAndUtcTimeAfterAndMeasurementType(
+                eq(deh.getReferenceSensors()), any(), eq("ah")))
+                .thenReturn(Optional.of(12.5));
+
+        // Mock average RH
+        when(indicationRepositoryV3.findAvgValueByLocationIdInAndUtcTimeAfterAndMeasurementType(
+                eq(deh.getReferenceSensors()), any(), eq("rh")))
+                .thenReturn(Optional.of(65.0));
+
+        applianceService.powerControl("DEH");
+
+        // Verify AH was set as actual
+        assertThat(deh.getActual(), is(12.5));
+
+        // Verify RH was calculated and passed to the entity (which goes to Android)
+        assertThat(deh.getActualRh(), is(65.0));
+
+        // Verify both average indications (AH and RH) were saved
+        verify(indicationServiceV3, atLeastOnce()).save(argThat(ind -> 
+                ind.getLocationId().equals("935-CORKWOOD-AVG") && 
+                "rh".equals(ind.getMeasurementType()) && 
+                ind.getValue() == 65.0
+        ));
+        
+        verify(indicationServiceV3, atLeastOnce()).save(argThat(ind -> 
+                ind.getLocationId().equals("935-CORKWOOD-AVG") && 
+                "ah".equals(ind.getMeasurementType()) && 
+                ind.getValue() == 12.5
+        ));
     }
 }
