@@ -7,22 +7,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class IndicationServiceV3 {
 
     private final IndicationRepositoryV3 indicationRepositoryV3;
-    private final InfluxRepository influxRepository;
+    private final Optional<InfluxRepository> influxRepository;
 
     public IndicationV3 save(IndicationV3 indication) {
-        influxRepository.saveAll(List.of(indication));
+        influxRepository.ifPresent(r -> r.saveAll(List.of(indication)));
         return indicationRepositoryV3.save(indication);
     }
 
     public void saveAll(Iterable<IndicationV3> indications) {
         indicationRepositoryV3.saveAll(indications);
-        influxRepository.saveAll((List) indications);
+        influxRepository.ifPresent(r -> r.saveAll((List) indications));
     }
 
 

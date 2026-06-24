@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static com.alexsoft.smarthouse.util.DateUtils.toLocalDateTime;
 
@@ -18,7 +19,7 @@ import static com.alexsoft.smarthouse.util.DateUtils.toLocalDateTime;
 @AllArgsConstructor
 public class IndicationsController {
 
-    private final InfluxRepository influxRepository;
+    private final Optional<InfluxRepository> influxRepository;
 
     /**
      * Synchronizes data from PostgreSQL to InfluxDB for a specified date range.
@@ -30,7 +31,7 @@ public class IndicationsController {
     @PostMapping("/influx-sync")
     public ResponseEntity<String> filterByDate(@RequestParam(required = false) LocalDateTime startDate,
                                                @RequestParam(required = false) LocalDateTime endDate) {
-        influxRepository.syncAllFromPostgresBy1Days(startDate, endDate);
+        influxRepository.ifPresent(r -> r.syncAllFromPostgresBy1Days(startDate, endDate));
         return null;
     }
 }

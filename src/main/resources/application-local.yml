@@ -2,14 +2,26 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:24870/smarthouse
     driver-class-name: org.postgresql.Driver
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    username: ${SPRING_DATASOURCE_USERNAME:smarthouse}
+    password: ${SPRING_DATASOURCE_PASSWORD:smarthouse}
 
 mqtt:
   server-in: 192.168.0.201
   server-out: 192.168.0.201
   msgSavingEnabled: true
   msgSendingEnabled: false
+
+influxdb:
+  url: http://localhost:8086
+  token: dummy_token
+  org: dummy_org
+  bucket: dummy_bucket
+
+avwx:
+  token: dummy_token
+
+flightradar24:
+  token: dummy_token
 
   # UNCOMMENT TO LOG HIBERNATE DB REQUESTS
 #  jpa:

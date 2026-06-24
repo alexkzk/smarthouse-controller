@@ -21,6 +21,8 @@ public class HourChangeTrackerRepository {
     public Integer getPreviousHour() {
         try {
             return (int) entityManager.createNativeQuery("SELECT previous_hour FROM main.hour_change_tracker where id = 1 LIMIT 1").getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            return null;
         } catch (Exception e) {
             LOGGER.error("Error getting previous hour", e);
             return null;
@@ -30,6 +32,8 @@ public class HourChangeTrackerRepository {
     public Object getLastSunsetEvent() {
         try {
             return entityManager.createNativeQuery("SELECT updated_at FROM main.hour_change_tracker WHERE id = 2 LIMIT 1").getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            return null;
         } catch (Exception e) {
             LOGGER.error("Error getting last sunset event", e);
             return null;
@@ -39,6 +43,8 @@ public class HourChangeTrackerRepository {
     public Object getLastSunriseEvent() {
         try {
             return entityManager.createNativeQuery("SELECT updated_at FROM main.hour_change_tracker WHERE id = 3 LIMIT 1").getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            return null;
         } catch (Exception e) {
             LOGGER.error("Error getting last sunrise event", e);
             return null;
@@ -59,11 +65,18 @@ public class HourChangeTrackerRepository {
     }
 
     @Transactional
-    public void updatePreviousHour(int currentHour, Timestamp updatedAt) {
-        entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET previous_hour = :currentHour, updated_at = :updated_at where id = 1")
-                .setParameter("currentHour", currentHour)
-                .setParameter("updated_at", updatedAt)
-                .executeUpdate();
+    public void updatePreviousHour(int currentHour, Timestamp updatedAt, boolean upsert) {
+        if (upsert) {
+            entityManager.createNativeQuery("INSERT INTO main.hour_change_tracker (id, previous_hour, updated_at) values (1, :currentHour, :updated_at)")
+                    .setParameter("currentHour", currentHour)
+                    .setParameter("updated_at", updatedAt)
+                    .executeUpdate();
+        } else {
+            entityManager.createNativeQuery("UPDATE main.hour_change_tracker SET previous_hour = :currentHour, updated_at = :updated_at where id = 1")
+                    .setParameter("currentHour", currentHour)
+                    .setParameter("updated_at", updatedAt)
+                    .executeUpdate();
+        }
     }
 
     @Transactional
