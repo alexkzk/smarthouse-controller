@@ -27,11 +27,8 @@ public class ApplianceFacade {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplianceFacade.class);
 
-    private volatile String lastKnownAcRunningState;
-
     private final ApplianceRepository applianceRepository;
     private final MessageSenderService messageSenderService;
-    private final IndicationRepositoryV3 indicationRepositoryV3;
     private final EventRepository eventRepository;
     private final IndicationServiceV3 indicationServiceV3;
 
@@ -45,9 +42,6 @@ public class ApplianceFacade {
         if (appliance.getCode().equals("AC")) {
             indicationServiceV3.save(IndicationV3.builder().publisherId("i7-4770k").measurementType("state").localTime(toLocalDateTime(utc)).utcTime(utc)
                     .locationId("935-CORKWOOD-AC").value(appliance.getState() == ON ? 1.0 : 0.0).build());
-            if (switched) {
-                lastKnownAcRunningState = null;
-            }
         }
 
         setLock(appliance, utc, requester, switched);
@@ -66,42 +60,7 @@ public class ApplianceFacade {
 
     private void setLock(Appliance appliance, LocalDateTime utc, String requester, boolean switched) {
 
-        if (("http-controller".equals(requester) || (requester != null && requester.startsWith("zigbee2mqtt/")) || "turn off hours setting".equals(requester)) &&
-                appliance.getApplianceGroup().filter(gr -> gr.getId() == 1).isPresent()) {
-            if (isDark()) {
-                if (appliance.getState() == OFF) {
-                    appliance.setLocked(true);
-                    LocalDateTime sixThirtyAm = wakeUpTime();
-                    // only update if not already locked until a later time (preserve user extensions)
-                    if (appliance.getLockedUntilUtc() == null || appliance.getLockedUntilUtc().isBefore(sixThirtyAm)) {
-                        appliance.setLockedUntilUtc(sixThirtyAm);
-                        eventRepository.save(Event.builder().utcTime(getUtc()).type("locked-until").device(appliance.getCode())
-                                .data(Map.of("until", sixThirtyAm.toString(), "rule", 1)).build());
-                    } else {
-                        eventRepository.save(Event.builder().utcTime(getUtc()).type("lock.preserved").device(appliance.getCode())
-                                .data(Map.of("existing", appliance.getLockedUntilUtc().toString(), "attempted", sixThirtyAm.toString())).build());
-                    }
-                } else {
-                    appliance.setLocked(false);
-                    appliance.setLockedUntilUtc(null);
-                    eventRepository.save(Event.builder().utcTime(getUtc()).type("unlocked").device(appliance.getCode())
-                            .data(Map.of("rule", 2)).build());
-                }
-            } else {
-                if (appliance.getState() == OFF) {
-                    appliance.setLocked(false);
-                    appliance.setLockedUntilUtc(null);
-                    eventRepository.save(Event.builder().utcTime(getUtc()).type("unlocked").device(appliance.getCode())
-                            .data(Map.of("rule", 4)).build());
-                } else {
-                    appliance.setLocked(true);
-                    LocalDateTime lockedUntilUtc = toUtc(getNearestSunsetTime().plusHours(1));
-                    appliance.setLockedUntilUtc(lockedUntilUtc);
-                    eventRepository.save(Event.builder().utcTime(getUtc()).type("locked-until").device(appliance.getCode())
-                            .data(Map.of("until", lockedUntilUtc.toString(), "rule", 4)).build());
-                }
-            }
-        } else if (switched) {
+        if (switched) {
             if (appliance.getState() == OFF) {
                 if (appliance.getMinimumOffCycleMinutes() != null) {
                     appliance.setLocked(true);
@@ -123,66 +82,13 @@ public class ApplianceFacade {
     }
 
     public void sendState(Appliance appliance) {
-        LocalDateTime utc = getUtc();
         if (appliance.getZigbee2MqttTopic() != null) {
-            if (appliance.getCode().equals("LED_UNDER_TV") && (toLocalDateTime(utc).getHour() < 7 || toLocalDateTime(utc).getHour() > 21)) {
-                messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\", \"brightness\":%d}"
-                        .formatted("on", appliance.getState() == ON ? 160 : 20));
-            } else {
-                String brightness;
-                if (List.of("LED_OVER_TV", "LED_OVER_BED", "LED_UNDER_TV").contains(appliance.getCode())) {
-                    if (appliance.getPowerSetting() == null) {
-                        brightness = ", \"brightness\": 160";
-                    } else {
-                        brightness = ", \"brightness\": %d".formatted((int) (255 * (appliance.getPowerSetting() / 100)));
-                    }
-                } else {
-                    brightness = "";
-                }
-                messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), ("{\"state\": \"%s\"" + brightness + "}")
-                        .formatted(appliance.getState() == ON ? "on" : "off"));
-                if (appliance.getCode().equals("TER_LIGHTS")) {
-                    messageSenderService.sendMessage("zigbee2mqtt/WRKTABLE/set", ("{\"state\": \"%s\"" + brightness + "}")
-                            .formatted(appliance.getState() == ON ? "on" : "off"));
-                }
-            }
+            messageSenderService.sendMessage(appliance.getZigbee2MqttTopic(), "{\"state\": \"%s\"}"
+                    .formatted(appliance.getState() == ON ? "on" : "off"));
         } else {
             messageSenderService.sendMessage(MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC, "{\"device\":\"%s\",\"state\":\"%s\"}"
                     .formatted(appliance.getCode(), appliance.getState() == ON ? "on" : "off"));
         }
-
-        if (appliance.getCode().equals("AC")) {
-            sendAcSetpointIfUnconfirmed(appliance);
-            indicationRepositoryV3.save(IndicationV3.builder().publisherId("i7-4770k").measurementType("state").localTime(toLocalDateTime(utc)).utcTime(utc)
-                    .locationId("935-CORKWOOD-AC").value((double) (appliance.getState() == ON ? 1 : 0)).build());
-        }
-    }
-
-    public void sendAcSetpointIfUnconfirmed(Appliance appliance) {
-        if (!appliance.getCode().equals("AC")) return;
-        LocalDateTime utc = getUtc();
-        indicationServiceV3.save(IndicationV3.builder().publisherId("i7-4770k").measurementType("state")
-                .localTime(toLocalDateTime(utc)).utcTime(utc)
-                .locationId("935-CORKWOOD-AC").value(appliance.getState() == ON ? 1.0 : 0.0).build());
-        if (isAcRunningStateConfirmed(appliance.getState(), lastKnownAcRunningState)) {
-            LOGGER.debug("AC running_state {} confirmed, skip sending (got={})", appliance.getState(), lastKnownAcRunningState);
-            return;
-        }
-        double coolingSetpoint = appliance.getState() == ON ? appliance.getSetting() - 3.0 : appliance.getSetting() + 3.0;
-        LOGGER.warn("AC running_state mismatch detected: expected={}, got={} — resending setpoint={}", appliance.getState(), lastKnownAcRunningState, coolingSetpoint);
-        messageSenderService.sendMessage("zigbee2mqtt/ac-thermostat/set",
-                "{\"occupied_cooling_setpoint\": %.1f}".formatted(coolingSetpoint));
-    }
-
-    public void updateAcRunningState(String runningState) {
-        this.lastKnownAcRunningState = runningState;
-        LOGGER.info("ac-thermostat running_state={}", runningState);
-    }
-
-    private boolean isAcRunningStateConfirmed(ApplianceState acState, String runningState) {
-        if (runningState == null) return false;
-        if (acState == ON) return "cooling".equalsIgnoreCase(runningState) || "cool".equalsIgnoreCase(runningState);
-        return "idle".equalsIgnoreCase(runningState);
     }
 
 }

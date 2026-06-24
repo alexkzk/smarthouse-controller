@@ -41,25 +41,6 @@ public class ApplianceService {
     private final EventRepository eventRepository;
     private final ApartmentDetailsService apartmentDetailsService;
 
-    @EventListener
-    @Transactional
-    public void onHourChanged(HourChangedEvent event) {
-        LocalDateTime utc = getUtc();
-        applianceGroupRepository.findByTurnOffHoursIsNotNull().forEach(group -> Arrays.stream(group.getTurnOffHours()
-                .split(",")).forEach(turnOffHour -> {
-            if (Integer.parseInt(turnOffHour) == event.getHour()) {
-                List<Appliance> affected = applianceRepository.findAll().stream()
-                        .filter(app -> app.getApplianceGroup().filter(gr -> gr.equals(group)).isPresent())
-                        .toList();
-                List<String> codes = affected.stream().map(Appliance::getCode).toList();
-                eventRepository.save(Event.builder().utcTime(utc)
-                        .type("group.%s.turn-off-hours.triggered".formatted(group.getCode()))
-                        .data(Map.of("hour", event.getHour(), "appliances", codes)).build());
-                affected.forEach(app -> applianceFacade.toggle(app, ApplianceState.OFF, utc, "turn off hours setting", true));
-            }
-        }));
-    }
-
     @Transactional
     public void powerControl(String applianceCode) {
         LocalDateTime utc = getUtc();
