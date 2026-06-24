@@ -39,6 +39,7 @@ public class ApplianceService {
     private final RequestRepository requestRepository;
     private final ApplianceFacade applianceFacade;
     private final EventRepository eventRepository;
+    private final ApartmentDetailsService apartmentDetailsService;
 
     @EventListener
     @Transactional
@@ -80,7 +81,8 @@ public class ApplianceService {
                 if (avgRhOpt.isPresent()) {
                     double avgRh = avgRhOpt.get();
                     appliance.setActualRh(avgRh);
-                    indicationServiceV3.save(IndicationV3.builder().locationId("935-CORKWOOD-AVG").localTime(toLocalDateTime(utc)).utcTime(utc).publisherId("i7-4770k").value(avgRh)
+                    String locationId = apartmentDetailsService.getLocationPrefix() + "-AVG";
+                    indicationServiceV3.save(IndicationV3.builder().locationId(locationId).localTime(toLocalDateTime(utc)).utcTime(utc).publisherId("i7-4770k").value(avgRh)
                             .measurementType("rh").build());
                 }
             }
@@ -181,7 +183,8 @@ public class ApplianceService {
         String metricType = appliance.getMetricType();
         if (metricType.equals("temp") || metricType.equals("humidity")) {
             String type = metricType.equals("humidity") ? "ah" : "temp";
-            indicationServiceV3.save(IndicationV3.builder().locationId("935-CORKWOOD-AVG").localTime(now).utcTime(utc).publisherId("i7-4770k").value(average)
+            String locationId = apartmentDetailsService.getLocationPrefix() + "-AVG";
+            indicationServiceV3.save(IndicationV3.builder().locationId(locationId).localTime(now).utcTime(utc).publisherId("i7-4770k").value(average)
                     .measurementType(type).value(average).build());
         }
     }
