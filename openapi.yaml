@@ -726,7 +726,7 @@ components:
             `{ "MON": { "9": "22.0/0.5", "*": "25.0/0.5" }, "*": { "*": "25.0/0.5" } }`
             Key `"*"` matches any day or hour. Value format: `"setting/hysteresisOn"`.
           additionalProperties: true
-        displayStatus:
+        actualRh:
           type: object
           nullable: true
           description: Arbitrary key-value pairs for display purposes

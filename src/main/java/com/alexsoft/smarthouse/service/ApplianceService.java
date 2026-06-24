@@ -72,6 +72,18 @@ public class ApplianceService {
             double average = averageOptional.getAsDouble();
             appliance.setActual(average);
             saveAverageIndication(appliance, average, utc, toLocalDateTime(utc));
+
+            if ("ah".equals(appliance.getMeasurementType()) && !CollectionUtils.isEmpty(appliance.getReferenceSensors())) {
+                LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
+                Optional<Double> avgRhOpt = indicationRepositoryV3.findAvgValueByLocationIdInAndUtcTimeAfterAndMeasurementType(
+                        appliance.getReferenceSensors(), averageStart, "rh");
+                if (avgRhOpt.isPresent()) {
+                    double avgRh = avgRhOpt.get();
+                    appliance.setActualRh(avgRh);
+                    indicationServiceV3.save(IndicationV3.builder().locationId("935-CORKWOOD-AVG").localTime(toLocalDateTime(utc)).utcTime(utc).publisherId("i7-4770k").value(avgRh)
+                            .measurementType("rh").build());
+                }
+            }
             if (!appliance.isLocked() && appliance.getSetting() != null) {
                 boolean onCondition = average > appliance.getSetting() + appliance.getHysteresisOn();
                 boolean offCondition = average < appliance.getSetting() - appliance.getHysteresisOff();
