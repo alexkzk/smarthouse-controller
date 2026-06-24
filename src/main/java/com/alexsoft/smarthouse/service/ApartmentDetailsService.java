@@ -1,7 +1,9 @@
 package com.alexsoft.smarthouse.service;
 
 import com.alexsoft.smarthouse.entity.ApartmentDetails;
+import com.alexsoft.smarthouse.entity.GlobalSetting;
 import com.alexsoft.smarthouse.repository.ApartmentDetailsRepository;
+import com.alexsoft.smarthouse.repository.GlobalSettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +14,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ApartmentDetailsService {
 
-    private final ApartmentDetailsRepository repository;
+    private final ApartmentDetailsRepository apartmentDetailsRepository;
+    private final GlobalSettingRepository globalSettingRepository;
 
     private ApartmentDetails cachedDetails;
     private LocalDateTime cacheExpiry = LocalDateTime.MIN;
@@ -21,18 +24,26 @@ public class ApartmentDetailsService {
         if (LocalDateTime.now().isAfter(cacheExpiry)) {
             refreshCache();
         }
-        return cachedDetails != null ? cachedDetails.getLocationPrefix() : "935-CORKWOOD";
+        return cachedDetails != null ? cachedDetails.getLocationPrefix() : "null";
     }
 
     private synchronized void refreshCache() {
         if (LocalDateTime.now().isAfter(cacheExpiry)) {
-            Optional<ApartmentDetails> detailsOpt = repository.findAll().stream().findFirst();
-            if (detailsOpt.isPresent()) {
-                cachedDetails = detailsOpt.get();
-                cacheExpiry = LocalDateTime.now().plusMinutes(5);
-            } else {
-                cacheExpiry = LocalDateTime.now().plusMinutes(1); // retry sooner if empty
+            Optional<GlobalSetting> settingOpt = globalSettingRepository.findById("active_apartment_id");
+            if (settingOpt.isPresent() && settingOpt.get().getValue() != null) {
+                try {
+                    Long activeId = Long.parseLong(settingOpt.get().getValue());
+                    Optional<ApartmentDetails> detailsOpt = apartmentDetailsRepository.findById(activeId);
+                    if (detailsOpt.isPresent()) {
+                        cachedDetails = detailsOpt.get();
+                        cacheExpiry = LocalDateTime.now().plusMinutes(5);
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    // ignore and fallback
+                }
             }
+            cacheExpiry = LocalDateTime.now().plusMinutes(1); // retry sooner if empty or invalid
         }
     }
 }
