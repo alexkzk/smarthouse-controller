@@ -72,18 +72,6 @@ public class ApplianceService {
             double average = averageOptional.getAsDouble();
             appliance.setActual(average);
             saveAverageIndication(appliance, average, utc, toLocalDateTime(utc));
-
-            if ("ah".equals(appliance.getMeasurementType()) && !CollectionUtils.isEmpty(appliance.getReferenceSensors())) {
-                LocalDateTime averageStart = utc.minus(Duration.ofMinutes(appliance.getAveragePeriodMinutes()));
-                Optional<Double> avgRhOpt = indicationRepositoryV3.findAvgValueByLocationIdInAndUtcTimeAfterAndMeasurementType(
-                        appliance.getReferenceSensors(), averageStart, "rh");
-                if (avgRhOpt.isPresent()) {
-                    Map<String, String> ds = appliance.getDisplayStatus();
-                    if (ds == null) ds = new java.util.HashMap<>();
-                    ds.put("Relative Humidity", String.format(java.util.Locale.US, "%.2f%%", avgRhOpt.get()));
-                    appliance.setDisplayStatus(ds);
-                }
-            }
             if (!appliance.isLocked() && appliance.getSetting() != null) {
                 boolean onCondition = average > appliance.getSetting() + appliance.getHysteresisOn();
                 boolean offCondition = average < appliance.getSetting() - appliance.getHysteresisOff();
