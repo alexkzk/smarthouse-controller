@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Event;
-import com.alexsoft.smarthouse.repository.EventRepository;
+import com.alexsoft.smarthouse.core.Event;
+import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.mqtt.MessageSenderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

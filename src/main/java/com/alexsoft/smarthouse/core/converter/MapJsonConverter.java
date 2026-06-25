@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.entity.converter;
+package com.alexsoft.smarthouse.core.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

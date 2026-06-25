@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse.environment;
 
-import com.alexsoft.smarthouse.repository.InfluxRepository;
+import com.alexsoft.smarthouse.environment.InfluxRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

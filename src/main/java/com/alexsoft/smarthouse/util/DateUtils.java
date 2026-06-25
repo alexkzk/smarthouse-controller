@@ -14,12 +14,16 @@ import java.util.Date;
 import java.util.Optional;
 
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
+import com.luckycatlabs.sunrisesunset.dto.Location;
 
-import static com.alexsoft.smarthouse.environment.AstroEventPublisher.USER_LOCATION;
+
 import static com.alexsoft.smarthouse.util.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 
 public class DateUtils {
+
+    public static final String APPLICATION_OPERATION_TIMEZONE = "America/New_York";
+    public static final Location USER_LOCATION = new Location("25.76", "-80.19");
 
     private static final ZoneId userTimezone = ZoneId.of("America/New_York");
 

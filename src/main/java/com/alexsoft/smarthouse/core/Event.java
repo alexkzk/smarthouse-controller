@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.entity;
+package com.alexsoft.smarthouse.core;
 
 import lombok.*;
 
@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.alexsoft.smarthouse.entity.converter.MapJsonConverter;
+import com.alexsoft.smarthouse.core.converter.MapJsonConverter;
 
 @Entity
 @Table(schema = "main", name = "event")

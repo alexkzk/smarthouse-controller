@@ -1,6 +1,6 @@
-package com.alexsoft.smarthouse.repository;
+package com.alexsoft.smarthouse.core;
 
-import com.alexsoft.smarthouse.entity.GlobalSetting;
+import com.alexsoft.smarthouse.core.GlobalSetting;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

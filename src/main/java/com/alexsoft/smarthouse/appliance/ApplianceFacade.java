@@ -3,11 +3,11 @@ import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import com.alexsoft.smarthouse.mqtt.MessageSenderService;
 
 import com.alexsoft.smarthouse.appliance.Appliance;
-import com.alexsoft.smarthouse.entity.Event;
+import com.alexsoft.smarthouse.core.Event;
 import com.alexsoft.smarthouse.environment.IndicationV3;
 import com.alexsoft.smarthouse.appliance.ApplianceState;
 import com.alexsoft.smarthouse.appliance.ApplianceRepository;
-import com.alexsoft.smarthouse.repository.EventRepository;
+import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

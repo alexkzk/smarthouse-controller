@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.appliance;
+package com.alexsoft.smarthouse.watchdog;
 import com.alexsoft.smarthouse.watchdog.FcmService;
 
 import com.fasterxml.jackson.databind.JsonNode;

@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.entity;
+package com.alexsoft.smarthouse.core;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

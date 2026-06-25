@@ -1,13 +1,12 @@
 package com.alexsoft.smarthouse.environment;
 import com.alexsoft.smarthouse.appliance.ApplianceService;
 
-import com.alexsoft.smarthouse.entity.Event;
+import com.alexsoft.smarthouse.core.Event;
 import com.alexsoft.smarthouse.environment.HourChangedEvent;
 import com.alexsoft.smarthouse.environment.SunriseEvent;
 import com.alexsoft.smarthouse.environment.SunsetEvent;
-import com.alexsoft.smarthouse.repository.EventRepository;
+import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.environment.HourChangeTrackerRepository;
-import com.luckycatlabs.sunrisesunset.dto.Location;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -31,12 +30,10 @@ import static com.alexsoft.smarthouse.util.DateUtils.*;
 public class AstroEventPublisher {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AstroEventPublisher.class);
-    public static final Location USER_LOCATION = new Location("25.76", "-80.19");
 
     private final ApplicationEventPublisher eventPublisher;
     private final HourChangeTrackerRepository hourChangeTrackerRepository;
     private final EventRepository eventRepository;
-    private final ApplianceService applianceService;
 
     private Integer lastReportedNewHour;
     private LocalDateTime lastSunsetReported;

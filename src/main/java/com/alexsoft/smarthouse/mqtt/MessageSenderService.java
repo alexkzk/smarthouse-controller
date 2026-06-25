@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse.mqtt;
 
-import com.alexsoft.smarthouse.entity.Event;
-import com.alexsoft.smarthouse.repository.EventRepository;
+import com.alexsoft.smarthouse.core.Event;
+import com.alexsoft.smarthouse.core.EventRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.repository;
+package com.alexsoft.smarthouse.environment;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 
 import com.alexsoft.smarthouse.environment.IndicationV3;

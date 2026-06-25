@@ -1,14 +1,16 @@
 package com.alexsoft.smarthouse.appliance;
+import com.alexsoft.smarthouse.core.EventRepository;
+import com.alexsoft.smarthouse.core.RequestRepository;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 
 import com.alexsoft.smarthouse.appliance.Appliance;
-import com.alexsoft.smarthouse.entity.Event;
+import com.alexsoft.smarthouse.core.Event;
 import com.alexsoft.smarthouse.environment.IndicationV3;
-import com.alexsoft.smarthouse.entity.Request;
+import com.alexsoft.smarthouse.core.Request;
 import com.alexsoft.smarthouse.appliance.ApplianceState;
 import com.alexsoft.smarthouse.environment.HourChangedEvent;
-import com.alexsoft.smarthouse.repository.*;
+
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;

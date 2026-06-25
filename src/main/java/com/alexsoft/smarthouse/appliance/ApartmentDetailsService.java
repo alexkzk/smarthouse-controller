@@ -1,9 +1,9 @@
 package com.alexsoft.smarthouse.appliance;
 
 import com.alexsoft.smarthouse.appliance.ApartmentDetails;
-import com.alexsoft.smarthouse.entity.GlobalSetting;
+import com.alexsoft.smarthouse.core.GlobalSetting;
 import com.alexsoft.smarthouse.appliance.ApartmentDetailsRepository;
-import com.alexsoft.smarthouse.repository.GlobalSettingRepository;
+import com.alexsoft.smarthouse.core.GlobalSettingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
