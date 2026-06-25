@@ -216,9 +216,6 @@ public class MessageReceiverService {
 
                     indicationServiceV3.saveAll(indicationV3s);
 
-                    if ("ac-thermostat".equals(deviceId) && map.containsKey("running_state")) {
-                        applianceFacade.updateAcRunningState((String) map.get("running_state"));
-                    }
 
                     Optional<Appliance> applianceByCode = applianceService.getApplianceByCode(deviceId)
                             .or(() -> applianceService.getApplianceByZigbeeTopic(topic));
