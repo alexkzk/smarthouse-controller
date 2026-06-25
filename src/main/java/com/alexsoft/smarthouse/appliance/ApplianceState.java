@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.appliance.internal;
+package com.alexsoft.smarthouse.appliance;
 
 public enum ApplianceState {
     ON, OFF;

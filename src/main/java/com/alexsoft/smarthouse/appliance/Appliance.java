@@ -1,5 +1,6 @@
-package com.alexsoft.smarthouse.appliance.internal;
+package com.alexsoft.smarthouse.appliance;
 
+import com.alexsoft.smarthouse.appliance.internal.ApplianceGroup;
 import com.alexsoft.smarthouse.util.MapToJsonConverter;
 import com.alexsoft.smarthouse.util.StringListConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static com.alexsoft.smarthouse.util.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 @Entity

@@ -1,8 +1,9 @@
 package com.alexsoft.smarthouse;
 
 import com.alexsoft.smarthouse.appliance.Appliance;
-import com.alexsoft.smarthouse.appliance.ApplianceGroup;
-import com.alexsoft.smarthouse.appliance.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.internal.ApplianceGroup;
+import com.alexsoft.smarthouse.appliance.internal.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.ApplianceState;
 import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.appliance.ApplianceFacade;
@@ -37,7 +38,7 @@ class ApplianceFacadeTest {
 
     private static final LocalDateTime UTC = LocalDateTime.of(2026, 4, 7, 11, 22, 0);
 
-    private Appliance ambientGroupLight(com.alexsoft.smarthouse.appliance.ApplianceState initialState) {
+    private Appliance ambientGroupLight(ApplianceState initialState) {
         ApplianceGroup group = new ApplianceGroup();
         group.setId(1);
         Appliance a = new Appliance();
@@ -48,7 +49,7 @@ class ApplianceFacadeTest {
         return a;
     }
 
-    private Appliance nonGroupAppliance(com.alexsoft.smarthouse.appliance.ApplianceState initialState) {
+    private Appliance nonGroupAppliance(ApplianceState initialState) {
         Appliance a = new Appliance();
         a.setCode("DEH");
         a.setState(initialState, UTC.minusHours(1));

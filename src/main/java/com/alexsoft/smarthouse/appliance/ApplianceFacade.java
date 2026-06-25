@@ -1,4 +1,5 @@
-package com.alexsoft.smarthouse.appliance.internal;
+package com.alexsoft.smarthouse.appliance;
+import com.alexsoft.smarthouse.appliance.internal.ApplianceRepository;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import com.alexsoft.smarthouse.mqtt.MessageSenderService;
 
@@ -13,8 +14,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static com.alexsoft.smarthouse.appliance.ApplianceService.MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC;
 import static com.alexsoft.smarthouse.util.DateUtils.*;
 

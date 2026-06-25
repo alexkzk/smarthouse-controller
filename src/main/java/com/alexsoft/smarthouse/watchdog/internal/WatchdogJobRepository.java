@@ -1,6 +1,5 @@
-package com.alexsoft.smarthouse.watchdog;
+package com.alexsoft.smarthouse.watchdog.internal;
 
-import com.alexsoft.smarthouse.watchdog.WatchdogJob;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

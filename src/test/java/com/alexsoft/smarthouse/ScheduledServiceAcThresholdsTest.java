@@ -5,7 +5,7 @@ import com.alexsoft.smarthouse.environment.IndicationV3;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.appliance.ApplianceService;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
-import com.alexsoft.smarthouse.watchdog.ScheduledService;
+import com.alexsoft.smarthouse.watchdog.internal.ScheduledService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

@@ -1,14 +1,14 @@
 package com.alexsoft.smarthouse;
 
 import com.alexsoft.smarthouse.appliance.Appliance;
-import com.alexsoft.smarthouse.appliance.ApplianceGroupRepository;
-import com.alexsoft.smarthouse.appliance.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.internal.ApplianceGroupRepository;
+import com.alexsoft.smarthouse.appliance.internal.ApplianceRepository;
 import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.core.RequestRepository;
 import com.alexsoft.smarthouse.appliance.ApplianceFacade;
 import com.alexsoft.smarthouse.appliance.ApplianceService;
-import com.alexsoft.smarthouse.appliance.ApartmentDetailsService;
+import com.alexsoft.smarthouse.appliance.internal.ApartmentDetailsService;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

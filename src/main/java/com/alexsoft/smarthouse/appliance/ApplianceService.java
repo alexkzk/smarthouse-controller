@@ -1,4 +1,5 @@
-package com.alexsoft.smarthouse.appliance.internal;
+package com.alexsoft.smarthouse.appliance;
+import com.alexsoft.smarthouse.appliance.internal.*;
 import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.core.RequestRepository;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
@@ -19,8 +20,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
 import static com.alexsoft.smarthouse.util.DateUtils.toLocalDateTime;
 

@@ -1,8 +1,6 @@
 package com.alexsoft.smarthouse.environment;
 
-import com.alexsoft.smarthouse.environment.Btc;
-import com.alexsoft.smarthouse.environment.IndicationV3;
-import com.alexsoft.smarthouse.environment.BtcRepository;
+import com.alexsoft.smarthouse.environment.internal.BtcRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

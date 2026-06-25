@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse.watchdog.resolver;
 
 import com.alexsoft.smarthouse.appliance.Appliance;
-import com.alexsoft.smarthouse.appliance.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DbStateResolver implements StateResolver {
 
-    private final ApplianceRepository applianceRepository;
+    private final ApplianceService applianceService;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -26,7 +26,7 @@ public class DbStateResolver implements StateResolver {
 
         try {
             if ("appliance-metrics".equalsIgnoreCase(path)) {
-                List<Appliance> appliances = applianceRepository.findAll();
+                List<Appliance> appliances = applianceService.getAllAppliances();
                 return objectMapper.writeValueAsString(appliances);
             }
             return "{\"error\": \"Unknown DB path: " + path + "\"}";

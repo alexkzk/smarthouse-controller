@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.watchdog;
+package com.alexsoft.smarthouse.watchdog.internal;
 
 import jakarta.persistence.*;
 import lombok.*;

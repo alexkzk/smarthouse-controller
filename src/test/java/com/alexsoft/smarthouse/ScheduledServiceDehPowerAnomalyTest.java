@@ -1,13 +1,14 @@
 package com.alexsoft.smarthouse;
 
 import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.appliance.ApplianceState;
 import com.alexsoft.smarthouse.environment.IndicationV3;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.appliance.ApplianceFacade;
 import com.alexsoft.smarthouse.appliance.ApplianceService;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import com.alexsoft.smarthouse.mqtt.MessageSenderService;
-import com.alexsoft.smarthouse.watchdog.ScheduledService;
+import com.alexsoft.smarthouse.watchdog.internal.ScheduledService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,7 +38,7 @@ class ScheduledServiceDehPowerAnomalyTest {
 
     private static final String BLINK_PAYLOAD = "{\"effect\": \"blink\"}";
 
-    private Appliance deh(com.alexsoft.smarthouse.appliance.ApplianceState state, LocalDateTime switchedOn) {
+    private Appliance deh(ApplianceState state, LocalDateTime switchedOn) {
         Appliance a = new Appliance();
         a.setCode("DEH");
         a.setState(state, switchedOn);

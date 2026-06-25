@@ -1,21 +1,17 @@
 package com.alexsoft.smarthouse;
 
 import com.alexsoft.smarthouse.core.Event;
-import com.alexsoft.smarthouse.environment.HourChangedEvent;
 import com.alexsoft.smarthouse.core.EventRepository;
-import com.alexsoft.smarthouse.environment.HourChangeTrackerRepository;
+import com.alexsoft.smarthouse.environment.internal.HourChangeTrackerRepository;
 import com.alexsoft.smarthouse.appliance.ApplianceService;
-import com.alexsoft.smarthouse.environment.AstroEventPublisher;
+import com.alexsoft.smarthouse.environment.internal.AstroEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-
-import java.sql.Timestamp;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;

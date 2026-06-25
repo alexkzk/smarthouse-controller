@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.mqtt.MessageReceiverService;
+import com.alexsoft.smarthouse.mqtt.internal.MessageReceiverService;
 import com.alexsoft.smarthouse.mqtt.MqttMessageReceivedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

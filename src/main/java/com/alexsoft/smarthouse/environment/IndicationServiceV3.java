@@ -1,8 +1,6 @@
 package com.alexsoft.smarthouse.environment;
 
-import com.alexsoft.smarthouse.environment.IndicationV3;
-import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
-import com.alexsoft.smarthouse.environment.InfluxRepository;
+import com.alexsoft.smarthouse.environment.internal.InfluxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

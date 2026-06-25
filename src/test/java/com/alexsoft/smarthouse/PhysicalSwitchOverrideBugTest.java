@@ -6,7 +6,6 @@ import com.alexsoft.smarthouse.appliance.ApplianceFacade;
 import com.alexsoft.smarthouse.appliance.ApplianceService;
 import com.alexsoft.smarthouse.appliance.listener.MqttApplianceListener;
 import com.alexsoft.smarthouse.mqtt.MqttMessageReceivedEvent;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
