@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.util;
+package com.alexsoft.smarthouse.core.util;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

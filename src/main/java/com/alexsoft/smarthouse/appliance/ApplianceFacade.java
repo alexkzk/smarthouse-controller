@@ -17,7 +17,8 @@ import java.util.Map;
 import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static com.alexsoft.smarthouse.appliance.ApplianceService.MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC;
-import static com.alexsoft.smarthouse.util.DateUtils.*;
+import static com.alexsoft.smarthouse.core.util.DateUtils.getUtc;
+import static com.alexsoft.smarthouse.core.util.DateUtils.toLocalDateTime;
 
 @Service
 @RequiredArgsConstructor

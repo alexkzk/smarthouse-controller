@@ -4,7 +4,7 @@ import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import com.alexsoft.smarthouse.environment.IndicationV3;
 import com.alexsoft.smarthouse.environment.IndicationV3.IndicationV3Builder;
 import com.alexsoft.smarthouse.mqtt.MqttMessageReceivedEvent;
-import com.alexsoft.smarthouse.util.TempUtils;
+import com.alexsoft.smarthouse.core.util.TempUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +15,9 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import static com.alexsoft.smarthouse.util.DateUtils.getLocalDateTime;
-import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
+import static com.alexsoft.smarthouse.core.util.DateUtils.getLocalDateTime;
+import static com.alexsoft.smarthouse.core.util.DateUtils.getUtc;
 
 @Component
 @RequiredArgsConstructor

@@ -1,6 +1,5 @@
 package com.alexsoft.smarthouse.watchdog.internal;
 
-import com.alexsoft.smarthouse.service.GeminiService;
 import com.alexsoft.smarthouse.watchdog.resolver.StateResolutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
-import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
+import static com.alexsoft.smarthouse.core.util.DateUtils.getUtc;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;

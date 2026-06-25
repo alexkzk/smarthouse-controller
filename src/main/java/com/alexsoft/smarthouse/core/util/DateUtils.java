@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.util;
+package com.alexsoft.smarthouse.core.util;
 
 import java.sql.Timestamp;
 import java.time.DayOfWeek;
@@ -15,9 +15,6 @@ import java.util.Optional;
 
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
 import com.luckycatlabs.sunrisesunset.dto.Location;
-
-
-import static com.alexsoft.smarthouse.util.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 
 public class DateUtils {

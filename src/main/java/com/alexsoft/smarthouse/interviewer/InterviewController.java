@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.controller;
+package com.alexsoft.smarthouse.interviewer;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

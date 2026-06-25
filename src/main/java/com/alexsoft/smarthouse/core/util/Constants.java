@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.util;
+package com.alexsoft.smarthouse.core.util;
 
 public class Constants {
     public static final String ISO_DATE_TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";

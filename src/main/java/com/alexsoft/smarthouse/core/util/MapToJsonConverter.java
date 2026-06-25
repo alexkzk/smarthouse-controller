@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.util;
+package com.alexsoft.smarthouse.core.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

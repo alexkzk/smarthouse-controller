@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
+import static com.alexsoft.smarthouse.core.util.DateUtils.getUtc;
 
 /**
  * REST Controller for managing smart home appliances.

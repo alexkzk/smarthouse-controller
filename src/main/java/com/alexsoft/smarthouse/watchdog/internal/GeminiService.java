@@ -1,4 +1,4 @@
-package com.alexsoft.smarthouse.service;
+package com.alexsoft.smarthouse.watchdog.internal;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

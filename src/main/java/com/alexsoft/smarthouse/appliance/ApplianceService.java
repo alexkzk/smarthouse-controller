@@ -22,8 +22,8 @@ import java.util.*;
 
 import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
-import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
-import static com.alexsoft.smarthouse.util.DateUtils.toLocalDateTime;
+import static com.alexsoft.smarthouse.core.util.DateUtils.getUtc;
+import static com.alexsoft.smarthouse.core.util.DateUtils.toLocalDateTime;
 
 @Service
 @RequiredArgsConstructor

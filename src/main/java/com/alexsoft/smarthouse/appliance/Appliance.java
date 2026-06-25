@@ -1,8 +1,8 @@
 package com.alexsoft.smarthouse.appliance;
 
 import com.alexsoft.smarthouse.appliance.internal.ApplianceGroup;
-import com.alexsoft.smarthouse.util.MapToJsonConverter;
-import com.alexsoft.smarthouse.util.StringListConverter;
+import com.alexsoft.smarthouse.core.util.MapToJsonConverter;
+import com.alexsoft.smarthouse.core.util.StringListConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
 import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
-import static com.alexsoft.smarthouse.util.Constants.APPLICATION_OPERATION_TIMEZONE;
+import static com.alexsoft.smarthouse.core.util.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 @Entity
 @Table(schema = "main")

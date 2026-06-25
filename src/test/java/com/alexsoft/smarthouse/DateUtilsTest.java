@@ -10,8 +10,8 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.stream.Stream;
 
-import static com.alexsoft.smarthouse.util.DateUtils.isDark;
-import static com.alexsoft.smarthouse.util.DateUtils.roundDateTime;
+import static com.alexsoft.smarthouse.core.util.DateUtils.isDark;
+import static com.alexsoft.smarthouse.core.util.DateUtils.roundDateTime;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.params.provider.Arguments.arguments;

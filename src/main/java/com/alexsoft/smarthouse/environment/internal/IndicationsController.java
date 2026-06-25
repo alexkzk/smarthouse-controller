@@ -1,6 +1,5 @@
 package com.alexsoft.smarthouse.environment.internal;
 
-import com.alexsoft.smarthouse.environment.internal.InfluxRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static com.alexsoft.smarthouse.util.DateUtils.toLocalDateTime;
+import static com.alexsoft.smarthouse.core.util.DateUtils.toLocalDateTime;
 
 /**
  * REST Controller for managing and processing sensor indications.

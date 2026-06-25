@@ -20,7 +20,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import static com.alexsoft.smarthouse.util.DateUtils.*;
+import static com.alexsoft.smarthouse.core.util.DateUtils.*;
 
 @Component
 @RequiredArgsConstructor
