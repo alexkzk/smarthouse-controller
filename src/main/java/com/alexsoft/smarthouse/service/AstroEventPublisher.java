@@ -52,7 +52,6 @@ public class AstroEventPublisher {
         lastSunriseReported = lastSunriseEvent == null ? null : convertToLocalDateTime((Timestamp) lastSunriseEvent);
         appReady = true;
         eventRepository.save(Event.builder().utcTime(toUtc(getLocalDateTime())).type("application.startup").build());
-        applianceService.onHourChanged(new HourChangedEvent(this, lastReportedNewHour));
     }
 
     @EventListener(ContextClosedEvent.class)

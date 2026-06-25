@@ -53,7 +53,7 @@ class PhysicalSwitchOverrideBugTest {
     @BeforeEach
     void setUp() {
         ApplianceFacade applianceFacade = new ApplianceFacade(
-                applianceRepository, messageSenderService, indicationRepositoryV3, eventRepository, indicationServiceV3);
+                applianceRepository, messageSenderService, eventRepository, indicationServiceV3);
         MessageReceiverService receiverService = new MessageReceiverService(
                 applianceService, indicationServiceV3, eventRepository);
         ReflectionTestUtils.setField(receiverService, "mqttTopic", "smarthouse/sensor");
