@@ -1,6 +1,5 @@
 package com.alexsoft.smarthouse.environment;
 
-import com.alexsoft.smarthouse.environment.IndicationV3;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

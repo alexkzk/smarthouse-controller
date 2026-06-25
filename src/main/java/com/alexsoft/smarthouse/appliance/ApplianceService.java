@@ -1,30 +1,26 @@
-package com.alexsoft.smarthouse.appliance;
+package com.alexsoft.smarthouse.appliance.internal;
 import com.alexsoft.smarthouse.core.EventRepository;
 import com.alexsoft.smarthouse.core.RequestRepository;
 import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 
-import com.alexsoft.smarthouse.appliance.Appliance;
 import com.alexsoft.smarthouse.core.Event;
 import com.alexsoft.smarthouse.environment.IndicationV3;
 import com.alexsoft.smarthouse.core.Request;
-import com.alexsoft.smarthouse.appliance.ApplianceState;
-import com.alexsoft.smarthouse.environment.HourChangedEvent;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.ON;
 import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
 import static com.alexsoft.smarthouse.util.DateUtils.toLocalDateTime;
 

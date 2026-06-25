@@ -4,7 +4,7 @@ import com.alexsoft.smarthouse.watchdog.WatchdogJob;
 import com.alexsoft.smarthouse.watchdog.WatchdogLog;
 import com.alexsoft.smarthouse.watchdog.WatchdogJobRepository;
 import com.alexsoft.smarthouse.watchdog.WatchdogLogRepository;
-import com.alexsoft.smarthouse.watchdog.FcmService;
+import com.alexsoft.smarthouse.watchdog.internal.FcmService;
 import com.alexsoft.smarthouse.service.GeminiService;
 import com.alexsoft.smarthouse.watchdog.resolver.StateResolutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;

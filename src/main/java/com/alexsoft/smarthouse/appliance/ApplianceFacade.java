@@ -1,25 +1,20 @@
-package com.alexsoft.smarthouse.appliance;
+package com.alexsoft.smarthouse.appliance.internal;
 import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import com.alexsoft.smarthouse.mqtt.MessageSenderService;
 
-import com.alexsoft.smarthouse.appliance.Appliance;
 import com.alexsoft.smarthouse.core.Event;
 import com.alexsoft.smarthouse.environment.IndicationV3;
-import com.alexsoft.smarthouse.appliance.ApplianceState;
-import com.alexsoft.smarthouse.appliance.ApplianceRepository;
 import com.alexsoft.smarthouse.core.EventRepository;
-import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
-import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.internal.ApplianceState.ON;
 import static com.alexsoft.smarthouse.appliance.ApplianceService.MQTT_SMARTHOUSE_POWER_CONTROL_TOPIC;
 import static com.alexsoft.smarthouse.util.DateUtils.*;
 
