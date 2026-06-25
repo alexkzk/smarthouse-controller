@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.configuration.MetarLocationsConfig;
+import com.alexsoft.smarthouse.environment.MetarLocationsConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;

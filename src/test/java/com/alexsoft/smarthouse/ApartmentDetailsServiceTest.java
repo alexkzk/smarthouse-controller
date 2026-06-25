@@ -1,10 +1,10 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.ApartmentDetails;
+import com.alexsoft.smarthouse.appliance.ApartmentDetails;
 import com.alexsoft.smarthouse.entity.GlobalSetting;
-import com.alexsoft.smarthouse.repository.ApartmentDetailsRepository;
+import com.alexsoft.smarthouse.appliance.ApartmentDetailsRepository;
 import com.alexsoft.smarthouse.repository.GlobalSettingRepository;
-import com.alexsoft.smarthouse.service.ApartmentDetailsService;
+import com.alexsoft.smarthouse.appliance.ApartmentDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

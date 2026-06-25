@@ -1,15 +1,15 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.enums.ApplianceState;
-import com.alexsoft.smarthouse.repository.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.appliance.ApplianceState;
+import com.alexsoft.smarthouse.appliance.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.EventRepository;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
-import com.alexsoft.smarthouse.service.ApplianceFacade;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
-import com.alexsoft.smarthouse.service.MessageReceiverService;
-import com.alexsoft.smarthouse.service.MessageSenderService;
+import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.appliance.ApplianceFacade;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
+import com.alexsoft.smarthouse.environment.IndicationServiceV3;
+import com.alexsoft.smarthouse.mqtt.MessageReceiverService;
+import com.alexsoft.smarthouse.mqtt.MessageSenderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

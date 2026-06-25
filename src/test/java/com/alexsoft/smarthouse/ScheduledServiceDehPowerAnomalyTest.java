@@ -1,13 +1,13 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.entity.IndicationV3;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
-import com.alexsoft.smarthouse.service.ApplianceFacade;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
-import com.alexsoft.smarthouse.service.MessageSenderService;
-import com.alexsoft.smarthouse.service.ScheduledService;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.environment.IndicationV3;
+import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.appliance.ApplianceFacade;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
+import com.alexsoft.smarthouse.environment.IndicationServiceV3;
+import com.alexsoft.smarthouse.mqtt.MessageSenderService;
+import com.alexsoft.smarthouse.watchdog.ScheduledService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,8 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static com.alexsoft.smarthouse.util.DateUtils.getUtc;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,7 +37,7 @@ class ScheduledServiceDehPowerAnomalyTest {
 
     private static final String BLINK_PAYLOAD = "{\"effect\": \"blink\"}";
 
-    private Appliance deh(com.alexsoft.smarthouse.enums.ApplianceState state, LocalDateTime switchedOn) {
+    private Appliance deh(com.alexsoft.smarthouse.appliance.ApplianceState state, LocalDateTime switchedOn) {
         Appliance a = new Appliance();
         a.setCode("DEH");
         a.setState(state, switchedOn);

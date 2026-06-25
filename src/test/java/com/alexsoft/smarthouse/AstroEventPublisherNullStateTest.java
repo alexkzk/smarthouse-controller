@@ -1,11 +1,11 @@
 package com.alexsoft.smarthouse;
 
 import com.alexsoft.smarthouse.entity.Event;
-import com.alexsoft.smarthouse.event.HourChangedEvent;
+import com.alexsoft.smarthouse.environment.HourChangedEvent;
 import com.alexsoft.smarthouse.repository.EventRepository;
-import com.alexsoft.smarthouse.repository.HourChangeTrackerRepository;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.AstroEventPublisher;
+import com.alexsoft.smarthouse.environment.HourChangeTrackerRepository;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
+import com.alexsoft.smarthouse.environment.AstroEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

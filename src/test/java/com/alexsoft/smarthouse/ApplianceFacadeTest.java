@@ -1,13 +1,13 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.entity.ApplianceGroup;
-import com.alexsoft.smarthouse.repository.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.appliance.ApplianceGroup;
+import com.alexsoft.smarthouse.appliance.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.EventRepository;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
-import com.alexsoft.smarthouse.service.ApplianceFacade;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
-import com.alexsoft.smarthouse.service.MessageSenderService;
+import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.appliance.ApplianceFacade;
+import com.alexsoft.smarthouse.environment.IndicationServiceV3;
+import com.alexsoft.smarthouse.mqtt.MessageSenderService;
 import com.alexsoft.smarthouse.util.DateUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 
-import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -37,7 +37,7 @@ class ApplianceFacadeTest {
 
     private static final LocalDateTime UTC = LocalDateTime.of(2026, 4, 7, 11, 22, 0);
 
-    private Appliance ambientGroupLight(com.alexsoft.smarthouse.enums.ApplianceState initialState) {
+    private Appliance ambientGroupLight(com.alexsoft.smarthouse.appliance.ApplianceState initialState) {
         ApplianceGroup group = new ApplianceGroup();
         group.setId(1);
         Appliance a = new Appliance();
@@ -48,7 +48,7 @@ class ApplianceFacadeTest {
         return a;
     }
 
-    private Appliance nonGroupAppliance(com.alexsoft.smarthouse.enums.ApplianceState initialState) {
+    private Appliance nonGroupAppliance(com.alexsoft.smarthouse.appliance.ApplianceState initialState) {
         Appliance a = new Appliance();
         a.setCode("DEH");
         a.setState(initialState, UTC.minusHours(1));

@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse.watchdog;
 
-import com.alexsoft.smarthouse.service.FcmService;
+import com.alexsoft.smarthouse.watchdog.FcmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;

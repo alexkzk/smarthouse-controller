@@ -1,15 +1,15 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.repository.ApplianceGroupRepository;
-import com.alexsoft.smarthouse.repository.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.appliance.ApplianceGroupRepository;
+import com.alexsoft.smarthouse.appliance.ApplianceRepository;
 import com.alexsoft.smarthouse.repository.EventRepository;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 import com.alexsoft.smarthouse.repository.RequestRepository;
-import com.alexsoft.smarthouse.service.ApplianceFacade;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.ApartmentDetailsService;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
+import com.alexsoft.smarthouse.appliance.ApplianceFacade;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
+import com.alexsoft.smarthouse.appliance.ApartmentDetailsService;
+import com.alexsoft.smarthouse.environment.IndicationServiceV3;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,8 +20,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.alexsoft.smarthouse.enums.ApplianceState.OFF;
-import static com.alexsoft.smarthouse.enums.ApplianceState.ON;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.OFF;
+import static com.alexsoft.smarthouse.appliance.ApplianceState.ON;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;

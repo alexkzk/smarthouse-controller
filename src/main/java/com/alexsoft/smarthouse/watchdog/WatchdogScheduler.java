@@ -1,10 +1,10 @@
 package com.alexsoft.smarthouse.watchdog;
 
-import com.alexsoft.smarthouse.entity.WatchdogJob;
-import com.alexsoft.smarthouse.entity.WatchdogLog;
-import com.alexsoft.smarthouse.repository.WatchdogJobRepository;
-import com.alexsoft.smarthouse.repository.WatchdogLogRepository;
-import com.alexsoft.smarthouse.service.FcmService;
+import com.alexsoft.smarthouse.watchdog.WatchdogJob;
+import com.alexsoft.smarthouse.watchdog.WatchdogLog;
+import com.alexsoft.smarthouse.watchdog.WatchdogJobRepository;
+import com.alexsoft.smarthouse.watchdog.WatchdogLogRepository;
+import com.alexsoft.smarthouse.watchdog.FcmService;
 import com.alexsoft.smarthouse.service.GeminiService;
 import com.alexsoft.smarthouse.watchdog.resolver.StateResolutionService;
 import com.fasterxml.jackson.databind.ObjectMapper;

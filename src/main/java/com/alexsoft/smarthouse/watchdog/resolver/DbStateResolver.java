@@ -1,7 +1,7 @@
 package com.alexsoft.smarthouse.watchdog.resolver;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.repository.ApplianceRepository;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.appliance.ApplianceRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

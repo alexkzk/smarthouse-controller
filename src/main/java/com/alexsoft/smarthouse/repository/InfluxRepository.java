@@ -1,6 +1,7 @@
 package com.alexsoft.smarthouse.repository;
+import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
 
-import com.alexsoft.smarthouse.entity.IndicationV3;
+import com.alexsoft.smarthouse.environment.IndicationV3;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
 import com.influxdb.client.WriteApiBlocking;

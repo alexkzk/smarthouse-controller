@@ -15,7 +15,7 @@ import java.util.Optional;
 
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator;
 
-import static com.alexsoft.smarthouse.service.AstroEventPublisher.USER_LOCATION;
+import static com.alexsoft.smarthouse.environment.AstroEventPublisher.USER_LOCATION;
 import static com.alexsoft.smarthouse.util.Constants.APPLICATION_OPERATION_TIMEZONE;
 
 

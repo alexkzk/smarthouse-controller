@@ -1,12 +1,12 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.enums.ApplianceState;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.appliance.ApplianceState;
 import com.alexsoft.smarthouse.repository.EventRepository;
-import com.alexsoft.smarthouse.service.ApplianceFacade;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
-import com.alexsoft.smarthouse.service.MessageReceiverService;
+import com.alexsoft.smarthouse.appliance.ApplianceFacade;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
+import com.alexsoft.smarthouse.environment.IndicationServiceV3;
+import com.alexsoft.smarthouse.mqtt.MessageReceiverService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -124,7 +124,7 @@ class MessageReceiverServiceTest {
         handler.handleMessage(mqttMessage("zigbee2mqtt/0xa4c138b53c1c52c4", "{\"vibration\":true}"));
 
         verify(indicationServiceV3).saveAll(argThat(iterable -> {
-            java.util.List<com.alexsoft.smarthouse.entity.IndicationV3> list = new java.util.ArrayList<>();
+            java.util.List<com.alexsoft.smarthouse.environment.IndicationV3> list = new java.util.ArrayList<>();
             iterable.forEach(list::add);
             return list.size() == 1
                 && list.get(0).getMeasurementType().equals("vibration")
@@ -141,7 +141,7 @@ class MessageReceiverServiceTest {
         handler.handleMessage(mqttMessage("zigbee2mqtt/0xa4c138b53c1c52c4", "{\"vibration\":false}"));
 
         verify(indicationServiceV3).saveAll(argThat(iterable -> {
-            java.util.List<com.alexsoft.smarthouse.entity.IndicationV3> list = new java.util.ArrayList<>();
+            java.util.List<com.alexsoft.smarthouse.environment.IndicationV3> list = new java.util.ArrayList<>();
             iterable.forEach(list::add);
             return list.size() == 1
                 && list.get(0).getMeasurementType().equals("vibration")

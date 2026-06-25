@@ -1,11 +1,11 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.entity.Appliance;
-import com.alexsoft.smarthouse.entity.IndicationV3;
-import com.alexsoft.smarthouse.repository.IndicationRepositoryV3;
-import com.alexsoft.smarthouse.service.ApplianceService;
-import com.alexsoft.smarthouse.service.IndicationServiceV3;
-import com.alexsoft.smarthouse.service.ScheduledService;
+import com.alexsoft.smarthouse.appliance.Appliance;
+import com.alexsoft.smarthouse.environment.IndicationV3;
+import com.alexsoft.smarthouse.environment.IndicationRepositoryV3;
+import com.alexsoft.smarthouse.appliance.ApplianceService;
+import com.alexsoft.smarthouse.environment.IndicationServiceV3;
+import com.alexsoft.smarthouse.watchdog.ScheduledService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

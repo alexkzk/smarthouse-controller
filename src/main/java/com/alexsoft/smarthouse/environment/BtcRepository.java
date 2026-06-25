@@ -1,0 +1,8 @@
+package com.alexsoft.smarthouse.environment;
+
+import com.alexsoft.smarthouse.environment.Btc;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BtcRepository extends JpaRepository<Btc, Integer> {
+
+}

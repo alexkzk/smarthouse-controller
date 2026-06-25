@@ -1,6 +1,6 @@
 package com.alexsoft.smarthouse;
 
-import com.alexsoft.smarthouse.repository.HourChangeTrackerRepository;
+import com.alexsoft.smarthouse.environment.HourChangeTrackerRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.junit.jupiter.api.BeforeEach;
