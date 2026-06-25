@@ -1,6 +1,18 @@
 # Smarthouse Controller
 
-Spring Boot IoT home automation backend. Collects data from home IoT sensors and external sources, persists it in PostgreSQL, and applies automation rules (MQTT, scheduling, alerts). Runs on a home server (i7-4770k, 192.168.0.201).
+Spring Boot Modulith IoT home automation backend. Collects data from home IoT sensors and external sources, persists it in PostgreSQL, and applies automation rules (MQTT, scheduling, alerts). Runs on a home server (i7-4770k, 192.168.0.201).
+
+## Architecture
+
+This project is built using the **Spring Modulith** architectural style. The application is divided into independent, decoupled domain modules:
+
+* `core`: Shared entities and repositories.
+* `appliance`: Appliance control and state tracking logic.
+* `environment`: Environment indications (temperature, humidity, weather, astrodynamics).
+* `mqtt`: Infrastructure for messaging; parses raw MQTT messages and publishes decoupled Spring application events.
+* `watchdog`: Background scheduled tasks, alerting, and integrations like Firebase Cloud Messaging (FCM).
+
+The architecture is strictly enforced during testing by `ModulithTest` which uses ArchUnit to prevent cyclic dependencies and unauthorized cross-module internal access. Modules interact exclusively through public APIs or loosely-coupled Spring Application Events.
 
 ## System Structure
 
